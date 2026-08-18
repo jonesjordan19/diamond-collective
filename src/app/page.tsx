@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createThirdwebClient, getContract } from "thirdweb";
 import { base } from "thirdweb/chains";
 import { 
@@ -26,6 +26,11 @@ const sluggerContract = getContract({
 function AppContent() {
   const account = useActiveAccount();
   const [justClaimed, setJustClaimed] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const { data: balanceData, isLoading, refetch } = useReadContract(getBalance, {
     contract: sluggerContract,
@@ -34,6 +39,10 @@ function AppContent() {
 
   const balance = balanceData ? Number(balanceData.displayValue) : 0;
   const isUnlocked = balance >= 100 || justClaimed;
+
+  if (!mounted) {
+    return <div className="min-h-screen bg-slate-950" />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
