@@ -11,7 +11,11 @@
     "next": "^14.2.5",
     "react": "^18",
     "react-dom": "^18",
-    "thirdweb": "^5.48.0"
+    "thirdweb": "^5.48.0",
+    "@coinbase/cdp-sdk": "1.52.0"
+  },
+  "overrides": {
+    "@coinbase/cdp-sdk": "1.52.0"
   },
   "devDependencies": {
     "@types/node": "^20",
