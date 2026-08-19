@@ -23,8 +23,112 @@ const sluggerContract = getContract({
   address: "0xF3f6D32ABCf2fDeAB3c6D0b440230714166Cc4A1",
 });
 
-// Neon Volt Branding Color
 const NEON_GREEN = "#a6ff00";
+
+// --- BRAND DUGOUT DIRECTORY CONFIGURATION ---
+// You can add more brands under any category here anytime!
+interface BrandItem {
+  name: string;
+  tagline: string;
+  description: string;
+  buttonText: string;
+  link: string;
+  isPrimary?: boolean;
+}
+
+interface MarketCategory {
+  title: string;
+  emoji: string;
+  brands: BrandItem[];
+}
+
+const MARKET_SECTIONS: MarketCategory[] = [
+  {
+    title: "Nutrition",
+    emoji: "⚡",
+    brands: [
+      {
+        name: "Just Ingredients",
+        tagline: "Clean Supplements & Electrolytes",
+        description: "Access exclusive athlete allocations, discount codes, and clean nutrition bundles.",
+        buttonText: "Claim Allocation ↗",
+        link: "https://typeform.com",
+      },
+    ],
+  },
+  {
+    title: "Tech",
+    emoji: "📱",
+    brands: [
+      {
+        name: "Pocket Radar",
+        tagline: "Velocity & Data Tracking",
+        description: "Collegiate ambassador units, Smart Coach app access, and velocity tracking programs.",
+        buttonText: "Ambassador Program ↗",
+        link: "https://typeform.com",
+      },
+    ],
+  },
+  {
+    title: "Player Services",
+    emoji: "🤝",
+    brands: [
+      {
+        name: "1-on-1 Brand Strategy Intro",
+        tagline: "NIL Opportunities",
+        description: "Schedule a 15-minute intro call directly with partner brand representatives looking for baseball ambassadors.",
+        buttonText: "Book on Calendly ↗",
+        link: "https://calendly.com",
+        isPrimary: true,
+      },
+    ],
+  },
+  {
+    title: "Clothing & Apparel",
+    emoji: "🧢",
+    brands: [],
+  },
+  {
+    title: "Equipment",
+    emoji: "⚾",
+    brands: [],
+  },
+  {
+    title: "Eyewear & Vision",
+    emoji: "🕶️",
+    brands: [],
+  },
+  {
+    title: "Footwear",
+    emoji: "👟",
+    brands: [],
+  },
+  {
+    title: "Hitting",
+    emoji: "💥",
+    brands: [],
+  },
+  {
+    title: "Pitching",
+    emoji: "🎯",
+    brands: [],
+  },
+  {
+    title: "Coaching",
+    emoji: "📋",
+    brands: [],
+  },
+  {
+    title: "Lessons & Coaching",
+    emoji: "🎓",
+    brands: [],
+  },
+  {
+    title: "Training",
+    emoji: "🏋️‍♂️",
+    brands: [],
+  },
+];
 
 function AppContent() {
   const account = useActiveAccount();
@@ -52,7 +156,7 @@ function AppContent() {
         <strong style={{ color: "#ffffff" }}>NCAA NIL Compliance Note:</strong> All SLUGGER COINS distributed during the Founders phase have no current market value and are non-compensatory. Tokens are issued solely for community participation and access purposes.
       </div>
 
-      <div style={{ maxWidth: "920px", margin: "0 auto", padding: "36px 20px" }}>
+      <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "36px 20px" }}>
         {/* Navigation / Header */}
         <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #1a1a1a", paddingBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
           <div>
@@ -84,20 +188,21 @@ function AppContent() {
         </header>
 
         {/* Hero Section */}
-        <section style={{ textAlign: "center", margin: "52px 0 40px 0" }}>
+        <section style={{ textAlign: "center", margin: "48px 0 36px 0" }}>
           <div style={{ display: "inline-block", backgroundColor: "rgba(166, 255, 0, 0.08)", border: `1px solid ${NEON_GREEN}`, borderRadius: "999px", padding: "6px 16px", fontSize: "11px", fontWeight: "800", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: "20px" }}>
             Only Available to College Baseball Players
           </div>
-          <h2 style={{ fontSize: "40px", fontWeight: "900", color: "#ffffff", margin: "0 0 16px 0", letterSpacing: "-0.5px", textTransform: "uppercase", lineHeight: "1.1" }}>
+          <h2 style={{ fontSize: "38px", fontWeight: "900", color: "#ffffff", margin: "0 0 16px 0", letterSpacing: "-0.5px", textTransform: "uppercase", lineHeight: "1.1" }}>
             The Baseball Blockchain Utility Token
           </h2>
-          <p style={{ fontSize: "16px", color: "#a1a1aa", maxWidth: "620px", margin: "0 auto", lineHeight: "1.6" }}>
+          <p style={{ fontSize: "16px", color: "#a1a1aa", maxWidth: "640px", margin: "0 auto", lineHeight: "1.6" }}>
             A digital society connecting players, coaches, and brands through access, education, and opportunity. Claim your 100 free coins to unlock the partner dugout.
           </p>
         </section>
 
-        {/* Step 1: Sign in prompt */}
+        {/* Dynamic Action Area */}
         {!account ? (
+          /* State 1: Athlete Needs to Sign In */
           <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: "24px", padding: "48px 24px", textAlign: "center", maxWidth: "540px", margin: "0 auto", boxShadow: "0 0 40px rgba(0,0,0,0.8)" }}>
             <h3 style={{ fontSize: "22px", fontWeight: "900", margin: "0 0 8px 0", color: "#ffffff", textTransform: "uppercase" }}>
               Step 1: Open Your Athlete Locker
@@ -110,8 +215,8 @@ function AppContent() {
             </div>
           </div>
         ) : !isUnlocked ? (
-          /* Step 2: Claim 100 Coins */
-          <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "24px", padding: "40px 24px", textAlign: "center", maxWidth: "540px", margin: "0 auto", boxShadow: `0 0 30px rgba(166, 255, 0, 0.12)` }}>
+          /* State 2: Athlete Needs to Claim 100 Coins */
+          <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "24px", padding: "40px 24px", textAlign: "center", maxWidth: "540px", margin: "0 auto", boxShadow: "0 0 30px rgba(166, 255, 0, 0.12)" }}>
             <div style={{ fontSize: "44px", marginBottom: "12px" }}>⚾</div>
             <h3 style={{ fontSize: "24px", fontWeight: "900", margin: "0 0 6px 0", color: "#ffffff", textTransform: "uppercase" }}>
               Claim Your 100 Slugger Coins
@@ -147,9 +252,10 @@ function AppContent() {
             </p>
           </div>
         ) : (
-          /* Step 3: Unlocked Dugout */
+          /* State 3: Unlocked Dugout Classified by Market Category */
           <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "18px", padding: "22px 28px", marginBottom: "32px", flexWrap: "wrap", gap: "12px" }}>
+            {/* Membership Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "18px", padding: "22px 28px", marginBottom: "36px", flexWrap: "wrap", gap: "12px" }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                   <span style={{ height: "10px", width: "10px", borderRadius: "50%", backgroundColor: NEON_GREEN, display: "inline-block", boxShadow: `0 0 10px ${NEON_GREEN}` }}></span>
@@ -166,76 +272,84 @@ function AppContent() {
               </div>
             </div>
 
-            {/* Brand Partners Showcase */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px" }}>
-              {/* Partner Card 1: Just Ingredients */}
-              <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: "18px", padding: "26px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <div>
-                  <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1px" }}>
-                    Nutrition & Recovery
-                  </span>
-                  <h4 style={{ fontSize: "20px", fontWeight: "900", color: "#ffffff", margin: "10px 0 6px 0", textTransform: "uppercase" }}>
-                    Just Ingredients
-                  </h4>
-                  <p style={{ fontSize: "13px", color: "#888888", lineHeight: "1.5", margin: 0 }}>
-                    Access exclusive athlete clean-supplement allocations, electrolyte bundles, and recovery discount packages.
-                  </p>
-                </div>
-                <a
-                  href="https://typeform.com" 
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ display: "block", textAlign: "center", backgroundColor: "#141414", border: "1px solid #2a2a2a", color: "#ffffff", fontWeight: "800", padding: "14px", borderRadius: "10px", fontSize: "12px", textTransform: "uppercase", letterSpacing: "1px", textDecoration: "none", marginTop: "24px" }}
-                >
-                  Claim Allocation ↗
-                </a>
-              </div>
+            {/* Market Category Sections */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
+              {MARKET_SECTIONS.map((section, idx) => (
+                <div key={idx} style={{ borderBottom: "1px solid #141414", paddingBottom: "32px" }}>
+                  {/* Category Title Header */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
+                    <span style={{ fontSize: "20px" }}>{section.emoji}</span>
+                    <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "900", textTransform: "uppercase", letterSpacing: "1px", color: "#ffffff" }}>
+                      {section.title}
+                    </h3>
+                    <span style={{ fontSize: "11px", color: "#666666", fontWeight: "700", marginLeft: "auto" }}>
+                      {section.brands.length} {section.brands.length === 1 ? "Partner" : "Partners"}
+                    </span>
+                  </div>
 
-              {/* Partner Card 2: Pocket Radar */}
-              <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: "18px", padding: "26px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <div>
-                  <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1px" }}>
-                    Performance Tech
-                  </span>
-                  <h4 style={{ fontSize: "20px", fontWeight: "900", color: "#ffffff", margin: "10px 0 6px 0", textTransform: "uppercase" }}>
-                    Pocket Radar
-                  </h4>
-                  <p style={{ fontSize: "13px", color: "#888888", lineHeight: "1.5", margin: 0 }}>
-                    Velocity and data tracking partner perks. Request collegiate ambassador units and Smart Coach access.
-                  </p>
+                  {/* Brand Cards Grid */}
+                  {section.brands.length > 0 ? (
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" }}>
+                      {section.brands.map((brand, bIdx) => (
+                        <div 
+                          key={bIdx}
+                          style={{ 
+                            backgroundColor: "#0a0a0a", 
+                            border: brand.isPrimary ? `1px solid ${NEON_GREEN}` : "1px solid #1f1f1f", 
+                            borderRadius: "16px", 
+                            padding: "24px", 
+                            display: "flex", 
+                            flexDirection: "column", 
+                            justifyContent: "space-between",
+                            boxShadow: brand.isPrimary ? "0 0 20px rgba(166, 255, 0, 0.08)" : "none"
+                          }}
+                        >
+                          <div>
+                            <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1px" }}>
+                              {brand.tagline}
+                            </span>
+                            <h4 style={{ fontSize: "18px", fontWeight: "900", color: "#ffffff", margin: "10px 0 6px 0", textTransform: "uppercase" }}>
+                              {brand.name}
+                            </h4>
+                            <p style={{ fontSize: "13px", color: "#888888", lineHeight: "1.5", margin: 0 }}>
+                              {brand.description}
+                            </p>
+                          </div>
+                          <a
+                            href={brand.link} 
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ 
+                              display: "block", 
+                              textAlign: "center", 
+                              backgroundColor: brand.isPrimary ? NEON_GREEN : "#141414", 
+                              color: brand.isPrimary ? "#000000" : "#ffffff", 
+                              border: brand.isPrimary ? "none" : "1px solid #2a2a2a", 
+                              fontWeight: "900", 
+                              padding: "13px", 
+                              borderRadius: "10px", 
+                              fontSize: "12px", 
+                              textTransform: "uppercase", 
+                              letterSpacing: "1px", 
+                              textDecoration: "none", 
+                              marginTop: "22px" 
+                            }}
+                          >
+                            {brand.buttonText}
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    /* Clean Placeholder for empty categories */
+                    <div style={{ backgroundColor: "#050505", border: "1px dashed #1a1a1a", borderRadius: "14px", padding: "20px", textAlign: "center" }}>
+                      <p style={{ margin: 0, fontSize: "12px", color: "#555555", fontWeight: "600" }}>
+                        Partner announcements dropping soon for {section.title}.
+                      </p>
+                    </div>
+                  )}
                 </div>
-                <a
-                  href="https://typeform.com" 
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ display: "block", textAlign: "center", backgroundColor: "#141414", border: "1px solid #2a2a2a", color: "#ffffff", fontWeight: "800", padding: "14px", borderRadius: "10px", fontSize: "12px", textTransform: "uppercase", letterSpacing: "1px", textDecoration: "none", marginTop: "24px" }}
-                >
-                  Ambassador Program ↗
-                </a>
-              </div>
-
-              {/* Partner Card 3: 1-on-1 Brand Rep Calls */}
-              <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "18px", padding: "26px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <div>
-                  <span style={{ fontSize: "11px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", letterSpacing: "1px" }}>
-                    NIL Opportunities
-                  </span>
-                  <h4 style={{ fontSize: "20px", fontWeight: "900", color: "#ffffff", margin: "10px 0 6px 0", textTransform: "uppercase" }}>
-                    1-on-1 Brand Intro Call
-                  </h4>
-                  <p style={{ fontSize: "13px", color: "#888888", lineHeight: "1.5", margin: 0 }}>
-                    Schedule a 15-minute pitch and strategy call directly with partner representatives looking for college baseball creators.
-                  </p>
-                </div>
-                <a
-                  href="https://calendly.com" 
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ display: "block", textAlign: "center", backgroundColor: NEON_GREEN, color: "#000000", fontWeight: "900", padding: "14px", borderRadius: "10px", fontSize: "12px", textTransform: "uppercase", letterSpacing: "1px", textDecoration: "none", marginTop: "24px" }}
-                >
-                  Book on Calendly ↗
-                </a>
-              </div>
+              ))}
             </div>
           </div>
         )}
