@@ -44,7 +44,6 @@ interface MarketCategory {
   brands: BrandItem[];
 }
 
-// --- ALPHABETICALLY ORGANIZED MARKET CATEGORIES (A-Z) ---
 const MARKET_SECTIONS: MarketCategory[] = [
   {
     title: "Clothing & Apparel",
@@ -178,10 +177,38 @@ function AppContent() {
   const balance = balanceData ? Number(balanceData.displayValue) : 0;
   const isUnlocked = balance >= 100 || justClaimed;
 
+  // Load profile from localStorage first, then sync with Google Sheets
+  useEffect(() => {
+    if (account?.address) {
+      const localKey = `athlete_profile_${account.address.toLowerCase()}`;
+      const savedLocal = localStorage.getItem(localKey);
+      if (savedLocal) {
+        try {
+          setProfile(JSON.parse(savedLocal));
+        } catch {}
+      }
+
+      // Fetch from Google Sheets
+      fetch(`${GOOGLE_SCRIPT_URL}?walletAddress=${encodeURIComponent(account.address)}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data?.profile && data.profile.fullName) {
+            setProfile(data.profile);
+            localStorage.setItem(localKey, JSON.stringify(data.profile));
+          }
+        })
+        .catch(() => {});
+    }
+  }, [account?.address]);
+
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!account?.address) return;
     setIsSavingProfile(true);
+
+    // Save locally immediately
+    const localKey = `athlete_profile_${account.address.toLowerCase()}`;
+    localStorage.setItem(localKey, JSON.stringify(profile));
 
     try {
       await fetch(GOOGLE_SCRIPT_URL, {
@@ -196,10 +223,11 @@ function AppContent() {
 
       setIsSavingProfile(false);
       setShowProfileModal(false);
-      alert("Profile successfully saved to Diamond Collective roster!");
+      alert("Profile successfully saved!");
     } catch {
       setIsSavingProfile(false);
-      alert("Error saving profile. Please try again.");
+      setShowProfileModal(false);
+      alert("Profile saved locally!");
     }
   };
 
@@ -284,7 +312,7 @@ function AppContent() {
           </p>
         </section>
 
-        {/* Dugout / Locker Action Flow */}
+        {/* Dugout / Locker Flow */}
         {!account ? (
           <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: "24px", padding: "48px 24px", textAlign: "center", maxWidth: "540px", margin: "0 auto" }}>
             <h3 style={{ fontSize: "22px", fontWeight: "900", margin: "0 0 8px 0", color: "#ffffff", textTransform: "uppercase" }}>
@@ -357,7 +385,7 @@ function AppContent() {
               </button>
             </div>
 
-            {/* Alphabetical Category Directory (A-Z) */}
+            {/* Alphabetical Category Directory */}
             <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
               {MARKET_SECTIONS.map((section, idx) => (
                 <div key={idx} style={{ borderBottom: "1px solid #141414", paddingBottom: "32px" }}>
@@ -553,7 +581,7 @@ function AppContent() {
                 />
               </div>
 
-              {/* Instagram URL + Followers */}
+              {/* Instagram */}
               <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "10px" }}>
                 <div>
                   <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>Instagram Profile Link</label>
@@ -578,7 +606,7 @@ function AppContent() {
                 </div>
               </div>
 
-              {/* TikTok URL + Followers */}
+              {/* TikTok */}
               <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "10px" }}>
                 <div>
                   <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>TikTok Profile Link</label>
@@ -603,7 +631,7 @@ function AppContent() {
                 </div>
               </div>
 
-              {/* X URL + Followers */}
+              {/* X */}
               <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "10px" }}>
                 <div>
                   <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>X (Twitter) Profile Link</label>
