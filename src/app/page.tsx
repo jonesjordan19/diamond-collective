@@ -69,6 +69,10 @@ function AppContent() {
                 },
               }),
             ]}
+            accountAbstraction={{
+              chain: base,
+              sponsorGas: true,
+            }}
             chain={base}
             theme="dark"
             connectButton={{ label: "Athlete Sign In" }}
