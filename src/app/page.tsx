@@ -134,9 +134,12 @@ interface AthleteProfile {
   college: string;
   position: string;
   gradYear: string;
-  instagram: string;
-  tiktok: string;
-  xHandle: string;
+  instagramUrl: string;
+  instagramFollowers: string;
+  tiktokUrl: string;
+  tiktokFollowers: string;
+  xUrl: string;
+  xFollowers: string;
 }
 
 function AppContent() {
@@ -152,9 +155,12 @@ function AppContent() {
     college: "",
     position: "",
     gradYear: "",
-    instagram: "",
-    tiktok: "",
-    xHandle: "",
+    instagramUrl: "",
+    instagramFollowers: "",
+    tiktokUrl: "",
+    tiktokFollowers: "",
+    xUrl: "",
+    xFollowers: "",
   });
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [introStatus, setIntroStatus] = useState<{ [brandName: string]: string }>({});
@@ -170,25 +176,6 @@ function AppContent() {
 
   const balance = balanceData ? Number(balanceData.displayValue) : 0;
   const isUnlocked = balance >= 100 || justClaimed;
-
-  useEffect(() => {
-    if (account?.address) {
-      fetch(GOOGLE_SCRIPT_URL, {
-        method: "POST",
-        body: JSON.stringify({
-          action: "getProfile",
-          walletAddress: account.address,
-        }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data?.profile) {
-            setProfile(data.profile);
-          }
-        })
-        .catch(() => {});
-    }
-  }, [account?.address]);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -247,7 +234,7 @@ function AppContent() {
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#000000", color: "#ffffff", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
-      {/* Compliance Bar */}
+      {/* Compliance Header */}
       <div style={{ backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: "10px 16px", textAlign: "center", fontSize: "11px", color: "#888888", letterSpacing: "0.5px", lineHeight: "1.4" }}>
         <strong style={{ color: "#ffffff" }}>NCAA NIL Compliance Note:</strong> All SLUGGER COINS distributed during the Founders phase have no current market value and are non-compensatory. Tokens are issued solely for community participation and access purposes.
       </div>
@@ -296,7 +283,7 @@ function AppContent() {
           </p>
         </section>
 
-        {/* Dynamic Dugout Flow */}
+        {/* Dugout / Locker Action Flow */}
         {!account ? (
           <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: "24px", padding: "48px 24px", textAlign: "center", maxWidth: "540px", margin: "0 auto" }}>
             <h3 style={{ fontSize: "22px", fontWeight: "900", margin: "0 0 8px 0", color: "#ffffff", textTransform: "uppercase" }}>
@@ -348,6 +335,7 @@ function AppContent() {
           </div>
         ) : (
           <div>
+            {/* Unlocked Header */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "18px", padding: "22px 28px", marginBottom: "36px", flexWrap: "wrap", gap: "16px" }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -368,6 +356,7 @@ function AppContent() {
               </button>
             </div>
 
+            {/* Category Directory */}
             <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
               {MARKET_SECTIONS.map((section, idx) => (
                 <div key={idx} style={{ borderBottom: "1px solid #141414", paddingBottom: "32px" }}>
@@ -474,18 +463,18 @@ function AppContent() {
         )}
       </div>
 
-      {/* Athlete Profile Setup Modal */}
+      {/* Validated Athlete Profile Modal */}
       {showProfileModal && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.85)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000, padding: "20px" }}>
-          <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "20px", width: "100%", maxWidth: "480px", maxHeight: "90vh", overflowY: "auto", padding: "30px" }}>
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.88)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000, padding: "16px" }}>
+          <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "20px", width: "100%", maxWidth: "500px", maxHeight: "90vh", overflowY: "auto", padding: "26px" }}>
             <h3 style={{ margin: "0 0 6px 0", fontSize: "20px", fontWeight: "900", textTransform: "uppercase", color: "#ffffff" }}>
               Athlete Locker Profile
             </h3>
-            <p style={{ fontSize: "13px", color: "#888888", margin: "0 0 20px 0" }}>
-              Save your info once so brand partners can connect with you directly.
+            <p style={{ fontSize: "13px", color: "#888888", margin: "0 0 18px 0" }}>
+              Enter your verified athletic details and full social profile links for brand partner consideration.
             </p>
 
-            <form onSubmit={handleSaveProfile} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+            <form onSubmit={handleSaveProfile} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <div>
                 <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>Full Name *</label>
                 <input 
@@ -515,6 +504,8 @@ function AppContent() {
                   <input 
                     type="tel" 
                     required
+                    pattern="[0-9+() -]{10,}"
+                    title="Please enter a valid phone number"
                     value={profile.phone} 
                     onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
                     placeholder="(555) 000-0000" 
@@ -538,7 +529,9 @@ function AppContent() {
                 <div>
                   <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>Grad Year *</label>
                   <input 
-                    type="text" 
+                    type="number" 
+                    min="2024"
+                    max="2032"
                     required
                     value={profile.gradYear} 
                     onChange={(e) => setProfile({ ...profile, gradYear: e.target.value })}
@@ -559,41 +552,82 @@ function AppContent() {
                 />
               </div>
 
-              <div>
-                <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>Instagram Handle</label>
-                <input 
-                  type="text" 
-                  value={profile.instagram} 
-                  onChange={(e) => setProfile({ ...profile, instagram: e.target.value })}
-                  placeholder="@yourhandle" 
-                  style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "10px 12px", borderRadius: "8px", fontSize: "13px" }}
-                />
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+              {/* Instagram URL + Followers */}
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "10px" }}>
                 <div>
-                  <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>TikTok Handle</label>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>Instagram Profile Link</label>
                   <input 
-                    type="text" 
-                    value={profile.tiktok} 
-                    onChange={(e) => setProfile({ ...profile, tiktok: e.target.value })}
-                    placeholder="@yourhandle" 
+                    type="url" 
+                    value={profile.instagramUrl} 
+                    onChange={(e) => setProfile({ ...profile, instagramUrl: e.target.value })}
+                    placeholder="https://instagram.com/handle" 
                     style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "10px 12px", borderRadius: "8px", fontSize: "13px" }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>X (Twitter) Handle</label>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>Followers</label>
                   <input 
-                    type="text" 
-                    value={profile.xHandle} 
-                    onChange={(e) => setProfile({ ...profile, xHandle: e.target.value })}
-                    placeholder="@yourhandle" 
+                    type="number" 
+                    min="0"
+                    value={profile.instagramFollowers} 
+                    onChange={(e) => setProfile({ ...profile, instagramFollowers: e.target.value })}
+                    placeholder="e.g. 3500" 
                     style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "10px 12px", borderRadius: "8px", fontSize: "13px" }}
                   />
                 </div>
               </div>
 
-              <div style={{ display: "flex", gap: "10px", marginTop: "14px" }}>
+              {/* TikTok URL + Followers */}
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "10px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>TikTok Profile Link</label>
+                  <input 
+                    type="url" 
+                    value={profile.tiktokUrl} 
+                    onChange={(e) => setProfile({ ...profile, tiktokUrl: e.target.value })}
+                    placeholder="https://tiktok.com/@handle" 
+                    style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "10px 12px", borderRadius: "8px", fontSize: "13px" }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>Followers</label>
+                  <input 
+                    type="number" 
+                    min="0"
+                    value={profile.tiktokFollowers} 
+                    onChange={(e) => setProfile({ ...profile, tiktokFollowers: e.target.value })}
+                    placeholder="e.g. 12000" 
+                    style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "10px 12px", borderRadius: "8px", fontSize: "13px" }}
+                  />
+                </div>
+              </div>
+
+              {/* X URL + Followers */}
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "10px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>X (Twitter) Profile Link</label>
+                  <input 
+                    type="url" 
+                    value={profile.xUrl} 
+                    onChange={(e) => setProfile({ ...profile, xUrl: e.target.value })}
+                    placeholder="https://x.com/handle" 
+                    style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "10px 12px", borderRadius: "8px", fontSize: "13px" }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>Followers</label>
+                  <input 
+                    type="number" 
+                    min="0"
+                    value={profile.xFollowers} 
+                    onChange={(e) => setProfile({ ...profile, xFollowers: e.target.value })}
+                    placeholder="e.g. 850" 
+                    style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "10px 12px", borderRadius: "8px", fontSize: "13px" }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", marginTop: "12px" }}>
                 <button
                   type="button"
                   onClick={() => setShowProfileModal(false)}
