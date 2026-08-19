@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import "./globals.css";
 
 export const metadata: Metadata = {
   title: "The Diamond Collective | Slugger Coin",
@@ -12,8 +11,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="bg-slate-950 text-slate-100 antialiased">{children}</body>
+    <html lang="en" style={{ backgroundColor: "#000000" }}>
+      <body style={{ backgroundColor: "#000000", color: "#ffffff", margin: 0, padding: 0 }}>
+        {children}
+      </body>
     </html>
   );
 }
