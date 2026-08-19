@@ -26,7 +26,6 @@ const sluggerContract = getContract({
 const NEON_GREEN = "#a6ff00";
 
 // --- BRAND DUGOUT DIRECTORY CONFIGURATION ---
-// You can add more brands under any category here anytime!
 interface BrandItem {
   name: string;
   tagline: string;
@@ -72,16 +71,7 @@ const MARKET_SECTIONS: MarketCategory[] = [
   {
     title: "Player Services",
     emoji: "🤝",
-    brands: [
-      {
-        name: "1-on-1 Brand Strategy Intro",
-        tagline: "NIL Opportunities",
-        description: "Schedule a 15-minute intro call directly with partner brand representatives looking for baseball ambassadors.",
-        buttonText: "Book on Calendly ↗",
-        link: "https://calendly.com",
-        isPrimary: true,
-      },
-    ],
+    brands: [],
   },
   {
     title: "Clothing & Apparel",
@@ -252,7 +242,7 @@ function AppContent() {
             </p>
           </div>
         ) : (
-          /* State 3: Unlocked Dugout Classified by Market Category */
+          /* State 3: Unlocked Dugout */
           <div>
             {/* Membership Header */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "18px", padding: "22px 28px", marginBottom: "36px", flexWrap: "wrap", gap: "12px" }}>
