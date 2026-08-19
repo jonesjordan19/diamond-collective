@@ -405,9 +405,17 @@ function AppContent() {
         <strong style={{ color: "#ffffff" }}>NCAA NIL Compliance Note:</strong> All SLUGGER COINS distributed during the Founders phase have no current market value and are non-compensatory. Tokens are issued solely for community participation and access purposes.
       </div>
 
-      <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "36px 20px" }}>
+      <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "32px 16px" }}>
         {/* Navigation */}
-        <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #1a1a1a", paddingBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
+        <header style={{ 
+          display: "flex", 
+          justifyContent: "space-between", 
+          alignItems: "center", 
+          borderBottom: "1px solid #1a1a1a", 
+          paddingBottom: "24px", 
+          flexWrap: "wrap", 
+          gap: "16px" 
+        }}>
           <div>
             <h1 style={{ margin: 0, fontSize: "24px", fontWeight: "900", letterSpacing: "1.5px", color: "#ffffff", textTransform: "uppercase" }}>
               The Diamond Collective
@@ -417,31 +425,33 @@ function AppContent() {
             </p>
           </div>
 
-          <ConnectButton
-            client={client}
-            wallets={[
-              inAppWallet({
-                auth: {
-                  options: ["google", "apple", "phone"],
-                },
-              }),
-            ]}
-            accountAbstraction={{
-              chain: base,
-              sponsorGas: true,
-            }}
-            chain={base}
-            theme="dark"
-            connectButton={{ label: "Athlete Sign In" }}
-          />
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <ConnectButton
+              client={client}
+              wallets={[
+                inAppWallet({
+                  auth: {
+                    options: ["google", "apple", "phone"],
+                  },
+                }),
+              ]}
+              accountAbstraction={{
+                chain: base,
+                sponsorGas: true,
+              }}
+              chain={base}
+              theme="dark"
+              connectButton={{ label: "Athlete Sign In" }}
+            />
+          </div>
         </header>
 
         {/* Hero Section */}
-        <section style={{ textAlign: "center", margin: "48px 0 36px 0" }}>
+        <section style={{ textAlign: "center", margin: "44px 0 32px 0" }}>
           <div style={{ display: "inline-block", backgroundColor: "rgba(166, 255, 0, 0.08)", border: `1px solid ${NEON_GREEN}`, borderRadius: "999px", padding: "6px 16px", fontSize: "11px", fontWeight: "800", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: "20px" }}>
             Exclusively for College Baseball Players
           </div>
-          <h2 style={{ fontSize: "38px", fontWeight: "900", color: "#ffffff", margin: "0 0 16px 0", letterSpacing: "-0.5px", textTransform: "uppercase", lineHeight: "1.1" }}>
+          <h2 style={{ fontSize: "36px", fontWeight: "900", color: "#ffffff", margin: "0 0 16px 0", letterSpacing: "-0.5px", textTransform: "uppercase", lineHeight: "1.15" }}>
             The Baseball Blockchain Utility Token
           </h2>
           <p style={{ fontSize: "16px", color: "#a1a1aa", maxWidth: "640px", margin: "0 auto", lineHeight: "1.6" }}>
@@ -451,14 +461,14 @@ function AppContent() {
 
         {/* Gatekeeper Flow */}
         {!account ? (
-          <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: "24px", padding: "48px 24px", textAlign: "center", maxWidth: "540px", margin: "0 auto" }}>
+          <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: "24px", padding: "44px 20px", textAlign: "center", maxWidth: "540px", margin: "0 auto" }}>
             <h3 style={{ fontSize: "22px", fontWeight: "900", margin: "0 0 8px 0", color: "#ffffff", textTransform: "uppercase" }}>
               Step 1: Open Your Athlete Locker
             </h3>
             <p style={{ fontSize: "14px", color: "#888888", margin: "0 0 28px 0", lineHeight: "1.5" }}>
-              Sign in with your Google or Apple ID in the top right corner to submit your collegiate verification application.
+              Tap the <strong style={{ color: "#ffffff" }}>Athlete Sign In</strong> button above to connect with your Google, Apple, or phone ID and submit your collegiate verification.
             </p>
-            <div style={{ display: "inline-block", backgroundColor: "#000000", border: "1px solid #2a2a2a", borderRadius: "12px", padding: "14px 28px", fontSize: "13px", color: "#ffffff", fontWeight: "700" }}>
+            <div style={{ display: "inline-block", backgroundColor: "#000000", border: "1px solid #2a2a2a", borderRadius: "12px", padding: "14px 24px", fontSize: "13px", color: "#ffffff", fontWeight: "700" }}>
               🔒 Sign in above to begin verification
             </div>
           </div>
@@ -566,7 +576,7 @@ function AppContent() {
                   </div>
 
                   {section.brands.length > 0 ? (
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "20px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "20px" }}>
                       {section.brands.map((brand, bIdx) => (
                         <div 
                           key={bIdx}
@@ -578,7 +588,6 @@ function AppContent() {
                             display: "flex", 
                             flexDirection: "column", 
                             justifyContent: "space-between",
-                            transition: "transform 0.15s ease, border-color 0.15s ease",
                           }}
                         >
                           <div>
