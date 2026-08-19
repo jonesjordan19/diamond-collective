@@ -46,39 +46,146 @@ interface MarketCategory {
 
 const MARKET_SECTIONS: MarketCategory[] = [
   {
-    title: "Clothing & Apparel",
-    emoji: "🧢",
-    brands: [],
-  },
-  {
-    title: "Coaching",
-    emoji: "📋",
-    brands: [],
+    title: "Hitting",
+    emoji: "💥",
+    brands: [
+      {
+        name: "Frost Gear",
+        tagline: "Cold-Weather Performance Batting Gear",
+        description: "Engineered with advanced thermal materials to keep hands warm, responsive, and game-ready without sacrificing grip or feel.",
+        buttonText: "Request Direct Intro ⚡",
+        type: "email_intro",
+        brandRepEmail: "parker@maxbp.com",
+        brandRepName: "Parker (MaxBP & Frost Gear)",
+        isPrimary: true,
+      },
+      {
+        name: "Soldier Sports",
+        tagline: "Team Soldier TANK Ambassador Program",
+        description: "Apply to join the Team Soldier TANK Ambassador Program and claim exclusive athlete perks, hardware, and performance gear.",
+        buttonText: "Open Ambassador Application ↗",
+        type: "affiliate_link",
+        link: "https://soldiersports.us/pages/ambassador",
+      },
+    ],
   },
   {
     title: "Equipment",
     emoji: "⚾",
-    brands: [],
+    brands: [
+      {
+        name: "MaxBP",
+        tagline: "High-Velocity Reaction & Vision Training",
+        description: "Train fast with the premier small-ball reaction and hitting machines in the game.",
+        buttonText: "Request Direct Intro ⚡",
+        type: "email_intro",
+        brandRepEmail: "parker@maxbp.com",
+        brandRepName: "Parker (MaxBP)",
+        isPrimary: true,
+      },
+      {
+        name: "Yardley Sports",
+        tagline: "Handcrafted Custom Leather Gloves",
+        description: "Premium handcrafted baseball gloves built with pro patterns, rich leather, and customized game-ready feel.",
+        buttonText: "Request Direct Intro ⚡",
+        type: "email_intro",
+        brandRepEmail: "braden@yardleysports.com",
+        brandRepName: "Braden (Yardley Sports)",
+        isPrimary: true,
+      },
+      {
+        name: "Rawlings",
+        tagline: "The Official Glove & Ball of MLB",
+        description: "Join the official Rawlings affiliate network on CJ Affiliate and monetize referred sales for the finest in the field.",
+        buttonText: "Open Affiliate Portal ↗",
+        type: "affiliate_link",
+        link: "https://www.rawlings.com/information-affiliate.html",
+      },
+      {
+        name: "Wilson Family of Brands",
+        tagline: "A2000, A2K, DeMarini & Louisville Slugger",
+        description: "Access official partner campaigns on Impact for Wilson, DeMarini, Louisville Slugger, and EvoShield.",
+        buttonText: "Join Wilson Network ↗",
+        type: "affiliate_link",
+        link: "https://app.impact.com/campaign-promo-signup/Wilson-Family-of-Brands.brand?execution=e1s1#/?viewkey=signUpPreStart",
+      },
+      {
+        name: "HydroJug",
+        tagline: "TikTok Shop Creator Program",
+        description: "Create TikTok content, tag HydroJug gear directly, and earn commission on every sale through TikTok Shop.",
+        buttonText: "Open Ambassador Program ↗",
+        type: "affiliate_link",
+        link: "https://www.thehydrojug.com/pages/ambassadors-affiliates",
+      },
+    ],
   },
   {
     title: "Eyewear & Vision",
     emoji: "🕶️",
-    brands: [],
+    brands: [
+      {
+        name: "Vision X Sports",
+        tagline: "Cognitive, Visual & Reaction Training",
+        description: "13-level performance series connecting eye tracking, depth perception, coordination, and mental conditioning.",
+        buttonText: "Request Direct Intro ⚡",
+        type: "email_intro",
+        brandRepEmail: "r.curry@visionxsports.com",
+        brandRepName: "R. Curry (Vision X Sports)",
+        isPrimary: true,
+      },
+    ],
+  },
+  {
+    title: "Clothing & Apparel",
+    emoji: "🧢",
+    brands: [
+      {
+        name: "Baseballism",
+        tagline: "Premium Baseball Lifestyle & Streetwear",
+        description: "The premier lifestyle brand honoring the game's culture. Submit for official creator and NIL collaborations.",
+        buttonText: "Open Collaboration Form ↗",
+        type: "affiliate_link",
+        link: "https://www.baseballism.com/pages/collabs-1?srsltid=AfmBOoqEktT0nGezfmx_xgwZmPpmD3k9pAy5xaq4E8D4suS0UqhDCmVD",
+      },
+      {
+        name: "Vuori",
+        tagline: "V1 Community Pro Network",
+        description: "A network of athletes united by movement. Members receive exclusive apparel allocations, benefits, and events.",
+        buttonText: "Join V1 Community ↗",
+        type: "affiliate_link",
+        link: "https://vuoriclothing.com/pages/v1-community-program",
+      },
+    ],
   },
   {
     title: "Footwear",
     emoji: "👟",
-    brands: [],
-  },
-  {
-    title: "Hitting",
-    emoji: "💥",
-    brands: [],
-  },
-  {
-    title: "Lessons & Coaching",
-    emoji: "🎓",
-    brands: [],
+    brands: [
+      {
+        name: "Nike",
+        tagline: "Official Nike Affiliate Network",
+        description: "Earn competitive commissions promoting Nike cleats, training footwear, and apparel with early product drops.",
+        buttonText: "Open Nike Publisher App ↗",
+        type: "affiliate_link",
+        link: "https://public.cj.com/signup/publisher?advertiserId=4942550#/branded",
+      },
+      {
+        name: "Mizuno",
+        tagline: "The Mizuno Movement Athlete Program",
+        description: "Gain access to exclusive high-performance diamond footwear and equipment ahead of consumer release.",
+        buttonText: "Join Mizuno Movement ↗",
+        type: "affiliate_link",
+        link: "https://usa.mizuno.com/mizuno-movement/",
+      },
+      {
+        name: "Under Armour",
+        tagline: "Under Armour Athlete Partner Program",
+        description: "Earn commissions on referred clickthrough sales across UA diamond footwear, HeatGear, and performance apparel.",
+        buttonText: "Open UA Partner Program ↗",
+        type: "affiliate_link",
+        link: "https://www.underarmour.com/en-us/t/ua-affiliate-program/",
+      },
+    ],
   },
   {
     title: "Nutrition",
@@ -86,39 +193,59 @@ const MARKET_SECTIONS: MarketCategory[] = [
     brands: [
       {
         name: "Just Ingredients",
-        tagline: "Clean Supplements & Electrolytes",
-        description: "Access exclusive athlete allocations, discount codes, and clean nutrition packages.",
-        buttonText: "Request Direct Intro ⚡",
-        type: "email_intro",
-        brandRepEmail: "partnerships@justingredients.us",
-        brandRepName: "Partnerships Team",
+        tagline: "Clean Supplements, Hydration & Electrolytes",
+        description: "Turn your passion into creator commissions, unique affiliate discount codes, and clean nutrition packages.",
+        buttonText: "Open Creator Portal ↗",
+        type: "affiliate_link",
+        link: "https://justingredients.com/pages/creator-program?srsltid=AfmBOoq02ujUzQv9eCCYLpLz1rYNSsFxQed5F2KxhsN-qNQNTshataQw",
+      },
+      {
+        name: "King of the Jungle",
+        tagline: "Elite Pre-Workout & Nootropic Performance",
+        description: "Scientifically dosed Nitric Oxide activators, hydration electrolytes, and clean nootropics for diamond endurance.",
+        buttonText: "Join Ambassador Program ↗",
+        type: "affiliate_link",
+        link: "https://kingofthejungle.com/pages/brand-ambassador",
       },
     ],
+  },
+  {
+    title: "Player Services",
+    emoji: "🤝",
+    brands: [
+      {
+        name: "Baseball Players of the World",
+        tagline: "Global Playing Opportunities & Media",
+        description: "Helping baseball players maximize the value of their careers through worldwide placements and strategic media.",
+        buttonText: "Submit Player Dossier ↗",
+        type: "affiliate_link",
+        link: "https://docs.google.com/forms/d/e/1FAIpQLSdqJDUk_maSDgFXyYHG0V5VZy7AgT_kBtPHRaSojhqkTyiYDw/viewform",
+      },
+    ],
+  },
+  {
+    title: "Technology",
+    emoji: "📱",
+    brands: [
+      {
+        name: "Pocket Radar",
+        tagline: "Smart Coach Velocity & Data Tracking",
+        description: "Quantify throw and exit velocity on every swing, pitch, and throw. Access official collegiate ambassador programs.",
+        buttonText: "Register Ambassador Unit ↗",
+        type: "affiliate_link",
+        link: "https://af.uppromote.com/pocket-radar-inc/register",
+      },
+    ],
+  },
+  {
+    title: "Coaching & Lessons",
+    emoji: "📋",
+    brands: [],
   },
   {
     title: "Pitching",
     emoji: "🎯",
     brands: [],
-  },
-  {
-    title: "Player Services",
-    emoji: "🤝",
-    brands: [],
-  },
-  {
-    title: "Tech",
-    emoji: "📱",
-    brands: [
-      {
-        name: "Pocket Radar",
-        tagline: "Velocity & Data Tracking",
-        description: "Collegiate ambassador units, Smart Coach app access, and velocity tracking programs.",
-        buttonText: "Request Direct Intro ⚡",
-        type: "email_intro",
-        brandRepEmail: "nil@pocketradar.com",
-        brandRepName: "Pocket Radar Team",
-      },
-    ],
   },
   {
     title: "Training",
@@ -233,11 +360,11 @@ function AppContent() {
 
       setIsSavingProfile(false);
       setShowProfileModal(false);
-      alert("Application submitted for verification! Our team will review your collegiate status.");
+      alert("Application submitted! Our team will review your collegiate status.");
     } catch {
       setIsSavingProfile(false);
       setShowProfileModal(false);
-      alert("Profile saved!");
+      alert("Profile submitted!");
     }
   };
 
@@ -278,7 +405,7 @@ function AppContent() {
         <strong style={{ color: "#ffffff" }}>NCAA NIL Compliance Note:</strong> All SLUGGER COINS distributed during the Founders phase have no current market value and are non-compensatory. Tokens are issued solely for community participation and access purposes.
       </div>
 
-      <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "36px 20px" }}>
+      <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "36px 20px" }}>
         {/* Navigation */}
         <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #1a1a1a", paddingBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
           <div>
@@ -312,19 +439,18 @@ function AppContent() {
         {/* Hero Section */}
         <section style={{ textAlign: "center", margin: "48px 0 36px 0" }}>
           <div style={{ display: "inline-block", backgroundColor: "rgba(166, 255, 0, 0.08)", border: `1px solid ${NEON_GREEN}`, borderRadius: "999px", padding: "6px 16px", fontSize: "11px", fontWeight: "800", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: "20px" }}>
-            Only Available to College Baseball Players
+            Exclusively for College Baseball Players
           </div>
           <h2 style={{ fontSize: "38px", fontWeight: "900", color: "#ffffff", margin: "0 0 16px 0", letterSpacing: "-0.5px", textTransform: "uppercase", lineHeight: "1.1" }}>
             The Baseball Blockchain Utility Token
           </h2>
           <p style={{ fontSize: "16px", color: "#a1a1aa", maxWidth: "640px", margin: "0 auto", lineHeight: "1.6" }}>
-            A digital society connecting players, coaches, and brands through access, education, and opportunity.
+            A digital society connecting players, coaches, and brands through access, education, and opportunity. Claim your 100 free coins to unlock the partner dugout.
           </p>
         </section>
 
-        {/* Dynamic Gatekeeper Flow */}
+        {/* Gatekeeper Flow */}
         {!account ? (
-          /* Step 1: Sign in */
           <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: "24px", padding: "48px 24px", textAlign: "center", maxWidth: "540px", margin: "0 auto" }}>
             <h3 style={{ fontSize: "22px", fontWeight: "900", margin: "0 0 8px 0", color: "#ffffff", textTransform: "uppercase" }}>
               Step 1: Open Your Athlete Locker
@@ -337,7 +463,6 @@ function AppContent() {
             </div>
           </div>
         ) : !hasProfile ? (
-          /* Step 2: Fill profile form */
           <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "24px", padding: "40px 24px", textAlign: "center", maxWidth: "540px", margin: "0 auto", boxShadow: "0 0 30px rgba(166, 255, 0, 0.12)" }}>
             <div style={{ fontSize: "44px", marginBottom: "12px" }}>📋</div>
             <h3 style={{ fontSize: "24px", fontWeight: "900", margin: "0 0 6px 0", color: "#ffffff", textTransform: "uppercase" }}>
@@ -354,24 +479,22 @@ function AppContent() {
             </button>
           </div>
         ) : !isApproved && balance < 100 ? (
-          /* Step 3: Pending review state */
           <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #eab308", borderRadius: "24px", padding: "40px 24px", textAlign: "center", maxWidth: "540px", margin: "0 auto", boxShadow: "0 0 30px rgba(234, 179, 8, 0.1)" }}>
             <div style={{ fontSize: "44px", marginBottom: "12px" }}>⏳</div>
             <h3 style={{ fontSize: "22px", fontWeight: "900", margin: "0 0 6px 0", color: "#ffffff", textTransform: "uppercase" }}>
               Verification Under Review
             </h3>
             <p style={{ fontSize: "14px", color: "#a1a1aa", margin: "0 0 20px 0", lineHeight: "1.5" }}>
-              Thanks, <strong style={{ color: "#ffffff" }}>{profile.fullName}</strong>. Your profile at <strong style={{ color: "#ffffff" }}>{profile.college}</strong> is currently being verified against roster records.
+              Thanks, <strong style={{ color: "#ffffff" }}>{profile.fullName}</strong>. Your profile at <strong style={{ color: "#ffffff" }}>{profile.college}</strong> is currently being verified.
             </p>
             <div style={{ backgroundColor: "#000000", border: "1px solid #2a2a2a", borderRadius: "12px", padding: "12px 18px", fontSize: "12px", color: "#eab308", fontWeight: "800", textTransform: "uppercase", letterSpacing: "1px", display: "inline-block" }}>
               Status: Pending Approval
             </div>
             <p style={{ fontSize: "12px", color: "#666666", margin: "16px 0 0 0" }}>
-              Once approved by collective admins, your 100 $SLUG claim button will activate automatically.
+              Once approved by collective admins, your 100 $SLUG claim button will unlock here automatically.
             </p>
           </div>
         ) : !isUnlocked ? (
-          /* Step 4: Approved - Claim button active */
           <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "24px", padding: "40px 24px", textAlign: "center", maxWidth: "540px", margin: "0 auto", boxShadow: "0 0 30px rgba(166, 255, 0, 0.12)" }}>
             <div style={{ fontSize: "44px", marginBottom: "12px" }}>⚾</div>
             <div style={{ display: "inline-block", backgroundColor: "rgba(166, 255, 0, 0.1)", border: `1px solid ${NEON_GREEN}`, borderRadius: "999px", padding: "4px 12px", fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", marginBottom: "12px" }}>
@@ -406,8 +529,8 @@ function AppContent() {
             </p>
           </div>
         ) : (
-          /* Step 5: Unlocked Dugout */
           <div>
+            {/* Athlete Status Pill */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "18px", padding: "22px 28px", marginBottom: "36px", flexWrap: "wrap", gap: "16px" }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -428,12 +551,12 @@ function AppContent() {
               </button>
             </div>
 
-            {/* Brand Market Directory */}
+            {/* Brand Dugout Directory */}
             <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
               {MARKET_SECTIONS.map((section, idx) => (
-                <div key={idx} style={{ borderBottom: "1px solid #141414", paddingBottom: "32px" }}>
+                <div key={idx} style={{ borderBottom: "1px solid #141414", paddingBottom: "36px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
-                    <span style={{ fontSize: "20px" }}>{section.emoji}</span>
+                    <span style={{ fontSize: "22px" }}>{section.emoji}</span>
                     <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "900", textTransform: "uppercase", letterSpacing: "1px", color: "#ffffff" }}>
                       {section.title}
                     </h3>
@@ -443,7 +566,7 @@ function AppContent() {
                   </div>
 
                   {section.brands.length > 0 ? (
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "20px" }}>
                       {section.brands.map((brand, bIdx) => (
                         <div 
                           key={bIdx}
@@ -454,17 +577,25 @@ function AppContent() {
                             padding: "24px", 
                             display: "flex", 
                             flexDirection: "column", 
-                            justifyContent: "space-between" 
+                            justifyContent: "space-between",
+                            transition: "transform 0.15s ease, border-color 0.15s ease",
                           }}
                         >
                           <div>
-                            <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1px" }}>
-                              {brand.tagline}
-                            </span>
-                            <h4 style={{ fontSize: "18px", fontWeight: "900", color: "#ffffff", margin: "10px 0 6px 0", textTransform: "uppercase" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px", marginBottom: "6px" }}>
+                              <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "0.8px" }}>
+                                {brand.tagline}
+                              </span>
+                              {brand.type === "email_intro" && (
+                                <span style={{ fontSize: "10px", fontWeight: "800", backgroundColor: "rgba(166, 255, 0, 0.12)", color: NEON_GREEN, border: `1px solid ${NEON_GREEN}`, padding: "2px 8px", borderRadius: "999px", textTransform: "uppercase" }}>
+                                  Direct Intro
+                                </span>
+                              )}
+                            </div>
+                            <h4 style={{ fontSize: "19px", fontWeight: "900", color: "#ffffff", margin: "8px 0 10px 0", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                               {brand.name}
                             </h4>
-                            <p style={{ fontSize: "13px", color: "#888888", lineHeight: "1.5", margin: 0 }}>
+                            <p style={{ fontSize: "13px", color: "#888888", lineHeight: "1.55", margin: 0 }}>
                               {brand.description}
                             </p>
                           </div>
@@ -479,7 +610,7 @@ function AppContent() {
                                 color: introStatus[brand.name] === "sent" ? "#ffffff" : "#000000", 
                                 border: "none", 
                                 fontWeight: "900", 
-                                padding: "13px", 
+                                padding: "14px", 
                                 borderRadius: "10px", 
                                 fontSize: "12px", 
                                 textTransform: "uppercase", 
@@ -489,9 +620,9 @@ function AppContent() {
                               }}
                             >
                               {introStatus[brand.name] === "sending" 
-                                ? "Dispatching Intro..." 
+                                ? "Dispatching Dossier..." 
                                 : introStatus[brand.name] === "sent" 
-                                ? "Intro Dispatched ✓" 
+                                ? "Dossier Dispatched ✓" 
                                 : brand.buttonText}
                             </button>
                           ) : (
@@ -506,7 +637,7 @@ function AppContent() {
                                 color: "#ffffff", 
                                 border: "1px solid #2a2a2a", 
                                 fontWeight: "900", 
-                                padding: "13px", 
+                                padding: "14px", 
                                 borderRadius: "10px", 
                                 fontSize: "12px", 
                                 textTransform: "uppercase", 
@@ -594,7 +725,7 @@ function AppContent() {
                     required
                     value={profile.college} 
                     onChange={(e) => setProfile({ ...profile, college: e.target.value })}
-                    placeholder="e.g. BYU Baseball" 
+                    placeholder="e.g. GCU Baseball" 
                     style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "10px 12px", borderRadius: "8px", fontSize: "13px" }}
                   />
                 </div>
