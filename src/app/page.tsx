@@ -13,6 +13,9 @@ import {
 import { inAppWallet } from "thirdweb/wallets";
 import { getBalance, claimTo } from "thirdweb/extensions/erc20";
 
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhwqCXDFPT0C1I4Zt-ASCpUVbkD9piI-_7pO1Dx5WhHG3JtMrgxm-N1kn4zhKbOXRzIA/exec";
+const NEON_GREEN = "#a6ff00";
+
 const client = createThirdwebClient({
   clientId: "770a552ed494b40543a6696298d41606",
 });
@@ -23,15 +26,15 @@ const sluggerContract = getContract({
   address: "0xF3f6D32ABCf2fDeAB3c6D0b440230714166Cc4A1",
 });
 
-const NEON_GREEN = "#a6ff00";
-
-// --- BRAND DUGOUT DIRECTORY CONFIGURATION ---
 interface BrandItem {
   name: string;
   tagline: string;
   description: string;
   buttonText: string;
-  link: string;
+  type: "email_intro" | "affiliate_link";
+  link?: string;
+  brandRepEmail?: string;
+  brandRepName?: string;
   isPrimary?: boolean;
 }
 
@@ -49,9 +52,11 @@ const MARKET_SECTIONS: MarketCategory[] = [
       {
         name: "Just Ingredients",
         tagline: "Clean Supplements & Electrolytes",
-        description: "Access exclusive athlete allocations, discount codes, and clean nutrition bundles.",
-        buttonText: "Claim Allocation ↗",
-        link: "https://typeform.com",
+        description: "Access exclusive athlete allocations, discount codes, and clean nutrition packages.",
+        buttonText: "Request Direct Intro ⚡",
+        type: "email_intro",
+        brandRepEmail: "partnerships@justingredients.us",
+        brandRepName: "Partnerships Team",
       },
     ],
   },
@@ -63,8 +68,10 @@ const MARKET_SECTIONS: MarketCategory[] = [
         name: "Pocket Radar",
         tagline: "Velocity & Data Tracking",
         description: "Collegiate ambassador units, Smart Coach app access, and velocity tracking programs.",
-        buttonText: "Ambassador Program ↗",
-        link: "https://typeform.com",
+        buttonText: "Request Direct Intro ⚡",
+        type: "email_intro",
+        brandRepEmail: "nil@pocketradar.com",
+        brandRepName: "Pocket Radar Team",
       },
     ],
   },
@@ -120,10 +127,37 @@ const MARKET_SECTIONS: MarketCategory[] = [
   },
 ];
 
+interface AthleteProfile {
+  fullName: string;
+  email: string;
+  phone: string;
+  college: string;
+  position: string;
+  gradYear: string;
+  instagram: string;
+  tiktok: string;
+  xHandle: string;
+}
+
 function AppContent() {
   const account = useActiveAccount();
   const [justClaimed, setJustClaimed] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profile, setProfile] = useState<AthleteProfile>({
+    fullName: "",
+    email: "",
+    phone: "",
+    college: "",
+    position: "",
+    gradYear: "",
+    instagram: "",
+    tiktok: "",
+    xHandle: "",
+  });
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [introStatus, setIntroStatus] = useState<{ [brandName: string]: string }>({});
 
   useEffect(() => {
     setMounted(true);
@@ -137,17 +171,89 @@ function AppContent() {
   const balance = balanceData ? Number(balanceData.displayValue) : 0;
   const isUnlocked = balance >= 100 || justClaimed;
 
+  useEffect(() => {
+    if (account?.address) {
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "getProfile",
+          walletAddress: account.address,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data?.profile) {
+            setProfile(data.profile);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [account?.address]);
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!account?.address) return;
+    setIsSavingProfile(true);
+
+    try {
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify({
+          action: "saveProfile",
+          walletAddress: account.address,
+          ...profile,
+        }),
+      });
+
+      setIsSavingProfile(false);
+      setShowProfileModal(false);
+      alert("Profile successfully saved to Diamond Collective roster!");
+    } catch {
+      setIsSavingProfile(false);
+      alert("Error saving profile. Please try again.");
+    }
+  };
+
+  const handleRequestIntro = async (brand: BrandItem) => {
+    if (!profile.fullName || !profile.email) {
+      setShowProfileModal(true);
+      return;
+    }
+
+    setIntroStatus((prev) => ({ ...prev, [brand.name]: "sending" }));
+
+    try {
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify({
+          action: "requestIntro",
+          walletAddress: account?.address,
+          brandName: brand.name,
+          brandRepEmail: brand.brandRepEmail,
+          brandRepName: brand.brandRepName,
+          ...profile,
+        }),
+      });
+
+      setIntroStatus((prev) => ({ ...prev, [brand.name]: "sent" }));
+    } catch {
+      setIntroStatus((prev) => ({ ...prev, [brand.name]: "error" }));
+    }
+  };
+
   if (!mounted) return null;
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#000000", color: "#ffffff", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
-      {/* Top Compliance Bar */}
+      {/* Compliance Bar */}
       <div style={{ backgroundColor: "#0a0a0a", borderBottom: "1px solid #1a1a1a", padding: "10px 16px", textAlign: "center", fontSize: "11px", color: "#888888", letterSpacing: "0.5px", lineHeight: "1.4" }}>
         <strong style={{ color: "#ffffff" }}>NCAA NIL Compliance Note:</strong> All SLUGGER COINS distributed during the Founders phase have no current market value and are non-compensatory. Tokens are issued solely for community participation and access purposes.
       </div>
 
       <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "36px 20px" }}>
-        {/* Navigation / Header */}
+        {/* Navigation */}
         <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #1a1a1a", paddingBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
           <div>
             <h1 style={{ margin: 0, fontSize: "24px", fontWeight: "900", letterSpacing: "1.5px", color: "#ffffff", textTransform: "uppercase" }}>
@@ -190,22 +296,20 @@ function AppContent() {
           </p>
         </section>
 
-        {/* Dynamic Action Area */}
+        {/* Dynamic Dugout Flow */}
         {!account ? (
-          /* State 1: Athlete Needs to Sign In */
-          <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: "24px", padding: "48px 24px", textAlign: "center", maxWidth: "540px", margin: "0 auto", boxShadow: "0 0 40px rgba(0,0,0,0.8)" }}>
+          <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: "24px", padding: "48px 24px", textAlign: "center", maxWidth: "540px", margin: "0 auto" }}>
             <h3 style={{ fontSize: "22px", fontWeight: "900", margin: "0 0 8px 0", color: "#ffffff", textTransform: "uppercase" }}>
               Step 1: Open Your Athlete Locker
             </h3>
             <p style={{ fontSize: "14px", color: "#888888", margin: "0 0 28px 0", lineHeight: "1.5" }}>
               Sign in with your Google or Apple ID in the top right corner to verify your athlete profile and claim your 100 Slugger Coins.
             </p>
-            <div style={{ display: "inline-block", backgroundColor: "#000000", border: "1px solid #2a2a2a", borderRadius: "12px", padding: "14px 28px", fontSize: "13px", color: "#ffffff", fontWeight: "700", letterSpacing: "0.5px" }}>
+            <div style={{ display: "inline-block", backgroundColor: "#000000", border: "1px solid #2a2a2a", borderRadius: "12px", padding: "14px 28px", fontSize: "13px", color: "#ffffff", fontWeight: "700" }}>
               🔒 Sign in above to unlock rewards
             </div>
           </div>
         ) : !isUnlocked ? (
-          /* State 2: Athlete Needs to Claim 100 Coins */
           <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "24px", padding: "40px 24px", textAlign: "center", maxWidth: "540px", margin: "0 auto", boxShadow: "0 0 30px rgba(166, 255, 0, 0.12)" }}>
             <div style={{ fontSize: "44px", marginBottom: "12px" }}>⚾</div>
             <h3 style={{ fontSize: "24px", fontWeight: "900", margin: "0 0 6px 0", color: "#ffffff", textTransform: "uppercase" }}>
@@ -231,6 +335,7 @@ function AppContent() {
               onTransactionConfirmed={() => {
                 setJustClaimed(true);
                 refetch();
+                setShowProfileModal(true);
               }}
               onError={(err) => alert(`Claim error: ${err.message}`)}
               style={{ width: "100%", backgroundColor: NEON_GREEN, color: "#000000", fontWeight: "900", textTransform: "uppercase", letterSpacing: "1px", padding: "16px", borderRadius: "12px", border: "none", cursor: "pointer", fontSize: "15px" }}
@@ -242,10 +347,8 @@ function AppContent() {
             </p>
           </div>
         ) : (
-          /* State 3: Unlocked Dugout */
           <div>
-            {/* Membership Header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "18px", padding: "22px 28px", marginBottom: "36px", flexWrap: "wrap", gap: "12px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "18px", padding: "22px 28px", marginBottom: "36px", flexWrap: "wrap", gap: "16px" }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                   <span style={{ height: "10px", width: "10px", borderRadius: "50%", backgroundColor: NEON_GREEN, display: "inline-block", boxShadow: `0 0 10px ${NEON_GREEN}` }}></span>
@@ -254,19 +357,20 @@ function AppContent() {
                   </h3>
                 </div>
                 <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "#888888" }}>
-                  Verified Member • Holding {balance >= 100 ? balance : "100"} $SLUG
+                  Verified Member • Holding {balance >= 100 ? balance : "100"} $SLUG {profile.fullName ? `• ${profile.fullName} (${profile.college || "Athlete"})` : ""}
                 </p>
               </div>
-              <div style={{ backgroundColor: "rgba(166, 255, 0, 0.1)", border: `1px solid ${NEON_GREEN}`, borderRadius: "999px", padding: "6px 16px", fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1px" }}>
-                Access Granted
-              </div>
+              <button
+                onClick={() => setShowProfileModal(true)}
+                style={{ backgroundColor: "#141414", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontWeight: "800", padding: "10px 18px", borderRadius: "10px", fontSize: "12px", textTransform: "uppercase", letterSpacing: "1px", cursor: "pointer" }}
+              >
+                {profile.fullName ? "Edit Athlete Profile 👤" : "Complete Profile ⚠️"}
+              </button>
             </div>
 
-            {/* Market Category Sections */}
             <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
               {MARKET_SECTIONS.map((section, idx) => (
                 <div key={idx} style={{ borderBottom: "1px solid #141414", paddingBottom: "32px" }}>
-                  {/* Category Title Header */}
                   <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
                     <span style={{ fontSize: "20px" }}>{section.emoji}</span>
                     <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "900", textTransform: "uppercase", letterSpacing: "1px", color: "#ffffff" }}>
@@ -277,7 +381,6 @@ function AppContent() {
                     </span>
                   </div>
 
-                  {/* Brand Cards Grid */}
                   {section.brands.length > 0 ? (
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" }}>
                       {section.brands.map((brand, bIdx) => (
@@ -290,8 +393,7 @@ function AppContent() {
                             padding: "24px", 
                             display: "flex", 
                             flexDirection: "column", 
-                            justifyContent: "space-between",
-                            boxShadow: brand.isPrimary ? "0 0 20px rgba(166, 255, 0, 0.08)" : "none"
+                            justifyContent: "space-between" 
                           }}
                         >
                           <div>
@@ -305,33 +407,60 @@ function AppContent() {
                               {brand.description}
                             </p>
                           </div>
-                          <a
-                            href={brand.link} 
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ 
-                              display: "block", 
-                              textAlign: "center", 
-                              backgroundColor: brand.isPrimary ? NEON_GREEN : "#141414", 
-                              color: brand.isPrimary ? "#000000" : "#ffffff", 
-                              border: brand.isPrimary ? "none" : "1px solid #2a2a2a", 
-                              fontWeight: "900", 
-                              padding: "13px", 
-                              borderRadius: "10px", 
-                              fontSize: "12px", 
-                              textTransform: "uppercase", 
-                              letterSpacing: "1px", 
-                              textDecoration: "none", 
-                              marginTop: "22px" 
-                            }}
-                          >
-                            {brand.buttonText}
-                          </a>
+
+                          {brand.type === "email_intro" ? (
+                            <button
+                              onClick={() => handleRequestIntro(brand)}
+                              disabled={introStatus[brand.name] === "sending" || introStatus[brand.name] === "sent"}
+                              style={{ 
+                                width: "100%",
+                                backgroundColor: introStatus[brand.name] === "sent" ? "#15803d" : NEON_GREEN, 
+                                color: introStatus[brand.name] === "sent" ? "#ffffff" : "#000000", 
+                                border: "none", 
+                                fontWeight: "900", 
+                                padding: "13px", 
+                                borderRadius: "10px", 
+                                fontSize: "12px", 
+                                textTransform: "uppercase", 
+                                letterSpacing: "1px", 
+                                cursor: "pointer", 
+                                marginTop: "22px" 
+                              }}
+                            >
+                              {introStatus[brand.name] === "sending" 
+                                ? "Dispatching Intro..." 
+                                : introStatus[brand.name] === "sent" 
+                                ? "Intro Dispatched ✓" 
+                                : brand.buttonText}
+                            </button>
+                          ) : (
+                            <a
+                              href={brand.link} 
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ 
+                                display: "block", 
+                                textAlign: "center", 
+                                backgroundColor: "#141414", 
+                                color: "#ffffff", 
+                                border: "1px solid #2a2a2a", 
+                                fontWeight: "900", 
+                                padding: "13px", 
+                                borderRadius: "10px", 
+                                fontSize: "12px", 
+                                textTransform: "uppercase", 
+                                letterSpacing: "1px", 
+                                textDecoration: "none", 
+                                marginTop: "22px" 
+                              }}
+                            >
+                              {brand.buttonText}
+                            </a>
+                          )}
                         </div>
                       ))}
                     </div>
                   ) : (
-                    /* Clean Placeholder for empty categories */
                     <div style={{ backgroundColor: "#050505", border: "1px dashed #1a1a1a", borderRadius: "14px", padding: "20px", textAlign: "center" }}>
                       <p style={{ margin: 0, fontSize: "12px", color: "#555555", fontWeight: "600" }}>
                         Partner announcements dropping soon for {section.title}.
@@ -344,6 +473,146 @@ function AppContent() {
           </div>
         )}
       </div>
+
+      {/* Athlete Profile Setup Modal */}
+      {showProfileModal && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.85)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000, padding: "20px" }}>
+          <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "20px", width: "100%", maxWidth: "480px", maxHeight: "90vh", overflowY: "auto", padding: "30px" }}>
+            <h3 style={{ margin: "0 0 6px 0", fontSize: "20px", fontWeight: "900", textTransform: "uppercase", color: "#ffffff" }}>
+              Athlete Locker Profile
+            </h3>
+            <p style={{ fontSize: "13px", color: "#888888", margin: "0 0 20px 0" }}>
+              Save your info once so brand partners can connect with you directly.
+            </p>
+
+            <form onSubmit={handleSaveProfile} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>Full Name *</label>
+                <input 
+                  type="text" 
+                  required
+                  value={profile.fullName} 
+                  onChange={(e) => setProfile({ ...profile, fullName: e.target.value })}
+                  placeholder="e.g. Jordan Jones" 
+                  style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "10px 12px", borderRadius: "8px", fontSize: "13px" }}
+                />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>Email *</label>
+                  <input 
+                    type="email" 
+                    required
+                    value={profile.email} 
+                    onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+                    placeholder="player@school.edu" 
+                    style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "10px 12px", borderRadius: "8px", fontSize: "13px" }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>Cell Phone *</label>
+                  <input 
+                    type="tel" 
+                    required
+                    value={profile.phone} 
+                    onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                    placeholder="(555) 000-0000" 
+                    style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "10px 12px", borderRadius: "8px", fontSize: "13px" }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "10px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>College / Program *</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={profile.college} 
+                    onChange={(e) => setProfile({ ...profile, college: e.target.value })}
+                    placeholder="e.g. BYU Baseball" 
+                    style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "10px 12px", borderRadius: "8px", fontSize: "13px" }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>Grad Year *</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={profile.gradYear} 
+                    onChange={(e) => setProfile({ ...profile, gradYear: e.target.value })}
+                    placeholder="2026" 
+                    style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "10px 12px", borderRadius: "8px", fontSize: "13px" }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>Primary Position</label>
+                <input 
+                  type="text" 
+                  value={profile.position} 
+                  onChange={(e) => setProfile({ ...profile, position: e.target.value })}
+                  placeholder="e.g. RHP / Shortstop" 
+                  style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "10px 12px", borderRadius: "8px", fontSize: "13px" }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>Instagram Handle</label>
+                <input 
+                  type="text" 
+                  value={profile.instagram} 
+                  onChange={(e) => setProfile({ ...profile, instagram: e.target.value })}
+                  placeholder="@yourhandle" 
+                  style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "10px 12px", borderRadius: "8px", fontSize: "13px" }}
+                />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>TikTok Handle</label>
+                  <input 
+                    type="text" 
+                    value={profile.tiktok} 
+                    onChange={(e) => setProfile({ ...profile, tiktok: e.target.value })}
+                    placeholder="@yourhandle" 
+                    style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "10px 12px", borderRadius: "8px", fontSize: "13px" }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>X (Twitter) Handle</label>
+                  <input 
+                    type="text" 
+                    value={profile.xHandle} 
+                    onChange={(e) => setProfile({ ...profile, xHandle: e.target.value })}
+                    placeholder="@yourhandle" 
+                    style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "10px 12px", borderRadius: "8px", fontSize: "13px" }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", marginTop: "14px" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowProfileModal(false)}
+                  style={{ flex: 1, backgroundColor: "#141414", border: "1px solid #2a2a2a", color: "#888888", fontWeight: "700", padding: "12px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", textTransform: "uppercase" }}
+                >
+                  Close
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingProfile}
+                  style={{ flex: 2, backgroundColor: NEON_GREEN, color: "#000000", border: "none", fontWeight: "900", padding: "12px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", textTransform: "uppercase", letterSpacing: "1px" }}
+                >
+                  {isSavingProfile ? "Saving..." : "Save Locker Profile"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
