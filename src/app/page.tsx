@@ -128,6 +128,7 @@ const MARKET_SECTIONS: MarketCategory[] = [
 ];
 
 interface AthleteProfile {
+  verificationStatus?: string;
   fullName: string;
   email: string;
   phone: string;
@@ -151,6 +152,7 @@ function AppContent() {
 
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profile, setProfile] = useState<AthleteProfile>({
+    verificationStatus: "Pending",
     fullName: "",
     email: "",
     phone: "",
@@ -180,6 +182,8 @@ function AppContent() {
 
   const balance = balanceData ? Number(balanceData.displayValue) : 0;
   const isUnlocked = balance >= 100 || justClaimed;
+  const isApproved = profile.verificationStatus === "Approved";
+  const hasProfile = Boolean(profile.fullName && profile.email);
 
   useEffect(() => {
     if (account?.address) {
@@ -224,7 +228,7 @@ function AppContent() {
 
       setIsSavingProfile(false);
       setShowProfileModal(false);
-      alert("Profile successfully saved!");
+      alert("Application submitted for verification! Our team will review your collegiate status.");
     } catch {
       setIsSavingProfile(false);
       setShowProfileModal(false);
@@ -309,37 +313,71 @@ function AppContent() {
             The Baseball Blockchain Utility Token
           </h2>
           <p style={{ fontSize: "16px", color: "#a1a1aa", maxWidth: "640px", margin: "0 auto", lineHeight: "1.6" }}>
-            A digital society connecting players, coaches, and brands through access, education, and opportunity. Claim your 100 free coins to unlock the partner dugout.
+            A digital society connecting players, coaches, and brands through access, education, and opportunity.
           </p>
         </section>
 
-        {/* Action Area */}
+        {/* Gatekeeper Flow */}
         {!account ? (
+          /* Step 1: Sign in */
           <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: "24px", padding: "48px 24px", textAlign: "center", maxWidth: "540px", margin: "0 auto" }}>
             <h3 style={{ fontSize: "22px", fontWeight: "900", margin: "0 0 8px 0", color: "#ffffff", textTransform: "uppercase" }}>
               Step 1: Open Your Athlete Locker
             </h3>
             <p style={{ fontSize: "14px", color: "#888888", margin: "0 0 28px 0", lineHeight: "1.5" }}>
-              Sign in with your Google or Apple ID in the top right corner to verify your athlete profile and claim your 100 Slugger Coins.
+              Sign in with your Google or Apple ID in the top right corner to submit your collegiate verification application.
             </p>
             <div style={{ display: "inline-block", backgroundColor: "#000000", border: "1px solid #2a2a2a", borderRadius: "12px", padding: "14px 28px", fontSize: "13px", color: "#ffffff", fontWeight: "700" }}>
-              🔒 Sign in above to unlock rewards
+              🔒 Sign in above to begin verification
             </div>
           </div>
+        ) : !hasProfile ? (
+          /* Step 2: Submit profile verification */
+          <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "24px", padding: "40px 24px", textAlign: "center", maxWidth: "540px", margin: "0 auto", boxShadow: "0 0 30px rgba(166, 255, 0, 0.12)" }}>
+            <div style={{ fontSize: "44px", marginBottom: "12px" }}>📋</div>
+            <h3 style={{ fontSize: "24px", fontWeight: "900", margin: "0 0 6px 0", color: "#ffffff", textTransform: "uppercase" }}>
+              Complete Athlete Verification
+            </h3>
+            <p style={{ fontSize: "14px", color: "#888888", margin: "0 0 24px 0", lineHeight: "1.5" }}>
+              The Diamond Collective is exclusive to active collegiate baseball players. Submit your locker profile and proof link for approval.
+            </p>
+            <button
+              onClick={() => setShowProfileModal(true)}
+              style={{ width: "100%", backgroundColor: NEON_GREEN, color: "#000000", fontWeight: "900", textTransform: "uppercase", letterSpacing: "1px", padding: "16px", borderRadius: "12px", border: "none", cursor: "pointer", fontSize: "15px" }}
+            >
+              Fill Out Locker Profile ✍️
+            </button>
+          </div>
+        ) : !isApproved && balance < 100 ? (
+          /* Step 3: Pending review state */
+          <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #eab308", borderRadius: "24px", padding: "40px 24px", textAlign: "center", maxWidth: "540px", margin: "0 auto", boxShadow: "0 0 30px rgba(234, 179, 8, 0.1)" }}>
+            <div style={{ fontSize: "44px", marginBottom: "12px" }}>⏳</div>
+            <h3 style={{ fontSize: "22px", fontWeight: "900", margin: "0 0 6px 0", color: "#ffffff", textTransform: "uppercase" }}>
+              Verification Under Review
+            </h3>
+            <p style={{ fontSize: "14px", color: "#a1a1aa", margin: "0 0 20px 0", lineHeight: "1.5" }}>
+              Thanks, <strong style={{ color: "#ffffff" }}>{profile.fullName}</strong>. Your profile at <strong style={{ color: "#ffffff" }}>{profile.college}</strong> is currently being verified against roster records.
+            </p>
+            <div style={{ backgroundColor: "#000000", border: "1px solid #2a2a2a", borderRadius: "12px", padding: "12px 18px", fontSize: "12px", color: "#eab308", fontWeight: "800", textTransform: "uppercase", letterSpacing: "1px", display: "inline-block" }}>
+              Status: Pending Approval
+            </div>
+            <p style={{ fontSize: "12px", color: "#666666", margin: "16px 0 0 0" }}>
+              Once approved by collective admins, your 100 $SLUG claim button will activate automatically.
+            </p>
+          </div>
         ) : !isUnlocked ? (
+          /* Step 4: Approved - Claim button unlocked */
           <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "24px", padding: "40px 24px", textAlign: "center", maxWidth: "540px", margin: "0 auto", boxShadow: "0 0 30px rgba(166, 255, 0, 0.12)" }}>
             <div style={{ fontSize: "44px", marginBottom: "12px" }}>⚾</div>
+            <div style={{ display: "inline-block", backgroundColor: "rgba(166, 255, 0, 0.1)", border: `1px solid ${NEON_GREEN}`, borderRadius: "999px", padding: "4px 12px", fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", marginBottom: "12px" }}>
+              ✓ Verified Collegiate Athlete
+            </div>
             <h3 style={{ fontSize: "24px", fontWeight: "900", margin: "0 0 6px 0", color: "#ffffff", textTransform: "uppercase" }}>
               Claim Your 100 Slugger Coins
             </h3>
             <p style={{ fontSize: "13px", color: "#888888", margin: "0 0 24px 0" }}>
-              Locker: <span style={{ fontFamily: "monospace", color: NEON_GREEN }}>{account.address.slice(0, 6)}...{account.address.slice(-4)}</span>
+              {profile.fullName} • {profile.college} ({profile.position})
             </p>
-            
-            <div style={{ backgroundColor: "#000000", border: "1px solid #1f1f1f", borderRadius: "12px", padding: "14px 18px", display: "flex", justifyContent: "space-between", fontSize: "13px", marginBottom: "24px" }}>
-              <span style={{ color: "#888888" }}>Current Balance:</span>
-              <span style={{ fontWeight: "800", color: "#ffffff" }}>{isLoading ? "Checking..." : `${balance} SLUG`}</span>
-            </div>
 
             <TransactionButton
               transaction={() =>
@@ -352,7 +390,6 @@ function AppContent() {
               onTransactionConfirmed={() => {
                 setJustClaimed(true);
                 refetch();
-                setShowProfileModal(true);
               }}
               onError={(err) => alert(`Claim error: ${err.message}`)}
               style={{ width: "100%", backgroundColor: NEON_GREEN, color: "#000000", fontWeight: "900", textTransform: "uppercase", letterSpacing: "1px", padding: "16px", borderRadius: "12px", border: "none", cursor: "pointer", fontSize: "15px" }}
@@ -364,6 +401,7 @@ function AppContent() {
             </p>
           </div>
         ) : (
+          /* Step 5: Fully Unlocked Brand Dugout */
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "18px", padding: "22px 28px", marginBottom: "36px", flexWrap: "wrap", gap: "16px" }}>
               <div>
@@ -374,17 +412,18 @@ function AppContent() {
                   </h3>
                 </div>
                 <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "#888888" }}>
-                  Verified Member • Holding {balance >= 100 ? balance : "100"} $SLUG {profile.fullName ? `• ${profile.fullName} (${profile.college || "Athlete"})` : ""}
+                  Verified Member • Holding {balance >= 100 ? balance : "100"} $SLUG • {profile.fullName} ({profile.college})
                 </p>
               </div>
               <button
                 onClick={() => setShowProfileModal(true)}
                 style={{ backgroundColor: "#141414", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontWeight: "800", padding: "10px 18px", borderRadius: "10px", fontSize: "12px", textTransform: "uppercase", letterSpacing: "1px", cursor: "pointer" }}
               >
-                {profile.fullName ? "Edit Athlete Profile 👤" : "Complete Profile ⚠️"}
+                Edit Athlete Profile 👤
               </button>
             </div>
 
+            {/* Brand Market Directory */}
             <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
               {MARKET_SECTIONS.map((section, idx) => (
                 <div key={idx} style={{ borderBottom: "1px solid #141414", paddingBottom: "32px" }}>
@@ -491,7 +530,7 @@ function AppContent() {
         )}
       </div>
 
-      {/* Athlete Profile Modal */}
+      {/* Validated Athlete Profile Modal */}
       {showProfileModal && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.88)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000, padding: "16px" }}>
           <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "20px", width: "100%", maxWidth: "520px", maxHeight: "90vh", overflowY: "auto", padding: "26px" }}>
@@ -499,7 +538,7 @@ function AppContent() {
               Athlete Locker Profile
             </h3>
             <p style={{ fontSize: "13px", color: "#888888", margin: "0 0 18px 0" }}>
-              Enter your athletic details and profile links for brand partner consideration.
+              Enter your athletic details and verification link to unlock the collegiate collective.
             </p>
 
             <form onSubmit={handleSaveProfile} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -596,7 +635,7 @@ function AppContent() {
                 </div>
               </div>
 
-              {/* Verification Link / Proof Field */}
+              {/* Verification Link */}
               <div>
                 <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>
                   Verification Proof Link *
@@ -702,7 +741,7 @@ function AppContent() {
                   disabled={isSavingProfile}
                   style={{ flex: 2, backgroundColor: NEON_GREEN, color: "#000000", border: "none", fontWeight: "900", padding: "12px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", textTransform: "uppercase", letterSpacing: "1px" }}
                 >
-                  {isSavingProfile ? "Saving..." : "Save Locker Profile"}
+                  {isSavingProfile ? "Submitting..." : "Submit Verification"}
                 </button>
               </div>
             </form>
