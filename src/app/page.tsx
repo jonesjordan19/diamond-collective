@@ -44,45 +44,16 @@ interface MarketCategory {
   brands: BrandItem[];
 }
 
+// --- ALPHABETICALLY ORGANIZED MARKET CATEGORIES (A-Z) ---
 const MARKET_SECTIONS: MarketCategory[] = [
-  {
-    title: "Nutrition",
-    emoji: "⚡",
-    brands: [
-      {
-        name: "Just Ingredients",
-        tagline: "Clean Supplements & Electrolytes",
-        description: "Access exclusive athlete allocations, discount codes, and clean nutrition packages.",
-        buttonText: "Request Direct Intro ⚡",
-        type: "email_intro",
-        brandRepEmail: "partnerships@justingredients.us",
-        brandRepName: "Partnerships Team",
-      },
-    ],
-  },
-  {
-    title: "Tech",
-    emoji: "📱",
-    brands: [
-      {
-        name: "Pocket Radar",
-        tagline: "Velocity & Data Tracking",
-        description: "Collegiate ambassador units, Smart Coach app access, and velocity tracking programs.",
-        buttonText: "Request Direct Intro ⚡",
-        type: "email_intro",
-        brandRepEmail: "nil@pocketradar.com",
-        brandRepName: "Pocket Radar Team",
-      },
-    ],
-  },
-  {
-    title: "Player Services",
-    emoji: "🤝",
-    brands: [],
-  },
   {
     title: "Clothing & Apparel",
     emoji: "🧢",
+    brands: [],
+  },
+  {
+    title: "Coaching",
+    emoji: "📋",
     brands: [],
   },
   {
@@ -106,19 +77,49 @@ const MARKET_SECTIONS: MarketCategory[] = [
     brands: [],
   },
   {
+    title: "Lessons & Coaching",
+    emoji: "🎓",
+    brands: [],
+  },
+  {
+    title: "Nutrition",
+    emoji: "⚡",
+    brands: [
+      {
+        name: "Just Ingredients",
+        tagline: "Clean Supplements & Electrolytes",
+        description: "Access exclusive athlete allocations, discount codes, and clean nutrition packages.",
+        buttonText: "Request Direct Intro ⚡",
+        type: "email_intro",
+        brandRepEmail: "partnerships@justingredients.us",
+        brandRepName: "Partnerships Team",
+      },
+    ],
+  },
+  {
     title: "Pitching",
     emoji: "🎯",
     brands: [],
   },
   {
-    title: "Coaching",
-    emoji: "📋",
+    title: "Player Services",
+    emoji: "🤝",
     brands: [],
   },
   {
-    title: "Lessons & Coaching",
-    emoji: "🎓",
-    brands: [],
+    title: "Tech",
+    emoji: "📱",
+    brands: [
+      {
+        name: "Pocket Radar",
+        tagline: "Velocity & Data Tracking",
+        description: "Collegiate ambassador units, Smart Coach app access, and velocity tracking programs.",
+        buttonText: "Request Direct Intro ⚡",
+        type: "email_intro",
+        brandRepEmail: "nil@pocketradar.com",
+        brandRepName: "Pocket Radar Team",
+      },
+    ],
   },
   {
     title: "Training",
@@ -356,7 +357,7 @@ function AppContent() {
               </button>
             </div>
 
-            {/* Category Directory */}
+            {/* Alphabetical Category Directory (A-Z) */}
             <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
               {MARKET_SECTIONS.map((section, idx) => (
                 <div key={idx} style={{ borderBottom: "1px solid #141414", paddingBottom: "32px" }}>
