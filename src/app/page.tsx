@@ -317,10 +317,19 @@ function AppContent() {
   useEffect(() => {
     if (account?.address) {
       const localKey = `athlete_profile_${account.address.toLowerCase()}`;
+      const localIntroKey = `athlete_intros_${account.address.toLowerCase()}`;
+      
       const savedLocal = localStorage.getItem(localKey);
       if (savedLocal) {
         try {
           setProfile(JSON.parse(savedLocal));
+        } catch {}
+      }
+
+      const savedIntros = localStorage.getItem(localIntroKey);
+      if (savedIntros) {
+        try {
+          setIntroStatus(JSON.parse(savedIntros));
         } catch {}
       }
 
@@ -333,6 +342,18 @@ function AppContent() {
           } else {
             localStorage.removeItem(localKey);
             setProfile(emptyProfile);
+          }
+
+          if (data?.existingIntros && Array.isArray(data.existingIntros)) {
+            const introsMap: { [brandName: string]: string } = {};
+            data.existingIntros.forEach((bName: string) => {
+              introsMap[bName] = "sent";
+            });
+            setIntroStatus((prev) => {
+              const updated = { ...prev, ...introsMap };
+              localStorage.setItem(localIntroKey, JSON.stringify(updated));
+              return updated;
+            });
           }
         })
         .catch(() => {});
@@ -374,7 +395,13 @@ function AppContent() {
       return;
     }
 
-    setIntroStatus((prev) => ({ ...prev, [brand.name]: "sending" }));
+    // Set UI to dispatched immediately and save in localStorage
+    const localIntroKey = `athlete_intros_${account?.address?.toLowerCase()}`;
+    setIntroStatus((prev) => {
+      const updated = { ...prev, [brand.name]: "sent" };
+      localStorage.setItem(localIntroKey, JSON.stringify(updated));
+      return updated;
+    });
 
     try {
       await fetch(GOOGLE_SCRIPT_URL, {
@@ -389,10 +416,8 @@ function AppContent() {
           ...profile,
         }),
       });
-
-      setIntroStatus((prev) => ({ ...prev, [brand.name]: "sent" }));
     } catch {
-      setIntroStatus((prev) => ({ ...prev, [brand.name]: "error" }));
+      // Ignored - backend handles safety & idempotency
     }
   };
 
@@ -612,7 +637,7 @@ function AppContent() {
                           {brand.type === "email_intro" ? (
                             <button
                               onClick={() => handleRequestIntro(brand)}
-                              disabled={introStatus[brand.name] === "sending" || introStatus[brand.name] === "sent"}
+                              disabled={introStatus[brand.name] === "sent"}
                               style={{ 
                                 width: "100%",
                                 backgroundColor: introStatus[brand.name] === "sent" ? "#15803d" : NEON_GREEN, 
@@ -624,14 +649,13 @@ function AppContent() {
                                 fontSize: "12px", 
                                 textTransform: "uppercase", 
                                 letterSpacing: "1px", 
-                                cursor: "pointer", 
-                                marginTop: "22px" 
+                                cursor: introStatus[brand.name] === "sent" ? "default" : "pointer", 
+                                marginTop: "22px",
+                                opacity: introStatus[brand.name] === "sent" ? 0.9 : 1
                               }}
                             >
-                              {introStatus[brand.name] === "sending" 
-                                ? "Dispatching Dossier..." 
-                                : introStatus[brand.name] === "sent" 
-                                ? "Dossier Dispatched ✓" 
+                              {introStatus[brand.name] === "sent" 
+                                ? "Intro Dispatched ✓" 
                                 : brand.buttonText}
                             </button>
                           ) : (
