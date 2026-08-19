@@ -145,29 +145,31 @@ interface AthleteProfile {
   xFollowers: string;
 }
 
+const emptyProfile: AthleteProfile = {
+  verificationStatus: "Pending",
+  fullName: "",
+  email: "",
+  phone: "",
+  college: "",
+  position: "",
+  collegeYear: "Freshman",
+  playerStatus: "Incoming Freshman",
+  verificationLink: "",
+  instagramUrl: "",
+  instagramFollowers: "",
+  tiktokUrl: "",
+  tiktokFollowers: "",
+  xUrl: "",
+  xFollowers: "",
+};
+
 function AppContent() {
   const account = useActiveAccount();
   const [justClaimed, setJustClaimed] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [profile, setProfile] = useState<AthleteProfile>({
-    verificationStatus: "Pending",
-    fullName: "",
-    email: "",
-    phone: "",
-    college: "",
-    position: "",
-    collegeYear: "Freshman",
-    playerStatus: "Incoming Freshman",
-    verificationLink: "",
-    instagramUrl: "",
-    instagramFollowers: "",
-    tiktokUrl: "",
-    tiktokFollowers: "",
-    xUrl: "",
-    xFollowers: "",
-  });
+  const [profile, setProfile] = useState<AthleteProfile>(emptyProfile);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [introStatus, setIntroStatus] = useState<{ [brandName: string]: string }>({});
 
@@ -201,6 +203,9 @@ function AppContent() {
           if (data?.profile && data.profile.fullName) {
             setProfile(data.profile);
             localStorage.setItem(localKey, JSON.stringify(data.profile));
+          } else {
+            localStorage.removeItem(localKey);
+            setProfile(emptyProfile);
           }
         })
         .catch(() => {});
@@ -232,7 +237,7 @@ function AppContent() {
     } catch {
       setIsSavingProfile(false);
       setShowProfileModal(false);
-      alert("Profile saved locally!");
+      alert("Profile saved!");
     }
   };
 
@@ -317,7 +322,7 @@ function AppContent() {
           </p>
         </section>
 
-        {/* Gatekeeper Flow */}
+        {/* Dynamic Gatekeeper Flow */}
         {!account ? (
           /* Step 1: Sign in */
           <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: "24px", padding: "48px 24px", textAlign: "center", maxWidth: "540px", margin: "0 auto" }}>
@@ -332,7 +337,7 @@ function AppContent() {
             </div>
           </div>
         ) : !hasProfile ? (
-          /* Step 2: Submit profile verification */
+          /* Step 2: Fill profile form */
           <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "24px", padding: "40px 24px", textAlign: "center", maxWidth: "540px", margin: "0 auto", boxShadow: "0 0 30px rgba(166, 255, 0, 0.12)" }}>
             <div style={{ fontSize: "44px", marginBottom: "12px" }}>📋</div>
             <h3 style={{ fontSize: "24px", fontWeight: "900", margin: "0 0 6px 0", color: "#ffffff", textTransform: "uppercase" }}>
@@ -366,7 +371,7 @@ function AppContent() {
             </p>
           </div>
         ) : !isUnlocked ? (
-          /* Step 4: Approved - Claim button unlocked */
+          /* Step 4: Approved - Claim button active */
           <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "24px", padding: "40px 24px", textAlign: "center", maxWidth: "540px", margin: "0 auto", boxShadow: "0 0 30px rgba(166, 255, 0, 0.12)" }}>
             <div style={{ fontSize: "44px", marginBottom: "12px" }}>⚾</div>
             <div style={{ display: "inline-block", backgroundColor: "rgba(166, 255, 0, 0.1)", border: `1px solid ${NEON_GREEN}`, borderRadius: "999px", padding: "4px 12px", fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", marginBottom: "12px" }}>
@@ -401,7 +406,7 @@ function AppContent() {
             </p>
           </div>
         ) : (
-          /* Step 5: Fully Unlocked Brand Dugout */
+          /* Step 5: Unlocked Dugout */
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "18px", padding: "22px 28px", marginBottom: "36px", flexWrap: "wrap", gap: "16px" }}>
               <div>
@@ -581,7 +586,7 @@ function AppContent() {
                 </div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "10px" }}>
                 <div>
                   <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>College / Program *</label>
                   <input 
