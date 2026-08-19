@@ -133,7 +133,9 @@ interface AthleteProfile {
   phone: string;
   college: string;
   position: string;
-  gradYear: string;
+  collegeYear: string;
+  playerStatus: string;
+  verificationLink: string;
   instagramUrl: string;
   instagramFollowers: string;
   tiktokUrl: string;
@@ -154,7 +156,9 @@ function AppContent() {
     phone: "",
     college: "",
     position: "",
-    gradYear: "",
+    collegeYear: "Freshman",
+    playerStatus: "Incoming Freshman",
+    verificationLink: "",
     instagramUrl: "",
     instagramFollowers: "",
     tiktokUrl: "",
@@ -177,7 +181,6 @@ function AppContent() {
   const balance = balanceData ? Number(balanceData.displayValue) : 0;
   const isUnlocked = balance >= 100 || justClaimed;
 
-  // Load profile from localStorage first, then sync with Google Sheets
   useEffect(() => {
     if (account?.address) {
       const localKey = `athlete_profile_${account.address.toLowerCase()}`;
@@ -188,7 +191,6 @@ function AppContent() {
         } catch {}
       }
 
-      // Fetch from Google Sheets
       fetch(`${GOOGLE_SCRIPT_URL}?walletAddress=${encodeURIComponent(account.address)}`)
         .then((res) => res.json())
         .then((data) => {
@@ -206,7 +208,6 @@ function AppContent() {
     if (!account?.address) return;
     setIsSavingProfile(true);
 
-    // Save locally immediately
     const localKey = `athlete_profile_${account.address.toLowerCase()}`;
     localStorage.setItem(localKey, JSON.stringify(profile));
 
@@ -312,7 +313,7 @@ function AppContent() {
           </p>
         </section>
 
-        {/* Dugout / Locker Flow */}
+        {/* Action Area */}
         {!account ? (
           <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: "24px", padding: "48px 24px", textAlign: "center", maxWidth: "540px", margin: "0 auto" }}>
             <h3 style={{ fontSize: "22px", fontWeight: "900", margin: "0 0 8px 0", color: "#ffffff", textTransform: "uppercase" }}>
@@ -364,7 +365,6 @@ function AppContent() {
           </div>
         ) : (
           <div>
-            {/* Unlocked Header */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "18px", padding: "22px 28px", marginBottom: "36px", flexWrap: "wrap", gap: "16px" }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -385,7 +385,6 @@ function AppContent() {
               </button>
             </div>
 
-            {/* Alphabetical Category Directory */}
             <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
               {MARKET_SECTIONS.map((section, idx) => (
                 <div key={idx} style={{ borderBottom: "1px solid #141414", paddingBottom: "32px" }}>
@@ -492,15 +491,15 @@ function AppContent() {
         )}
       </div>
 
-      {/* Validated Athlete Profile Modal */}
+      {/* Athlete Profile Modal */}
       {showProfileModal && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.88)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000, padding: "16px" }}>
-          <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "20px", width: "100%", maxWidth: "500px", maxHeight: "90vh", overflowY: "auto", padding: "26px" }}>
+          <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "20px", width: "100%", maxWidth: "520px", maxHeight: "90vh", overflowY: "auto", padding: "26px" }}>
             <h3 style={{ margin: "0 0 6px 0", fontSize: "20px", fontWeight: "900", textTransform: "uppercase", color: "#ffffff" }}>
               Athlete Locker Profile
             </h3>
             <p style={{ fontSize: "13px", color: "#888888", margin: "0 0 18px 0" }}>
-              Enter your verified athletic details and full social profile links for brand partner consideration.
+              Enter your athletic details and profile links for brand partner consideration.
             </p>
 
             <form onSubmit={handleSaveProfile} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -524,7 +523,7 @@ function AppContent() {
                     required
                     value={profile.email} 
                     onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                    placeholder="player@school.edu" 
+                    placeholder="player@gmail.com" 
                     style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "10px 12px", borderRadius: "8px", fontSize: "13px" }}
                   />
                 </div>
@@ -543,7 +542,7 @@ function AppContent() {
                 </div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "10px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                 <div>
                   <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>College / Program *</label>
                   <input 
@@ -556,29 +555,63 @@ function AppContent() {
                   />
                 </div>
                 <div>
-                  <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>Grad Year *</label>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>Position *</label>
                   <input 
-                    type="number" 
-                    min="2024"
-                    max="2032"
+                    type="text" 
                     required
-                    value={profile.gradYear} 
-                    onChange={(e) => setProfile({ ...profile, gradYear: e.target.value })}
-                    placeholder="2026" 
+                    value={profile.position} 
+                    onChange={(e) => setProfile({ ...profile, position: e.target.value })}
+                    placeholder="e.g. RHP / Shortstop" 
                     style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "10px 12px", borderRadius: "8px", fontSize: "13px" }}
                   />
                 </div>
               </div>
 
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>Class Year *</label>
+                  <select
+                    value={profile.collegeYear}
+                    onChange={(e) => setProfile({ ...profile, collegeYear: e.target.value })}
+                    style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "10px 12px", borderRadius: "8px", fontSize: "13px" }}
+                  >
+                    <option value="Freshman">Freshman</option>
+                    <option value="Sophomore">Sophomore</option>
+                    <option value="Junior">Junior</option>
+                    <option value="Senior">Senior</option>
+                    <option value="Graduate / 5th Year">Graduate / 5th Year</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>Player Status *</label>
+                  <select
+                    value={profile.playerStatus}
+                    onChange={(e) => setProfile({ ...profile, playerStatus: e.target.value })}
+                    style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "10px 12px", borderRadius: "8px", fontSize: "13px" }}
+                  >
+                    <option value="Incoming Freshman">Incoming Freshman</option>
+                    <option value="Transfer Portal / Juco">Transfer Portal / Juco</option>
+                    <option value="Returning College Player">Returning College Player</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Verification Link / Proof Field */}
               <div>
-                <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>Primary Position</label>
+                <label style={{ display: "block", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>
+                  Verification Proof Link *
+                </label>
                 <input 
-                  type="text" 
-                  value={profile.position} 
-                  onChange={(e) => setProfile({ ...profile, position: e.target.value })}
-                  placeholder="e.g. RHP / Shortstop" 
+                  type="url" 
+                  required
+                  value={profile.verificationLink} 
+                  onChange={(e) => setProfile({ ...profile, verificationLink: e.target.value })}
+                  placeholder="Roster Bio URL, Signing Announcement Link, or Prep Profile" 
                   style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "10px 12px", borderRadius: "8px", fontSize: "13px" }}
                 />
+                <span style={{ display: "block", fontSize: "11px", color: "#666666", marginTop: "4px" }}>
+                  Past Roster link, X/IG commitment post, or recruiting bio (PG / Prep Baseball).
+                </span>
               </div>
 
               {/* Instagram */}
