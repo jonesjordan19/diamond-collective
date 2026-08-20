@@ -503,11 +503,11 @@ function AppContent() {
           <div style={{ display: "inline-block", backgroundColor: "rgba(166, 255, 0, 0.08)", border: `1px solid ${NEON_GREEN}`, borderRadius: "999px", padding: "6px 16px", fontSize: "11px", fontWeight: "800", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: "20px" }}>
             Exclusively for College Baseball Players
           </div>
-          <h2 style={{ fontSize: "38px", fontWeight: "900", color: "#ffffff", margin: "0 0 16px 0", letterSpacing: "-0.5px", textTransform: "uppercase", lineHeight: "1.15" }}>
-            The Baseball Blockchain Utility Token
+          <h2 style={{ fontSize: "36px", fontWeight: "900", color: "#ffffff", margin: "0 0 16px 0", letterSpacing: "-0.5px", textTransform: "uppercase", lineHeight: "1.15" }}>
+            Your Digital Clubhouse for Deals, Gear & Access
           </h2>
           <p style={{ fontSize: "16px", color: "#a1a1aa", maxWidth: "680px", margin: "0 auto", lineHeight: "1.6" }}>
-            A digital society connecting collegiate players, coaches, and premier brands through direct access, equipment perks, and NIL partnerships.
+            Step into the collective. Claim your free 100 $SLUG allocation to connect directly with sponsor brands, claim future member gear runs, and unlock pro development.
           </p>
         </section>
 
