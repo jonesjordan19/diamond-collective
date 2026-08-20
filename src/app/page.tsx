@@ -8,7 +8,8 @@ import {
   ConnectButton, 
   TransactionButton, 
   useActiveAccount, 
-  useReadContract 
+  useReadContract,
+  useConnectModal
 } from "thirdweb/react";
 import { inAppWallet } from "thirdweb/wallets";
 import { getBalance, claimTo, totalSupply } from "thirdweb/extensions/erc20";
@@ -27,6 +28,14 @@ const sluggerContract = getContract({
   chain: base,
   address: "0xF3f6D32ABCf2fDeAB3c6D0b440230714166Cc4A1",
 });
+
+const supportedWallets = [
+  inAppWallet({
+    auth: {
+      options: ["google", "apple", "phone"],
+    },
+  }),
+];
 
 interface BrandItem {
   name: string;
@@ -313,6 +322,7 @@ const emptyProfile: AthleteProfile = {
 
 function AppContent() {
   const account = useActiveAccount();
+  const { connect } = useConnectModal();
   const [justClaimed, setJustClaimed] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -325,6 +335,19 @@ function AppContent() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleOpenLogin = () => {
+    connect({
+      client,
+      wallets: supportedWallets,
+      accountAbstraction: {
+        chain: base,
+        sponsorGas: true,
+      },
+      chain: base,
+      theme: "dark",
+    });
+  };
 
   const { data: balanceData, refetch: refetchBalance } = useReadContract(getBalance, {
     contract: sluggerContract,
@@ -480,13 +503,7 @@ function AppContent() {
           <div style={{ display: "flex", alignItems: "center" }}>
             <ConnectButton
               client={client}
-              wallets={[
-                inAppWallet({
-                  auth: {
-                    options: ["google", "apple", "phone"],
-                  },
-                }),
-              ]}
+              wallets={supportedWallets}
               accountAbstraction={{
                 chain: base,
                 sponsorGas: true,
@@ -542,11 +559,29 @@ function AppContent() {
                 Step 1: Open Your Athlete Locker
               </h3>
               <p style={{ fontSize: "14px", color: "#888888", margin: "0 0 24px 0", lineHeight: "1.5" }}>
-                Tap the <strong style={{ color: "#ffffff" }}>Athlete Sign In</strong> button in the top menu to connect with your Google, Apple, or phone ID and submit your collegiate verification.
+                Tap below to connect with your Google, Apple, or phone ID and submit your collegiate verification.
               </p>
-              <div style={{ display: "inline-block", backgroundColor: "#000000", border: `1px solid #2a2a2a`, borderRadius: "12px", padding: "14px 24px", fontSize: "13px", color: NEON_GREEN, fontWeight: "800" }}>
-                🔒 Sign In Above to Submit Roster Verification
-              </div>
+              <button
+                onClick={handleOpenLogin}
+                style={{ 
+                  backgroundColor: NEON_GREEN, 
+                  color: "#000000", 
+                  fontWeight: "900", 
+                  textTransform: "uppercase", 
+                  letterSpacing: "1px", 
+                  padding: "16px 28px", 
+                  borderRadius: "12px", 
+                  border: "none", 
+                  cursor: "pointer", 
+                  fontSize: "14px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px"
+                }}
+              >
+                🔒 Athlete Sign In & Verification ↗
+              </button>
             </div>
 
             {/* 3-Step "How It Works" Section */}
@@ -664,9 +699,31 @@ function AppContent() {
                       </p>
                     </div>
 
-                    <div style={{ marginTop: "20px", backgroundColor: "#000000", border: "1px solid #222222", borderRadius: "10px", padding: "12px", textAlign: "center", fontSize: "11px", fontWeight: "800", color: "#777777", textTransform: "uppercase", letterSpacing: "0.8px" }}>
+                    <button
+                      onClick={handleOpenLogin}
+                      style={{ 
+                        width: "100%",
+                        marginTop: "20px", 
+                        backgroundColor: "#0d0d0d", 
+                        border: "1px solid #2a2a2a", 
+                        borderRadius: "10px", 
+                        padding: "13px", 
+                        textAlign: "center", 
+                        fontSize: "11px", 
+                        fontWeight: "900", 
+                        color: NEON_GREEN, 
+                        textTransform: "uppercase", 
+                        letterSpacing: "0.8px",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "6px",
+                        transition: "all 0.15s ease"
+                      }}
+                    >
                       🔒 Sign In & Verify to Unlock
-                    </div>
+                    </button>
                   </div>
                 ))}
               </div>
