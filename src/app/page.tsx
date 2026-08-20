@@ -16,7 +16,6 @@ import { getBalance, claimTo, totalSupply } from "thirdweb/extensions/erc20";
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhwqCXDFPT0C1I4Zt-ASCpUVbkD9piI-_7pO1Dx5WhHG3JtMrgxm-N1kn4zhKbOXRzIA/exec";
 const NEON_GREEN = "#a6ff00";
 
-// Founders Phase Allocation Cap (Adjust if your total founder drop pool is different)
 const FOUNDERS_POOL_TOTAL = 100000;
 
 const client = createThirdwebClient({
@@ -327,13 +326,11 @@ function AppContent() {
     setMounted(true);
   }, []);
 
-  // Real-time on-chain balance for active athlete
   const { data: balanceData, refetch: refetchBalance } = useReadContract(getBalance, {
     contract: sluggerContract,
     address: account?.address || "",
   });
 
-  // Real-time on-chain total supply across entire collective
   const { data: totalSupplyData, refetch: refetchSupply } = useReadContract(totalSupply, {
     contract: sluggerContract,
   });
@@ -514,7 +511,7 @@ function AppContent() {
           </p>
         </section>
 
-        {/* Live Metrics Bar - Dynamic Real-Time Values */}
+        {/* Live Metrics Bar */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px", maxWidth: "860px", margin: "0 auto 40px auto" }}>
           <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "14px", padding: "16px", textAlign: "center" }}>
             <span style={{ display: "block", fontSize: "20px", fontWeight: "900", color: NEON_GREEN }}>15+</span>
@@ -633,12 +630,28 @@ function AppContent() {
                     }}
                   >
                     <div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px", marginBottom: "6px" }}>
-                        <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "0.8px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px", marginBottom: "8px" }}>
+                        <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "0.8px", flex: 1, lineHeight: "1.3" }}>
                           {brand.tagline}
                         </span>
                         {brand.type === "email_intro" && (
-                          <span style={{ fontSize: "10px", fontWeight: "800", backgroundColor: "rgba(166, 255, 0, 0.12)", color: NEON_GREEN, border: `1px solid ${NEON_GREEN}`, padding: "2px 8px", borderRadius: "999px", textTransform: "uppercase" }}>
+                          <span style={{ 
+                            fontSize: "10px", 
+                            fontWeight: "900", 
+                            backgroundColor: "rgba(166, 255, 0, 0.12)", 
+                            color: NEON_GREEN, 
+                            border: `1px solid ${NEON_GREEN}`, 
+                            padding: "4px 10px", 
+                            borderRadius: "999px", 
+                            textTransform: "uppercase",
+                            letterSpacing: "0.6px",
+                            whiteSpace: "nowrap",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            lineHeight: "1",
+                            flexShrink: 0
+                          }}>
                             Direct Intro
                           </span>
                         )}
@@ -831,12 +844,28 @@ function AppContent() {
                           }}
                         >
                           <div>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px", marginBottom: "6px" }}>
-                              <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "0.8px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px", marginBottom: "8px" }}>
+                              <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "0.8px", flex: 1, lineHeight: "1.3" }}>
                                 {brand.tagline}
                               </span>
                               {brand.type === "email_intro" && (
-                                <span style={{ fontSize: "10px", fontWeight: "800", backgroundColor: "rgba(166, 255, 0, 0.12)", color: NEON_GREEN, border: `1px solid ${NEON_GREEN}`, padding: "2px 8px", borderRadius: "999px", textTransform: "uppercase" }}>
+                                <span style={{ 
+                                  fontSize: "10px", 
+                                  fontWeight: "900", 
+                                  backgroundColor: "rgba(166, 255, 0, 0.12)", 
+                                  color: NEON_GREEN, 
+                                  border: `1px solid ${NEON_GREEN}`, 
+                                  padding: "4px 10px", 
+                                  borderRadius: "999px", 
+                                  textTransform: "uppercase",
+                                  letterSpacing: "0.6px",
+                                  whiteSpace: "nowrap",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  lineHeight: "1",
+                                  flexShrink: 0
+                                }}>
                                   Direct Intro
                                 </span>
                               )}
