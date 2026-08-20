@@ -254,6 +254,25 @@ const MARKET_SECTIONS: MarketCategory[] = [
   },
 ];
 
+const FAQS = [
+  {
+    q: "Is this compliant with NCAA and Institutional NIL rules?",
+    a: "Yes. All Slugger Coins ($SLUG) distributed during the Founders phase have zero market cash value and are non-compensatory. Tokens are issued exclusively as an access key to unlock brand directories, educational resources, and partner introductions.",
+  },
+  {
+    q: "Do I need crypto experience or a crypto wallet to join?",
+    a: "None at all. When you sign in using your existing Google, Apple, or phone ID, an embedded smart wallet is generated automatically in the background. All blockchain transactions are 100% free and gas-sponsored on Base.",
+  },
+  {
+    q: "Who is eligible to join The Diamond Collective?",
+    a: "Membership is exclusive to active collegiate baseball players (NCAA D1, D2, D3, NAIA, and NJCAA) as well as committed incoming freshmen. Each athlete's roster status is verified prior to token distribution.",
+  },
+  {
+    q: "What happens when I request a Direct Brand Intro?",
+    a: "Our automated system packages your athletic dossier, verified roster bio, contact information, and social media reach into a formal introduction dispatched directly to the brand's partnership team and CC'd to your email.",
+  },
+];
+
 interface AthleteProfile {
   verificationStatus?: string;
   fullName: string;
@@ -299,6 +318,7 @@ function AppContent() {
   const [profile, setProfile] = useState<AthleteProfile>(emptyProfile);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [introStatus, setIntroStatus] = useState<{ [brandName: string]: string }>({});
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -395,7 +415,6 @@ function AppContent() {
       return;
     }
 
-    // Set UI to dispatched immediately and save in localStorage
     const localIntroKey = `athlete_intros_${account?.address?.toLowerCase()}`;
     setIntroStatus((prev) => {
       const updated = { ...prev, [brand.name]: "sent" };
@@ -416,9 +435,7 @@ function AppContent() {
           ...profile,
         }),
       });
-    } catch {
-      // Ignored - backend handles safety & idempotency
-    }
+    } catch {}
   };
 
   if (!mounted) return null;
@@ -472,30 +489,212 @@ function AppContent() {
         </header>
 
         {/* Hero Section */}
-        <section style={{ textAlign: "center", margin: "44px 0 32px 0" }}>
+        <section style={{ textAlign: "center", margin: "44px 0 28px 0" }}>
           <div style={{ display: "inline-block", backgroundColor: "rgba(166, 255, 0, 0.08)", border: `1px solid ${NEON_GREEN}`, borderRadius: "999px", padding: "6px 16px", fontSize: "11px", fontWeight: "800", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: "20px" }}>
             Exclusively for College Baseball Players
           </div>
-          <h2 style={{ fontSize: "36px", fontWeight: "900", color: "#ffffff", margin: "0 0 16px 0", letterSpacing: "-0.5px", textTransform: "uppercase", lineHeight: "1.15" }}>
+          <h2 style={{ fontSize: "38px", fontWeight: "900", color: "#ffffff", margin: "0 0 16px 0", letterSpacing: "-0.5px", textTransform: "uppercase", lineHeight: "1.15" }}>
             The Baseball Blockchain Utility Token
           </h2>
-          <p style={{ fontSize: "16px", color: "#a1a1aa", maxWidth: "640px", margin: "0 auto", lineHeight: "1.6" }}>
-            A digital society connecting players, coaches, and brands through access, education, and opportunity. Claim your 100 free coins to unlock the partner dugout.
+          <p style={{ fontSize: "16px", color: "#a1a1aa", maxWidth: "680px", margin: "0 auto", lineHeight: "1.6" }}>
+            A digital society connecting collegiate players, coaches, and premier brands through direct access, equipment perks, and NIL partnerships.
           </p>
         </section>
 
-        {/* Gatekeeper Flow */}
+        {/* Live Metrics Bar */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px", maxWidth: "860px", margin: "0 auto 40px auto" }}>
+          <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "14px", padding: "16px", textAlign: "center" }}>
+            <span style={{ display: "block", fontSize: "20px", fontWeight: "900", color: NEON_GREEN }}>15+</span>
+            <span style={{ fontSize: "11px", color: "#888888", textTransform: "uppercase", fontWeight: "700", letterSpacing: "0.5px" }}>Brand Partners</span>
+          </div>
+          <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "14px", padding: "16px", textAlign: "center" }}>
+            <span style={{ display: "block", fontSize: "20px", fontWeight: "900", color: "#ffffff" }}>100% Free</span>
+            <span style={{ fontSize: "11px", color: "#888888", textTransform: "uppercase", fontWeight: "700", letterSpacing: "0.5px" }}>Gas-Sponsored on Base</span>
+          </div>
+          <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "14px", padding: "16px", textAlign: "center" }}>
+            <span style={{ display: "block", fontSize: "20px", fontWeight: "900", color: NEON_GREEN }}>100 $SLUG</span>
+            <span style={{ fontSize: "11px", color: "#888888", textTransform: "uppercase", fontWeight: "700", letterSpacing: "0.5px" }}>Player Allocation</span>
+          </div>
+          <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "14px", padding: "16px", textAlign: "center" }}>
+            <span style={{ display: "block", fontSize: "20px", fontWeight: "900", color: "#ffffff" }}>91% Remaining</span>
+            <span style={{ fontSize: "11px", color: "#888888", textTransform: "uppercase", fontWeight: "700", letterSpacing: "0.5px" }}>Founders Phase</span>
+          </div>
+        </div>
+
+        {/* Dynamic Gatekeeper Flow */}
         {!account ? (
-          <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: "24px", padding: "44px 20px", textAlign: "center", maxWidth: "540px", margin: "0 auto" }}>
-            <h3 style={{ fontSize: "22px", fontWeight: "900", margin: "0 0 8px 0", color: "#ffffff", textTransform: "uppercase" }}>
-              Step 1: Open Your Athlete Locker
-            </h3>
-            <p style={{ fontSize: "14px", color: "#888888", margin: "0 0 28px 0", lineHeight: "1.5" }}>
-              Tap the <strong style={{ color: "#ffffff" }}>Athlete Sign In</strong> button above to connect with your Google, Apple, or phone ID and submit your collegiate verification.
-            </p>
-            <div style={{ display: "inline-block", backgroundColor: "#000000", border: "1px solid #2a2a2a", borderRadius: "12px", padding: "14px 24px", fontSize: "13px", color: "#ffffff", fontWeight: "700" }}>
-              🔒 Sign in above to begin verification
+          <div>
+            {/* Step 1: Sign in Hero Box */}
+            <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "24px", padding: "44px 20px", textAlign: "center", maxWidth: "600px", margin: "0 auto 48px auto", boxShadow: "0 0 30px rgba(166, 255, 0, 0.08)" }}>
+              <h3 style={{ fontSize: "22px", fontWeight: "900", margin: "0 0 8px 0", color: "#ffffff", textTransform: "uppercase" }}>
+                Step 1: Open Your Athlete Locker
+              </h3>
+              <p style={{ fontSize: "14px", color: "#888888", margin: "0 0 24px 0", lineHeight: "1.5" }}>
+                Tap the <strong style={{ color: "#ffffff" }}>Athlete Sign In</strong> button in the top menu to connect with your Google, Apple, or phone ID and submit your collegiate verification.
+              </p>
+              <div style={{ display: "inline-block", backgroundColor: "#000000", border: `1px solid #2a2a2a`, borderRadius: "12px", padding: "14px 24px", fontSize: "13px", color: NEON_GREEN, fontWeight: "800" }}>
+                🔒 Sign In Above to Submit Roster Verification
+              </div>
             </div>
+
+            {/* 3-Step "How It Works" Section */}
+            <section style={{ margin: "56px 0" }}>
+              <div style={{ textAlign: "center", marginBottom: "32px" }}>
+                <span style={{ fontSize: "11px", fontWeight: "800", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>
+                  Seamless Onboarding
+                </span>
+                <h3 style={{ fontSize: "26px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", margin: "6px 0 0 0" }}>
+                  How The Diamond Collective Works
+                </h3>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" }}>
+                <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "18px", padding: "28px 24px" }}>
+                  <div style={{ width: "40px", height: "40px", borderRadius: "10px", backgroundColor: "rgba(166, 255, 0, 0.1)", color: NEON_GREEN, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", fontWeight: "900", marginBottom: "16px" }}>
+                    1
+                  </div>
+                  <h4 style={{ fontSize: "18px", fontWeight: "900", textTransform: "uppercase", color: "#ffffff", margin: "0 0 8px 0" }}>
+                    Authenticate
+                  </h4>
+                  <p style={{ fontSize: "13px", color: "#888888", lineHeight: "1.6", margin: 0 }}>
+                    Sign in with your standard Google or Apple account. No seed phrases, crypto knowledge, or browser extensions required.
+                  </p>
+                </div>
+
+                <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "18px", padding: "28px 24px" }}>
+                  <div style={{ width: "40px", height: "40px", borderRadius: "10px", backgroundColor: "rgba(166, 255, 0, 0.1)", color: NEON_GREEN, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", fontWeight: "900", marginBottom: "16px" }}>
+                    2
+                  </div>
+                  <h4 style={{ fontSize: "18px", fontWeight: "900", textTransform: "uppercase", color: "#ffffff", margin: "0 0 8px 0" }}>
+                    Verify Roster Status
+                  </h4>
+                  <p style={{ fontSize: "13px", color: "#888888", lineHeight: "1.6", margin: 0 }}>
+                    Submit your collegiate program details and verification proof link (roster bio, commitment post, or recruiting profile).
+                  </p>
+                </div>
+
+                <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "18px", padding: "28px 24px" }}>
+                  <div style={{ width: "40px", height: "40px", borderRadius: "10px", backgroundColor: "rgba(166, 255, 0, 0.1)", color: NEON_GREEN, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", fontWeight: "900", marginBottom: "16px" }}>
+                    3
+                  </div>
+                  <h4 style={{ fontSize: "18px", fontWeight: "900", textTransform: "uppercase", color: "#ffffff", margin: "0 0 8px 0" }}>
+                    Claim & Unlock Intros
+                  </h4>
+                  <p style={{ fontSize: "13px", color: "#888888", lineHeight: "1.6", margin: 0 }}>
+                    Claim your 100 $SLUG tokens gas-free on Base to unlock direct brand partnership intros, custom gear deals, and affiliate portals.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* Public Partner Dugout Preview */}
+            <section style={{ margin: "56px 0" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px", flexWrap: "wrap", gap: "12px" }}>
+                <div>
+                  <span style={{ fontSize: "11px", fontWeight: "800", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>
+                    Partner Network
+                  </span>
+                  <h3 style={{ fontSize: "26px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", margin: "6px 0 0 0" }}>
+                    Featured Brand Opportunities
+                  </h3>
+                </div>
+                <span style={{ fontSize: "12px", color: "#888888", fontWeight: "600" }}>
+                  15 Partner Brands Live in the Dugout
+                </span>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "18px" }}>
+                {MARKET_SECTIONS.flatMap(s => s.brands).map((brand, bIdx) => (
+                  <div 
+                    key={bIdx}
+                    style={{ 
+                      backgroundColor: "#0a0a0a", 
+                      border: brand.isPrimary ? `1px solid rgba(166, 255, 0, 0.3)` : "1px solid #1a1a1a", 
+                      borderRadius: "16px", 
+                      padding: "22px", 
+                      display: "flex", 
+                      flexDirection: "column", 
+                      justifyContent: "space-between" 
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px", marginBottom: "6px" }}>
+                        <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "0.8px" }}>
+                          {brand.tagline}
+                        </span>
+                        {brand.type === "email_intro" && (
+                          <span style={{ fontSize: "10px", fontWeight: "800", backgroundColor: "rgba(166, 255, 0, 0.12)", color: NEON_GREEN, border: `1px solid ${NEON_GREEN}`, padding: "2px 8px", borderRadius: "999px", textTransform: "uppercase" }}>
+                            Direct Intro
+                          </span>
+                        )}
+                      </div>
+                      <h4 style={{ fontSize: "18px", fontWeight: "900", color: "#ffffff", margin: "6px 0 8px 0", textTransform: "uppercase" }}>
+                        {brand.name}
+                      </h4>
+                      <p style={{ fontSize: "13px", color: "#888888", lineHeight: "1.5", margin: 0 }}>
+                        {brand.description}
+                      </p>
+                    </div>
+
+                    <div style={{ marginTop: "20px", backgroundColor: "#000000", border: "1px solid #222222", borderRadius: "10px", padding: "12px", textAlign: "center", fontSize: "11px", fontWeight: "800", color: "#777777", textTransform: "uppercase", letterSpacing: "0.8px" }}>
+                      🔒 Sign In & Verify to Unlock
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* FAQ Accordion */}
+            <section style={{ margin: "56px 0" }}>
+              <div style={{ textAlign: "center", marginBottom: "32px" }}>
+                <span style={{ fontSize: "11px", fontWeight: "800", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>
+                  Got Questions?
+                </span>
+                <h3 style={{ fontSize: "26px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", margin: "6px 0 0 0" }}>
+                  Frequently Asked Questions
+                </h3>
+              </div>
+
+              <div style={{ maxWidth: "800px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "12px" }}>
+                {FAQS.map((faq, fIdx) => (
+                  <div 
+                    key={fIdx} 
+                    style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "14px", overflow: "hidden" }}
+                  >
+                    <button
+                      onClick={() => setOpenFaq(openFaq === fIdx ? null : fIdx)}
+                      style={{ width: "100%", textAlign: "left", padding: "18px 20px", background: "none", border: "none", color: "#ffffff", fontSize: "15px", fontWeight: "800", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                    >
+                      <span>{faq.q}</span>
+                      <span style={{ color: NEON_GREEN, fontSize: "18px", fontWeight: "900", marginLeft: "12px" }}>
+                        {openFaq === fIdx ? "−" : "+"}
+                      </span>
+                    </button>
+                    {openFaq === fIdx && (
+                      <div style={{ padding: "0 20px 20px 20px", color: "#a1a1aa", fontSize: "13px", lineHeight: "1.6" }}>
+                        {faq.a}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Brand Inbound Footer CTA */}
+            <section style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "20px", padding: "36px 24px", textAlign: "center", margin: "48px 0 20px 0" }}>
+              <h4 style={{ fontSize: "18px", fontWeight: "900", textTransform: "uppercase", color: "#ffffff", margin: "0 0 8px 0" }}>
+                Are You a Baseball Brand or Service Provider?
+              </h4>
+              <p style={{ fontSize: "13px", color: "#888888", maxWidth: "540px", margin: "0 auto 20px auto", lineHeight: "1.5" }}>
+                Join The Diamond Collective to connect directly with verified collegiate baseball players across the country.
+              </p>
+              <a
+                href="mailto:partnerships@diamondcollective.net?subject=Brand%20Partnership%20Inquiry%20-%20The%20Diamond%20Collective"
+                style={{ display: "inline-block", backgroundColor: "#141414", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontWeight: "900", padding: "12px 24px", borderRadius: "10px", fontSize: "12px", textTransform: "uppercase", letterSpacing: "1px", textDecoration: "none" }}
+              >
+                Inquire About Brand Partnerships ↗
+              </a>
+            </section>
           </div>
         ) : !hasProfile ? (
           <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "24px", padding: "40px 24px", textAlign: "center", maxWidth: "540px", margin: "0 auto", boxShadow: "0 0 30px rgba(166, 255, 0, 0.12)" }}>
@@ -586,7 +785,7 @@ function AppContent() {
               </button>
             </div>
 
-            {/* Brand Dugout Directory */}
+            {/* Unlocked Brand Dugout Directory */}
             <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
               {MARKET_SECTIONS.map((section, idx) => (
                 <div key={idx} style={{ borderBottom: "1px solid #141414", paddingBottom: "36px" }}>
