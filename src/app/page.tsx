@@ -568,7 +568,7 @@ function AppContent() {
                   color: "#000000", 
                   fontWeight: "900", 
                   textTransform: "uppercase", 
-                  letterSpacing: "1px", 
+                  letterSpacing: "0.8px", 
                   padding: "16px 28px", 
                   borderRadius: "12px", 
                   border: "none", 
@@ -577,10 +577,15 @@ function AppContent() {
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  gap: "8px"
+                  textAlign: "center",
+                  gap: "8px",
+                  lineHeight: "1.2",
+                  width: "100%",
+                  maxWidth: "380px"
                 }}
               >
-                🔒 Athlete Sign In & Verification ↗
+                <span>Athlete Sign In & Verification</span>
+                <span style={{ fontSize: "16px", fontWeight: "900" }}>↗</span>
               </button>
             </div>
 
@@ -722,7 +727,7 @@ function AppContent() {
                         transition: "all 0.15s ease"
                       }}
                     >
-                      🔒 Sign In & Verify to Unlock
+                      Sign In & Verify to Unlock ↗
                     </button>
                   </div>
                 ))}
