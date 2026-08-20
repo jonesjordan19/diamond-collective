@@ -11,10 +11,13 @@ import {
   useReadContract 
 } from "thirdweb/react";
 import { inAppWallet } from "thirdweb/wallets";
-import { getBalance, claimTo } from "thirdweb/extensions/erc20";
+import { getBalance, claimTo, totalSupply } from "thirdweb/extensions/erc20";
 
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhwqCXDFPT0C1I4Zt-ASCpUVbkD9piI-_7pO1Dx5WhHG3JtMrgxm-N1kn4zhKbOXRzIA/exec";
 const NEON_GREEN = "#a6ff00";
+
+// Founders Phase Allocation Cap (Adjust if your total founder drop pool is different)
+const FOUNDERS_POOL_TOTAL = 100000;
 
 const client = createThirdwebClient({
   clientId: "770a552ed494b40543a6696298d41606",
@@ -324,10 +327,20 @@ function AppContent() {
     setMounted(true);
   }, []);
 
-  const { data: balanceData, isLoading, refetch } = useReadContract(getBalance, {
+  // Real-time on-chain balance for active athlete
+  const { data: balanceData, refetch: refetchBalance } = useReadContract(getBalance, {
     contract: sluggerContract,
     address: account?.address || "",
   });
+
+  // Real-time on-chain total supply across entire collective
+  const { data: totalSupplyData, refetch: refetchSupply } = useReadContract(totalSupply, {
+    contract: sluggerContract,
+  });
+
+  const totalMinted = totalSupplyData ? Number(totalSupplyData) / 1e18 : 0;
+  const rawRemaining = ((FOUNDERS_POOL_TOTAL - totalMinted) / FOUNDERS_POOL_TOTAL) * 100;
+  const remainingPercentage = Math.max(0, Math.min(100, Math.round(rawRemaining)));
 
   const balance = balanceData ? Number(balanceData.displayValue) : 0;
   const isUnlocked = balance >= 100 || justClaimed;
@@ -501,7 +514,7 @@ function AppContent() {
           </p>
         </section>
 
-        {/* Live Metrics Bar */}
+        {/* Live Metrics Bar - Dynamic Real-Time Values */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px", maxWidth: "860px", margin: "0 auto 40px auto" }}>
           <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "14px", padding: "16px", textAlign: "center" }}>
             <span style={{ display: "block", fontSize: "20px", fontWeight: "900", color: NEON_GREEN }}>15+</span>
@@ -516,7 +529,9 @@ function AppContent() {
             <span style={{ fontSize: "11px", color: "#888888", textTransform: "uppercase", fontWeight: "700", letterSpacing: "0.5px" }}>Player Allocation</span>
           </div>
           <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "14px", padding: "16px", textAlign: "center" }}>
-            <span style={{ display: "block", fontSize: "20px", fontWeight: "900", color: "#ffffff" }}>91% Remaining</span>
+            <span style={{ display: "block", fontSize: "20px", fontWeight: "900", color: "#ffffff" }}>
+              {totalSupplyData !== undefined ? `${remainingPercentage}% Remaining` : "Live Sync..."}
+            </span>
             <span style={{ fontSize: "11px", color: "#888888", textTransform: "uppercase", fontWeight: "700", letterSpacing: "0.5px" }}>Founders Phase</span>
           </div>
         </div>
@@ -751,7 +766,8 @@ function AppContent() {
               }
               onTransactionConfirmed={() => {
                 setJustClaimed(true);
-                refetch();
+                refetchBalance();
+                refetchSupply();
               }}
               onError={(err) => alert(`Claim error: ${err.message}`)}
               style={{ width: "100%", backgroundColor: NEON_GREEN, color: "#000000", fontWeight: "900", textTransform: "uppercase", letterSpacing: "1px", padding: "16px", borderRadius: "12px", border: "none", cursor: "pointer", fontSize: "15px" }}
@@ -759,7 +775,7 @@ function AppContent() {
               Claim 100 Free Slugger Coins
             </TransactionButton>
             <p style={{ fontSize: "12px", color: "#666666", margin: "16px 0 0 0", fontWeight: "600" }}>
-              Claims remaining: <span style={{ color: NEON_GREEN }}>91%</span> • Instant & Gasless on Base
+              Claims remaining: <span style={{ color: NEON_GREEN }}>{remainingPercentage}%</span> • Instant & Gasless on Base
             </p>
           </div>
         ) : (
