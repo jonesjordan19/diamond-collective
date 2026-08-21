@@ -15,6 +15,7 @@ import { inAppWallet } from "thirdweb/wallets";
 import { getBalance, claimTo, totalSupply } from "thirdweb/extensions/erc20";
 
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhwqCXDFPT0C1I4Zt-ASCpUVbkD9piI-_7pO1Dx5WhHG3JtMrgxm-N1kn4zhKbOXRzIA/exec";
+const STRIPE_GRIP_DROP_URL = "https://buy.stripe.com/8x2eVeeW57dgc5I1hX8Vi01";
 const NEON_GREEN = "#a6ff00";
 
 const FOUNDERS_POOL_TOTAL = 100000;
@@ -271,6 +272,10 @@ const FAQS = [
     a: "Yes. All Slugger Coins ($SLUG) distributed during the Founders phase have zero market cash value and are non-compensatory. Tokens are issued exclusively as an access key to unlock brand directories, educational resources, and partner introductions.",
   },
   {
+    q: "How does 'The Big Black Grip' member drop work?",
+    a: "The first 60 verified college ballplayers to claim receive 'The Big Black Grip' bat grip 100% free ($0 product cost). A flat $8.99 shipping and handling fee is paid directly through Stripe to cover USPS Ground postage with tracking, bubble mailer packaging, and fulfillment.",
+  },
+  {
     q: "Do I need crypto experience or a crypto wallet to join?",
     a: "None at all. When you sign in using your existing Google, Apple, or phone ID, an embedded smart wallet is generated automatically in the background. All blockchain transactions are 100% free and gas-sponsored on Base.",
   },
@@ -524,7 +529,7 @@ function AppContent() {
             Your Digital Clubhouse for Deals, Gear & Access
           </h2>
           <p style={{ fontSize: "16px", color: "#a1a1aa", maxWidth: "680px", margin: "0 auto", lineHeight: "1.6" }}>
-            Step into the collective. Claim your free 100 $SLUG allocation to connect directly with sponsor brands, claim future member gear runs, and unlock pro development.
+            Step into the collective. Claim your free 100 $SLUG allocation, unlock exclusive member gear drops, and connect directly with sponsor brands.
           </p>
         </section>
 
@@ -535,12 +540,12 @@ function AppContent() {
             <span style={{ fontSize: "11px", color: "#888888", textTransform: "uppercase", fontWeight: "700", letterSpacing: "0.5px" }}>Brand Partners</span>
           </div>
           <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "14px", padding: "16px", textAlign: "center" }}>
-            <span style={{ display: "block", fontSize: "20px", fontWeight: "900", color: "#ffffff" }}>100% Free</span>
-            <span style={{ fontSize: "11px", color: "#888888", textTransform: "uppercase", fontWeight: "700", letterSpacing: "0.5px" }}>Gas-Sponsored on Base</span>
+            <span style={{ display: "block", fontSize: "20px", fontWeight: "900", color: "#ffffff" }}>Drop #001</span>
+            <span style={{ fontSize: "11px", color: "#888888", textTransform: "uppercase", fontWeight: "700", letterSpacing: "0.5px" }}>60 Grips Live</span>
           </div>
           <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "14px", padding: "16px", textAlign: "center" }}>
             <span style={{ display: "block", fontSize: "20px", fontWeight: "900", color: NEON_GREEN }}>100 $SLUG</span>
-            <span style={{ fontSize: "11px", color: "#888888", textTransform: "uppercase", fontWeight: "700", letterSpacing: "0.5px" }}>Player Allocation</span>
+            <span style={{ fontSize: "11px", color: "#888888", textTransform: "uppercase", fontWeight: "700", letterSpacing: "0.5px" }}>Free Allocation</span>
           </div>
           <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "14px", padding: "16px", textAlign: "center" }}>
             <span style={{ display: "block", fontSize: "20px", fontWeight: "900", color: "#ffffff" }}>
@@ -553,8 +558,48 @@ function AppContent() {
         {/* Dynamic Gatekeeper Flow */}
         {!account ? (
           <div>
+            {/* Drop #001 Teaser Card for Logged Out Players */}
+            <div style={{ backgroundColor: "#080808", border: `1px solid ${NEON_GREEN}`, borderRadius: "24px", padding: "32px 24px", maxWidth: "800px", margin: "0 auto 40px auto", boxShadow: "0 0 35px rgba(166, 255, 0, 0.1)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", marginBottom: "16px" }}>
+                <span style={{ backgroundColor: NEON_GREEN, color: "#000000", fontSize: "11px", fontWeight: "900", padding: "6px 14px", borderRadius: "999px", textTransform: "uppercase", letterSpacing: "1px" }}>
+                  🔥 Exclusive Member Drop #001
+                </span>
+                <span style={{ fontSize: "12px", color: "#888888", fontWeight: "800", textTransform: "uppercase" }}>
+                  Limited to First 60 Verified Athletes
+                </span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "20px" }}>
+                <div style={{ flex: "1 1 340px" }}>
+                  <h3 style={{ fontSize: "24px", fontWeight: "900", margin: "0 0 8px 0", color: "#ffffff", textTransform: "uppercase" }}>
+                    "The Big Black Grip" Bat Grip ($0.00 Free)
+                  </h3>
+                  <p style={{ fontSize: "14px", color: "#a1a1aa", lineHeight: "1.5", margin: 0 }}>
+                    We're hooking up the first 60 verified college players with our premium pro-feel bat grip for $0.00 (just cover flat $8.99 USPS shipping & handling).
+                  </p>
+                </div>
+                <button
+                  onClick={handleOpenLogin}
+                  style={{ 
+                    backgroundColor: "#111111", 
+                    border: `1px solid ${NEON_GREEN}`, 
+                    color: NEON_GREEN, 
+                    fontWeight: "900", 
+                    textTransform: "uppercase", 
+                    letterSpacing: "1px", 
+                    padding: "14px 24px", 
+                    borderRadius: "12px", 
+                    cursor: "pointer", 
+                    fontSize: "13px",
+                    whiteSpace: "nowrap"
+                  }}
+                >
+                  Sign In to Claim ➔
+                </button>
+              </div>
+            </div>
+
             {/* Step 1: Sign in Hero Box */}
-            <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "24px", padding: "44px 20px", textAlign: "center", maxWidth: "600px", margin: "0 auto 48px auto", boxShadow: "0 0 30px rgba(166, 255, 0, 0.08)" }}>
+            <div style={{ backgroundColor: "#0a0a0a", border: `1px solid #222222`, borderRadius: "24px", padding: "44px 20px", textAlign: "center", maxWidth: "600px", margin: "0 auto 48px auto" }}>
               <h3 style={{ fontSize: "22px", fontWeight: "900", margin: "0 0 8px 0", color: "#ffffff", textTransform: "uppercase" }}>
                 Step 1: Open Your Athlete Locker
               </h3>
@@ -633,7 +678,7 @@ function AppContent() {
                     Claim & Unlock Intros
                   </h4>
                   <p style={{ fontSize: "13px", color: "#888888", lineHeight: "1.6", margin: 0 }}>
-                    Claim your 100 $SLUG tokens gas-free on Base to unlock direct brand partnership intros, custom gear deals, and affiliate portals.
+                    Claim your 100 $SLUG tokens gas-free on Base to unlock Drop #001, direct brand intros, and partner gear deals.
                   </p>
                 </div>
               </div>
@@ -856,7 +901,7 @@ function AppContent() {
         ) : (
           <div>
             {/* Athlete Status Pill */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "18px", padding: "22px 28px", marginBottom: "36px", flexWrap: "wrap", gap: "16px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "18px", padding: "22px 28px", marginBottom: "28px", flexWrap: "wrap", gap: "16px" }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                   <span style={{ height: "10px", width: "10px", borderRadius: "50%", backgroundColor: NEON_GREEN, display: "inline-block", boxShadow: `0 0 10px ${NEON_GREEN}` }}></span>
@@ -874,6 +919,75 @@ function AppContent() {
               >
                 Edit Athlete Profile 👤
               </button>
+            </div>
+
+            {/* 🔥 FEATURED EXCLUSIVE MEMBER DROP #001 CARD */}
+            <div style={{ 
+              backgroundColor: "#0d0d0d", 
+              border: `2px solid ${NEON_GREEN}`, 
+              borderRadius: "22px", 
+              padding: "30px 24px", 
+              marginBottom: "40px", 
+              boxShadow: "0 0 35px rgba(166, 255, 0, 0.15)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "20px"
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+                    <span style={{ backgroundColor: NEON_GREEN, color: "#000000", fontSize: "11px", fontWeight: "900", padding: "4px 12px", borderRadius: "999px", textTransform: "uppercase", letterSpacing: "1px" }}>
+                      Member Drop #001
+                    </span>
+                    <span style={{ fontSize: "12px", color: "#888888", fontWeight: "800", textTransform: "uppercase" }}>
+                      First 60 Members Only
+                    </span>
+                  </div>
+                  <h3 style={{ fontSize: "26px", fontWeight: "900", color: "#ffffff", margin: "0 0 6px 0", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    "The Big Black Grip" Bat Grip
+                  </h3>
+                  <p style={{ fontSize: "14px", color: "#a1a1aa", margin: 0, maxWidth: "600px", lineHeight: "1.5" }}>
+                    Pro-feel, high-tack diamond performance grip. 100% free for verified members (<span style={{ color: "#ffffff", textDecoration: "line-through" }}>$16.00 retail</span> → <strong style={{ color: NEON_GREEN }}>$0.00</strong>). Flat $8.99 USPS shipping & handling.
+                  </p>
+                </div>
+
+                <div style={{ textAlign: "right" }}>
+                  <span style={{ display: "block", fontSize: "28px", fontWeight: "900", color: NEON_GREEN }}>$0.00</span>
+                  <span style={{ fontSize: "11px", color: "#888888", textTransform: "uppercase", fontWeight: "700" }}>+ $8.99 Flat S&H</span>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #1f1f1f", paddingTop: "18px", flexWrap: "wrap", gap: "14px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ height: "8px", width: "8px", borderRadius: "50%", backgroundColor: NEON_GREEN }}></span>
+                  <span style={{ fontSize: "12px", color: "#cccccc", fontWeight: "700" }}>
+                    📦 60 Units in Vault • USPS Ground with Tracking
+                  </span>
+                </div>
+
+                <a
+                  href={STRIPE_GRIP_DROP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    backgroundColor: NEON_GREEN,
+                    color: "#000000",
+                    fontWeight: "900",
+                    padding: "14px 28px",
+                    borderRadius: "10px",
+                    fontSize: "13px",
+                    textTransform: "uppercase",
+                    letterSpacing: "1px",
+                    textDecoration: "none",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px"
+                  }}
+                >
+                  <span>Claim Your Free Grip ($8.99 S&H)</span>
+                  <span style={{ fontSize: "16px" }}>↗</span>
+                </a>
+              </div>
             </div>
 
             {/* Unlocked Brand Dugout Directory */}
