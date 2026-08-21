@@ -332,6 +332,7 @@ function AppContent() {
   const [mounted, setMounted] = useState(false);
 
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [dispatchedBrand, setDispatchedBrand] = useState<BrandItem | null>(null);
   const [profile, setProfile] = useState<AthleteProfile>(emptyProfile);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [introStatus, setIntroStatus] = useState<{ [brandName: string]: string }>({});
@@ -459,6 +460,9 @@ function AppContent() {
       localStorage.setItem(localIntroKey, JSON.stringify(updated));
       return updated;
     });
+
+    // Trigger the informational success popup for the athlete
+    setDispatchedBrand(brand);
 
     try {
       await fetch(GOOGLE_SCRIPT_URL, {
@@ -947,7 +951,7 @@ function AppContent() {
                     "The Big Black Grip" Bat Grip
                   </h3>
                   <p style={{ fontSize: "14px", color: "#a1a1aa", margin: 0, maxWidth: "600px", lineHeight: "1.5" }}>
-                    Pro-feel, high-tack diamond performance grip. 100% free for verified members (<span style={{ color: "#ffffff", textDecoration: "line-through" }}>$16.00 retail</span> → <strong style={{ color: NEON_GREEN }}>$0.00</strong>). Flat $8.99 USPS shipping & handling.
+                    Single-sleeve, one-piece seamless bat grip with ultra durability and zero tape unraveling. 100% free for verified members (<span style={{ color: "#ffffff", textDecoration: "line-through" }}>$16.00 retail</span> → <strong style={{ color: NEON_GREEN }}>$0.00</strong>). Flat $8.99 USPS shipping & handling.
                   </p>
                 </div>
 
@@ -1118,6 +1122,75 @@ function AppContent() {
           </div>
         )}
       </div>
+
+      {/* 🚀 POST-INTRO CONFIRMATION NOTIFICATION MODAL */}
+      {dispatchedBrand && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.88)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1100, padding: "16px" }}>
+          <div style={{ backgroundColor: "#0d0d0d", border: `2px solid ${NEON_GREEN}`, borderRadius: "24px", width: "100%", maxWidth: "520px", padding: "30px 26px", boxShadow: "0 0 45px rgba(166, 255, 0, 0.18)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+              <span style={{ fontSize: "28px" }}>⚡</span>
+              <div>
+                <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>
+                  Direct Intro Dispatched
+                </span>
+                <h3 style={{ margin: "2px 0 0 0", fontSize: "22px", fontWeight: "900", textTransform: "uppercase", color: "#ffffff" }}>
+                  {dispatchedBrand.name}
+                </h3>
+              </div>
+            </div>
+
+            <p style={{ fontSize: "14px", color: "#ffffff", fontWeight: "700", lineHeight: "1.5", margin: "16px 0 14px 0" }}>
+              Your athletic dossier is officially in front of the decision-maker.
+            </p>
+
+            <div style={{ backgroundColor: "#050505", border: "1px solid #1f1f1f", borderRadius: "14px", padding: "16px", marginBottom: "18px", display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                <span style={{ fontSize: "14px" }}>📬</span>
+                <div style={{ fontSize: "12px", color: "#a1a1aa", lineHeight: "1.4" }}>
+                  <strong style={{ color: "#ffffff" }}>Direct Delivery:</strong> A verified snapshot with your college bio, position, contact info, and social reach has been delivered straight to the {dispatchedBrand.name} partnerships team.
+                </div>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                <span style={{ fontSize: "14px" }}>🔍</span>
+                <div style={{ fontSize: "12px", color: "#a1a1aa", lineHeight: "1.4" }}>
+                  <strong style={{ color: "#ffffff" }}>Brand Review:</strong> The brand rep will review your profile to evaluate fit for upcoming athlete rosters, creator campaigns, or product testing.
+                </div>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                <span style={{ fontSize: "14px" }}>🤝</span>
+                <div style={{ fontSize: "12px", color: "#a1a1aa", lineHeight: "1.4" }}>
+                  <strong style={{ color: "#ffffff" }}>Next Steps:</strong> If there's an alignment for an upcoming campaign, their team will reach out directly to your email or phone to discuss next steps.
+                </div>
+              </div>
+            </div>
+
+            <p style={{ fontSize: "11px", color: "#666666", lineHeight: "1.4", margin: "0 0 20px 0" }}>
+              *Note: While individual brand responses depend on current campaign budgets and roster openings, your verified profile has been delivered directly into the hands of the decision-maker.
+            </p>
+
+            <button
+              onClick={() => setDispatchedBrand(null)}
+              style={{
+                width: "100%",
+                backgroundColor: NEON_GREEN,
+                color: "#000000",
+                fontWeight: "900",
+                textTransform: "uppercase",
+                letterSpacing: "1px",
+                padding: "14px",
+                borderRadius: "10px",
+                border: "none",
+                cursor: "pointer",
+                fontSize: "13px"
+              }}
+            >
+              Got It — Back to Dugout ➔
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Validated Athlete Profile Modal */}
       {showProfileModal && (
