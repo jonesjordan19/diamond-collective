@@ -19,6 +19,7 @@ const STRIPE_GRIP_DROP_URL = "https://buy.stripe.com/8x2eVeeW57dgc5I1hX8Vi01";
 const NEON_GREEN = "#a6ff00";
 
 const FOUNDERS_POOL_TOTAL = 100000;
+const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
 
 const client = createThirdwebClient({
   clientId: "770a552ed494b40543a6696298d41606",
@@ -335,7 +336,9 @@ function AppContent() {
   const [dispatchedBrand, setDispatchedBrand] = useState<BrandItem | null>(null);
   const [profile, setProfile] = useState<AthleteProfile>(emptyProfile);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
-  const [introStatus, setIntroStatus] = useState<{ [brandName: string]: string }>({});
+  
+  // Stored as { [brandName]: timestampNumber }
+  const [introTimestamps, setIntroTimestamps] = useState<{ [brandName: string]: number }>({});
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useEffect(() => {
@@ -373,6 +376,13 @@ function AppContent() {
   const isApproved = profile.verificationStatus === "Approved";
   const hasProfile = Boolean(profile.fullName && profile.email);
 
+  // Check if an intro is active (<90 days old)
+  const isIntroActive = (brandName: string): boolean => {
+    const timestamp = introTimestamps[brandName];
+    if (!timestamp) return false;
+    return Date.now() - timestamp < NINETY_DAYS_MS;
+  };
+
   useEffect(() => {
     if (account?.address) {
       const localKey = `athlete_profile_${account.address.toLowerCase()}`;
@@ -388,7 +398,13 @@ function AppContent() {
       const savedIntros = localStorage.getItem(localIntroKey);
       if (savedIntros) {
         try {
-          setIntroStatus(JSON.parse(savedIntros));
+          const parsed = JSON.parse(savedIntros);
+          const formatted: { [bName: string]: number } = {};
+          // Backward compatibility: handle old "sent" string or number timestamp
+          Object.keys(parsed).forEach((k) => {
+            formatted[k] = typeof parsed[k] === "number" ? parsed[k] : Date.now();
+          });
+          setIntroTimestamps(formatted);
         } catch {}
       }
 
@@ -404,11 +420,11 @@ function AppContent() {
           }
 
           if (data?.existingIntros && Array.isArray(data.existingIntros)) {
-            const introsMap: { [brandName: string]: string } = {};
+            const introsMap: { [brandName: string]: number } = {};
             data.existingIntros.forEach((bName: string) => {
-              introsMap[bName] = "sent";
+              introsMap[bName] = Date.now();
             });
-            setIntroStatus((prev) => {
+            setIntroTimestamps((prev) => {
               const updated = { ...prev, ...introsMap };
               localStorage.setItem(localIntroKey, JSON.stringify(updated));
               return updated;
@@ -449,14 +465,21 @@ function AppContent() {
   };
 
   const handleRequestIntro = async (brand: BrandItem) => {
+    // If already active within 90 days, clicking shows the notification modal
+    if (isIntroActive(brand.name)) {
+      setDispatchedBrand(brand);
+      return;
+    }
+
     if (!profile.fullName || !profile.email) {
       setShowProfileModal(true);
       return;
     }
 
+    const now = Date.now();
     const localIntroKey = `athlete_intros_${account?.address?.toLowerCase()}`;
-    setIntroStatus((prev) => {
-      const updated = { ...prev, [brand.name]: "sent" };
+    setIntroTimestamps((prev) => {
+      const updated = { ...prev, [brand.name]: now };
       localStorage.setItem(localIntroKey, JSON.stringify(updated));
       return updated;
     });
@@ -1010,104 +1033,114 @@ function AppContent() {
 
                   {section.brands.length > 0 ? (
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "20px" }}>
-                      {section.brands.map((brand, bIdx) => (
-                        <div 
-                          key={bIdx}
-                          style={{ 
-                            backgroundColor: "#0a0a0a", 
-                            border: brand.isPrimary ? `1px solid ${NEON_GREEN}` : "1px solid #1f1f1f", 
-                            borderRadius: "16px", 
-                            padding: "24px", 
-                            display: "flex", 
-                            flexDirection: "column", 
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <div>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px", marginBottom: "8px" }}>
-                              <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "0.8px", flex: 1, lineHeight: "1.3" }}>
-                                {brand.tagline}
-                              </span>
-                              {brand.type === "email_intro" && (
-                                <span style={{ 
-                                  fontSize: "10px", 
+                      {section.brands.map((brand, bIdx) => {
+                        const activeIntro = isIntroActive(brand.name);
+                        return (
+                          <div 
+                            key={bIdx}
+                            style={{ 
+                              backgroundColor: "#0a0a0a", 
+                              border: brand.isPrimary ? `1px solid ${NEON_GREEN}` : "1px solid #1f1f1f", 
+                              borderRadius: "16px", 
+                              padding: "24px", 
+                              display: "flex", 
+                              flexDirection: "column", 
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <div>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px", marginBottom: "8px" }}>
+                                <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "0.8px", flex: 1, lineHeight: "1.3" }}>
+                                  {brand.tagline}
+                                </span>
+                                {brand.type === "email_intro" && (
+                                  <span style={{ 
+                                    fontSize: "10px", 
+                                    fontWeight: "900", 
+                                    backgroundColor: "rgba(166, 255, 0, 0.12)", 
+                                    color: NEON_GREEN, 
+                                    border: `1px solid ${NEON_GREEN}`, 
+                                    padding: "4px 10px", 
+                                    borderRadius: "999px", 
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.6px",
+                                    whiteSpace: "nowrap",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    lineHeight: "1",
+                                    flexShrink: 0
+                                  }}>
+                                    Direct Intro
+                                  </span>
+                                )}
+                              </div>
+                              <h4 style={{ fontSize: "19px", fontWeight: "900", color: "#ffffff", margin: "8px 0 10px 0", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                                {brand.name}
+                              </h4>
+                              <p style={{ fontSize: "13px", color: "#888888", lineHeight: "1.55", margin: 0 }}>
+                                {brand.description}
+                              </p>
+                            </div>
+
+                            {brand.type === "email_intro" ? (
+                              <button
+                                onClick={() => handleRequestIntro(brand)}
+                                style={{ 
+                                  width: "100%",
+                                  backgroundColor: activeIntro ? "#15803d" : NEON_GREEN, 
+                                  color: activeIntro ? "#ffffff" : "#000000", 
+                                  border: "none", 
                                   fontWeight: "900", 
-                                  backgroundColor: "rgba(166, 255, 0, 0.12)", 
-                                  color: NEON_GREEN, 
-                                  border: `1px solid ${NEON_GREEN}`, 
-                                  padding: "4px 10px", 
-                                  borderRadius: "999px", 
-                                  textTransform: "uppercase",
-                                  letterSpacing: "0.6px",
-                                  whiteSpace: "nowrap",
-                                  display: "inline-flex",
+                                  padding: "14px", 
+                                  borderRadius: "10px", 
+                                  fontSize: "12px", 
+                                  textTransform: "uppercase", 
+                                  letterSpacing: "1px", 
+                                  cursor: "pointer", 
+                                  marginTop: "22px",
+                                  display: "flex",
                                   alignItems: "center",
                                   justifyContent: "center",
-                                  lineHeight: "1",
-                                  flexShrink: 0
-                                }}>
-                                  Direct Intro
-                                </span>
-                              )}
-                            </div>
-                            <h4 style={{ fontSize: "19px", fontWeight: "900", color: "#ffffff", margin: "8px 0 10px 0", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                              {brand.name}
-                            </h4>
-                            <p style={{ fontSize: "13px", color: "#888888", lineHeight: "1.55", margin: 0 }}>
-                              {brand.description}
-                            </p>
+                                  gap: "6px"
+                                }}
+                              >
+                                {activeIntro ? (
+                                  <>
+                                    <span>Intro Dispatched ✓</span>
+                                    <span style={{ fontSize: "11px", opacity: 0.8 }}>(View Details ℹ️)</span>
+                                  </>
+                                ) : (
+                                  brand.buttonText
+                                )}
+                              </button>
+                            ) : (
+                              <a
+                                href={brand.link} 
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ 
+                                  display: "block", 
+                                  textAlign: "center", 
+                                  backgroundColor: "#141414", 
+                                  color: "#ffffff", 
+                                  border: "1px solid #2a2a2a", 
+                                  fontWeight: "900", 
+                                  padding: "14px", 
+                                  borderRadius: "10px", 
+                                  fontSize: "12px", 
+                                  textTransform: "uppercase", 
+                                  letterSpacing: "1px", 
+                                  textDecoration: "none", 
+                                  marginTop: "22px" 
+                                }}
+                              >
+                                {brand.buttonText}
+                              </a>
+                            )}
                           </div>
-
-                          {brand.type === "email_intro" ? (
-                            <button
-                              onClick={() => handleRequestIntro(brand)}
-                              disabled={introStatus[brand.name] === "sent"}
-                              style={{ 
-                                width: "100%",
-                                backgroundColor: introStatus[brand.name] === "sent" ? "#15803d" : NEON_GREEN, 
-                                color: introStatus[brand.name] === "sent" ? "#ffffff" : "#000000", 
-                                border: "none", 
-                                fontWeight: "900", 
-                                padding: "14px", 
-                                borderRadius: "10px", 
-                                fontSize: "12px", 
-                                textTransform: "uppercase", 
-                                letterSpacing: "1px", 
-                                cursor: introStatus[brand.name] === "sent" ? "default" : "pointer", 
-                                marginTop: "22px",
-                                opacity: introStatus[brand.name] === "sent" ? 0.9 : 1
-                              }}
-                            >
-                              {introStatus[brand.name] === "sent" 
-                                ? "Intro Dispatched ✓" 
-                                : brand.buttonText}
-                            </button>
-                          ) : (
-                            <a
-                              href={brand.link} 
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{ 
-                                display: "block", 
-                                textAlign: "center", 
-                                backgroundColor: "#141414", 
-                                color: "#ffffff", 
-                                border: "1px solid #2a2a2a", 
-                                fontWeight: "900", 
-                                padding: "14px", 
-                                borderRadius: "10px", 
-                                fontSize: "12px", 
-                                textTransform: "uppercase", 
-                                letterSpacing: "1px", 
-                                textDecoration: "none", 
-                                marginTop: "22px" 
-                              }}
-                            >
-                              {brand.buttonText}
-                            </a>
-                          )}
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   ) : (
                     <div style={{ backgroundColor: "#050505", border: "1px dashed #1a1a1a", borderRadius: "14px", padding: "20px", textAlign: "center" }}>
@@ -1140,7 +1173,7 @@ function AppContent() {
             </div>
 
             <p style={{ fontSize: "14px", color: "#ffffff", fontWeight: "700", lineHeight: "1.5", margin: "16px 0 14px 0" }}>
-              Your athletic dossier is officially in front of the decision-maker.
+              Your athletic dossier is officially on the decision-maker's desk.
             </p>
 
             <div style={{ backgroundColor: "#050505", border: "1px solid #1f1f1f", borderRadius: "14px", padding: "16px", marginBottom: "18px", display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -1167,7 +1200,7 @@ function AppContent() {
             </div>
 
             <p style={{ fontSize: "11px", color: "#666666", lineHeight: "1.4", margin: "0 0 20px 0" }}>
-              *Note: While individual brand responses depend on current campaign budgets and roster openings, your verified profile has been delivered directly into the hands of the decision-maker.
+              *Note: While individual brand responses depend on current campaign budgets and roster openings, your verified profile has been delivered directly into the hands of the decision-maker. This intro window resets after 90 days if you wish to resubmit updated seasonal stats or metrics.
             </p>
 
             <button
