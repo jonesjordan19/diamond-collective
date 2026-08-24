@@ -31,7 +31,6 @@ const sluggerContract = getContract({
   address: "0xF3f6D32ABCf2fDeAB3c6D0b440230714166Cc4A1",
 });
 
-// Robust wallet configuration to prevent sign-in loop
 const supportedWallets = [
   inAppWallet({
     auth: {
@@ -385,6 +384,7 @@ function AppContent() {
     return Date.now() - timestamp < NINETY_DAYS_MS;
   };
 
+  // Cross-Domain JSONP Loader that completely bypasses CORS & Google redirects
   useEffect(() => {
     if (account?.address) {
       const lowerWallet = account.address.toLowerCase();
@@ -410,33 +410,36 @@ function AppContent() {
         } catch {}
       }
 
-      // Fetch with redirect follow and safe fallback
-      fetch(`${GOOGLE_SCRIPT_URL}?walletAddress=${encodeURIComponent(lowerWallet)}`, {
-        method: "GET",
-        redirect: "follow",
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data && data.profile && data.profile.fullName) {
-            setProfile(data.profile);
-            localStorage.setItem(localKey, JSON.stringify(data.profile));
-          }
+      const callbackName = `handle_dc_${Date.now()}`;
+      (window as any)[callbackName] = (data: any) => {
+        if (data && data.profile && data.profile.fullName) {
+          setProfile(data.profile);
+          localStorage.setItem(localKey, JSON.stringify(data.profile));
+        }
 
-          if (data?.existingIntros && Array.isArray(data.existingIntros)) {
-            const introsMap: { [brandName: string]: number } = {};
-            data.existingIntros.forEach((bName: string) => {
-              introsMap[bName] = Date.now();
-            });
-            setIntroTimestamps((prev) => {
-              const updated = { ...prev, ...introsMap };
-              localStorage.setItem(localIntroKey, JSON.stringify(updated));
-              return updated;
-            });
-          }
-        })
-        .catch(() => {
-          // If network fetch fails, retain cached profile from local storage
-        });
+        if (data?.existingIntros && Array.isArray(data.existingIntros)) {
+          const introsMap: { [brandName: string]: number } = {};
+          data.existingIntros.forEach((bName: string) => {
+            introsMap[bName] = Date.now();
+          });
+          setIntroTimestamps((prev) => {
+            const updated = { ...prev, ...introsMap };
+            localStorage.setItem(localIntroKey, JSON.stringify(updated));
+            return updated;
+          });
+        }
+
+        try {
+          delete (window as any)[callbackName];
+          const scriptTag = document.getElementById(callbackName);
+          if (scriptTag) scriptTag.remove();
+        } catch {}
+      };
+
+      const script = document.createElement("script");
+      script.id = callbackName;
+      script.src = `${GOOGLE_SCRIPT_URL}?walletAddress=${encodeURIComponent(lowerWallet)}&callback=${callbackName}`;
+      document.body.appendChild(script);
     }
   }, [account?.address]);
 
