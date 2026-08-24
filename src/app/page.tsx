@@ -31,10 +31,15 @@ const sluggerContract = getContract({
   address: "0xF3f6D32ABCf2fDeAB3c6D0b440230714166Cc4A1",
 });
 
+// Robust wallet configuration to prevent sign-in loop
 const supportedWallets = [
   inAppWallet({
     auth: {
       options: ["google", "apple", "phone"],
+    },
+    smartAccount: {
+      chain: base,
+      sponsorGas: true,
     },
   }),
 ];
@@ -336,8 +341,6 @@ function AppContent() {
   const [dispatchedBrand, setDispatchedBrand] = useState<BrandItem | null>(null);
   const [profile, setProfile] = useState<AthleteProfile>(emptyProfile);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
-  
-  // Stored as { [brandName]: timestampNumber }
   const [introTimestamps, setIntroTimestamps] = useState<{ [brandName: string]: number }>({});
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
@@ -376,7 +379,6 @@ function AppContent() {
   const isApproved = profile.verificationStatus === "Approved";
   const hasProfile = Boolean(profile.fullName && profile.email);
 
-  // Check if an intro is active (<90 days old)
   const isIntroActive = (brandName: string): boolean => {
     const timestamp = introTimestamps[brandName];
     if (!timestamp) return false;
@@ -385,8 +387,9 @@ function AppContent() {
 
   useEffect(() => {
     if (account?.address) {
-      const localKey = `athlete_profile_${account.address.toLowerCase()}`;
-      const localIntroKey = `athlete_intros_${account.address.toLowerCase()}`;
+      const lowerWallet = account.address.toLowerCase();
+      const localKey = `athlete_profile_${lowerWallet}`;
+      const localIntroKey = `athlete_intros_${lowerWallet}`;
       
       const savedLocal = localStorage.getItem(localKey);
       if (savedLocal) {
@@ -400,7 +403,6 @@ function AppContent() {
         try {
           const parsed = JSON.parse(savedIntros);
           const formatted: { [bName: string]: number } = {};
-          // Backward compatibility: handle old "sent" string or number timestamp
           Object.keys(parsed).forEach((k) => {
             formatted[k] = typeof parsed[k] === "number" ? parsed[k] : Date.now();
           });
@@ -408,15 +410,16 @@ function AppContent() {
         } catch {}
       }
 
-      fetch(`${GOOGLE_SCRIPT_URL}?walletAddress=${encodeURIComponent(account.address)}`)
+      // Fetch with redirect follow and safe fallback
+      fetch(`${GOOGLE_SCRIPT_URL}?walletAddress=${encodeURIComponent(lowerWallet)}`, {
+        method: "GET",
+        redirect: "follow",
+      })
         .then((res) => res.json())
         .then((data) => {
-          if (data?.profile && data.profile.fullName) {
+          if (data && data.profile && data.profile.fullName) {
             setProfile(data.profile);
             localStorage.setItem(localKey, JSON.stringify(data.profile));
-          } else {
-            localStorage.removeItem(localKey);
-            setProfile(emptyProfile);
           }
 
           if (data?.existingIntros && Array.isArray(data.existingIntros)) {
@@ -431,7 +434,9 @@ function AppContent() {
             });
           }
         })
-        .catch(() => {});
+        .catch(() => {
+          // If network fetch fails, retain cached profile from local storage
+        });
     }
   }, [account?.address]);
 
@@ -440,7 +445,8 @@ function AppContent() {
     if (!account?.address) return;
     setIsSavingProfile(true);
 
-    const localKey = `athlete_profile_${account.address.toLowerCase()}`;
+    const lowerWallet = account.address.toLowerCase();
+    const localKey = `athlete_profile_${lowerWallet}`;
     localStorage.setItem(localKey, JSON.stringify(profile));
 
     try {
@@ -449,7 +455,7 @@ function AppContent() {
         mode: "no-cors",
         body: JSON.stringify({
           action: "saveProfile",
-          walletAddress: account.address,
+          walletAddress: lowerWallet,
           ...profile,
         }),
       });
@@ -465,7 +471,6 @@ function AppContent() {
   };
 
   const handleRequestIntro = async (brand: BrandItem) => {
-    // If already active within 90 days, clicking shows the notification modal
     if (isIntroActive(brand.name)) {
       setDispatchedBrand(brand);
       return;
@@ -477,14 +482,14 @@ function AppContent() {
     }
 
     const now = Date.now();
-    const localIntroKey = `athlete_intros_${account?.address?.toLowerCase()}`;
+    const lowerWallet = account?.address?.toLowerCase() || "";
+    const localIntroKey = `athlete_intros_${lowerWallet}`;
     setIntroTimestamps((prev) => {
       const updated = { ...prev, [brand.name]: now };
       localStorage.setItem(localIntroKey, JSON.stringify(updated));
       return updated;
     });
 
-    // Trigger the informational success popup for the athlete
     setDispatchedBrand(brand);
 
     try {
@@ -493,7 +498,7 @@ function AppContent() {
         mode: "no-cors",
         body: JSON.stringify({
           action: "requestIntro",
-          walletAddress: account?.address,
+          walletAddress: lowerWallet,
           brandName: brand.name,
           brandRepEmail: brand.brandRepEmail,
           brandRepName: brand.brandRepName,
