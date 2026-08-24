@@ -384,17 +384,19 @@ function AppContent() {
     return Date.now() - timestamp < NINETY_DAYS_MS;
   };
 
-  // Cross-Domain JSONP Loader that completely bypasses CORS & Google redirects
+  // Robust profile loading
   useEffect(() => {
     if (account?.address) {
       const lowerWallet = account.address.toLowerCase();
       const localKey = `athlete_profile_${lowerWallet}`;
       const localIntroKey = `athlete_intros_${lowerWallet}`;
       
+      // 1. Instantly load from localStorage if available
       const savedLocal = localStorage.getItem(localKey);
       if (savedLocal) {
         try {
-          setProfile(JSON.parse(savedLocal));
+          const parsed = JSON.parse(savedLocal);
+          if (parsed.fullName) setProfile(parsed);
         } catch {}
       }
 
@@ -410,14 +412,15 @@ function AppContent() {
         } catch {}
       }
 
-      const callbackName = `handle_dc_${Date.now()}`;
+      // 2. Fetch live data from Google Sheet with unique JSONP handler
+      const callbackName = `cb_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
       (window as any)[callbackName] = (data: any) => {
         if (data && data.profile && data.profile.fullName) {
           setProfile(data.profile);
           localStorage.setItem(localKey, JSON.stringify(data.profile));
         }
 
-        if (data?.existingIntros && Array.isArray(data.existingIntros)) {
+        if (data && Array.isArray(data.existingIntros)) {
           const introsMap: { [brandName: string]: number } = {};
           data.existingIntros.forEach((bName: string) => {
             introsMap[bName] = Date.now();
@@ -431,14 +434,14 @@ function AppContent() {
 
         try {
           delete (window as any)[callbackName];
-          const scriptTag = document.getElementById(callbackName);
-          if (scriptTag) scriptTag.remove();
+          const elem = document.getElementById(callbackName);
+          if (elem) elem.remove();
         } catch {}
       };
 
       const script = document.createElement("script");
       script.id = callbackName;
-      script.src = `${GOOGLE_SCRIPT_URL}?walletAddress=${encodeURIComponent(lowerWallet)}&callback=${callbackName}`;
+      script.src = `${GOOGLE_SCRIPT_URL}?walletAddress=${encodeURIComponent(lowerWallet)}&callback=${callbackName}&_t=${Date.now()}`;
       document.body.appendChild(script);
     }
   }, [account?.address]);
@@ -450,6 +453,8 @@ function AppContent() {
 
     const lowerWallet = account.address.toLowerCase();
     const localKey = `athlete_profile_${lowerWallet}`;
+    
+    // Save locally immediately
     localStorage.setItem(localKey, JSON.stringify(profile));
 
     try {
@@ -465,7 +470,7 @@ function AppContent() {
 
       setIsSavingProfile(false);
       setShowProfileModal(false);
-      alert("Application submitted! Our team will review your collegiate status.");
+      alert("Application submitted! Your profile is now saved.");
     } catch {
       setIsSavingProfile(false);
       setShowProfileModal(false);
