@@ -384,14 +384,12 @@ function AppContent() {
     return Date.now() - timestamp < NINETY_DAYS_MS;
   };
 
-  // Robust profile loading
   useEffect(() => {
     if (account?.address) {
       const lowerWallet = account.address.toLowerCase();
       const localKey = `athlete_profile_${lowerWallet}`;
       const localIntroKey = `athlete_intros_${lowerWallet}`;
       
-      // 1. Instantly load from localStorage if available
       const savedLocal = localStorage.getItem(localKey);
       if (savedLocal) {
         try {
@@ -412,7 +410,6 @@ function AppContent() {
         } catch {}
       }
 
-      // 2. Fetch live data from Google Sheet with unique JSONP handler
       const callbackName = `cb_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
       (window as any)[callbackName] = (data: any) => {
         if (data && data.profile && data.profile.fullName) {
@@ -454,7 +451,6 @@ function AppContent() {
     const lowerWallet = account.address.toLowerCase();
     const localKey = `athlete_profile_${lowerWallet}`;
     
-    // Save locally immediately
     localStorage.setItem(localKey, JSON.stringify(profile));
 
     try {
@@ -740,80 +736,140 @@ function AppContent() {
                 </span>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "18px" }}>
-                {MARKET_SECTIONS.flatMap(s => s.brands).map((brand, bIdx) => (
-                  <div 
-                    key={bIdx}
-                    style={{ 
-                      backgroundColor: "#0a0a0a", 
-                      border: brand.isPrimary ? `1px solid rgba(166, 255, 0, 0.3)` : "1px solid #1a1a1a", 
-                      borderRadius: "16px", 
-                      padding: "22px", 
+              <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
+                {MARKET_SECTIONS.map((section, idx) => (
+                  <div key={idx} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    {/* Public Category Banner */}
+                    <div style={{ 
                       display: "flex", 
-                      flexDirection: "column", 
-                      justifyContent: "space-between" 
-                    }}
-                  >
-                    <div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px", marginBottom: "8px" }}>
-                        <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "0.8px", flex: 1, lineHeight: "1.3" }}>
-                          {brand.tagline}
+                      alignItems: "center", 
+                      justifyContent: "space-between",
+                      backgroundColor: "#0d0d0d",
+                      border: "1px solid #1f1f1f",
+                      borderLeft: `4px solid ${NEON_GREEN}`,
+                      borderRadius: "14px",
+                      padding: "12px 18px",
+                      flexWrap: "wrap",
+                      gap: "10px"
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <span style={{ 
+                          fontSize: "20px", 
+                          backgroundColor: "rgba(166, 255, 0, 0.08)", 
+                          border: "1px solid rgba(166, 255, 0, 0.2)",
+                          width: "36px", 
+                          height: "36px", 
+                          borderRadius: "10px", 
+                          display: "flex", 
+                          alignItems: "center", 
+                          justifyContent: "center" 
+                        }}>
+                          {section.emoji}
                         </span>
-                        {brand.type === "email_intro" && (
-                          <span style={{ 
-                            fontSize: "10px", 
-                            fontWeight: "900", 
-                            backgroundColor: "rgba(166, 255, 0, 0.12)", 
-                            color: NEON_GREEN, 
-                            border: `1px solid ${NEON_GREEN}`, 
-                            padding: "4px 10px", 
-                            borderRadius: "999px", 
-                            textTransform: "uppercase",
-                            letterSpacing: "0.6px",
-                            whiteSpace: "nowrap",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            lineHeight: "1",
-                            flexShrink: 0
-                          }}>
-                            Direct Intro
+                        <div>
+                          <span style={{ fontSize: "10px", color: NEON_GREEN, fontWeight: "900", letterSpacing: "1.5px", textTransform: "uppercase", display: "block" }}>
+                            Category
                           </span>
-                        )}
+                          <h4 style={{ margin: 0, fontSize: "18px", fontWeight: "900", textTransform: "uppercase", letterSpacing: "1px", color: "#ffffff" }}>
+                            {section.title}
+                          </h4>
+                        </div>
                       </div>
-                      <h4 style={{ fontSize: "18px", fontWeight: "900", color: "#ffffff", margin: "6px 0 8px 0", textTransform: "uppercase" }}>
-                        {brand.name}
-                      </h4>
-                      <p style={{ fontSize: "13px", color: "#888888", lineHeight: "1.5", margin: 0 }}>
-                        {brand.description}
-                      </p>
+
+                      <span style={{ 
+                        fontSize: "11px", 
+                        color: "#a1a1aa", 
+                        fontWeight: "800", 
+                        backgroundColor: "#171717", 
+                        border: "1px solid #262626",
+                        padding: "5px 12px", 
+                        borderRadius: "999px",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px"
+                      }}>
+                        {section.brands.length} {section.brands.length === 1 ? "Partner" : "Partners"}
+                      </span>
                     </div>
 
-                    <button
-                      onClick={handleOpenLogin}
-                      style={{ 
-                        width: "100%",
-                        marginTop: "20px", 
-                        backgroundColor: "#0d0d0d", 
-                        border: "1px solid #2a2a2a", 
-                        borderRadius: "10px", 
-                        padding: "13px", 
-                        textAlign: "center", 
-                        fontSize: "11px", 
-                        fontWeight: "900", 
-                        color: NEON_GREEN, 
-                        textTransform: "uppercase", 
-                        letterSpacing: "0.8px",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "6px",
-                        transition: "all 0.15s ease"
-                      }}
-                    >
-                      Sign In & Verify to Unlock ↗
-                    </button>
+                    {section.brands.length > 0 ? (
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "16px" }}>
+                        {section.brands.map((brand, bIdx) => (
+                          <div 
+                            key={bIdx}
+                            style={{ 
+                              backgroundColor: "#0a0a0a", 
+                              border: brand.isPrimary ? `1px solid rgba(166, 255, 0, 0.3)` : "1px solid #1a1a1a", 
+                              borderRadius: "16px", 
+                              padding: "22px", 
+                              display: "flex", 
+                              flexDirection: "column", 
+                              justifyContent: "space-between" 
+                            }}
+                          >
+                            <div>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px", marginBottom: "8px" }}>
+                                <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "0.8px", flex: 1, lineHeight: "1.3" }}>
+                                  {brand.tagline}
+                                </span>
+                                {brand.type === "email_intro" && (
+                                  <span style={{ 
+                                    fontSize: "10px", 
+                                    fontWeight: "900", 
+                                    backgroundColor: "rgba(166, 255, 0, 0.12)", 
+                                    color: NEON_GREEN, 
+                                    border: `1px solid ${NEON_GREEN}`, 
+                                    padding: "4px 10px", 
+                                    borderRadius: "999px", 
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.6px",
+                                    whiteSpace: "nowrap",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    lineHeight: "1",
+                                    flexShrink: 0
+                                  }}>
+                                    Direct Intro
+                                  </span>
+                                )}
+                              </div>
+                              <h4 style={{ fontSize: "18px", fontWeight: "900", color: "#ffffff", margin: "6px 0 8px 0", textTransform: "uppercase" }}>
+                                {brand.name}
+                              </h4>
+                              <p style={{ fontSize: "13px", color: "#888888", lineHeight: "1.5", margin: 0 }}>
+                                {brand.description}
+                              </p>
+                            </div>
+
+                            <button
+                              onClick={handleOpenLogin}
+                              style={{ 
+                                width: "100%",
+                                marginTop: "20px", 
+                                backgroundColor: "#0d0d0d", 
+                                border: "1px solid #2a2a2a", 
+                                borderRadius: "10px", 
+                                padding: "13px", 
+                                textAlign: "center", 
+                                fontSize: "11px", 
+                                fontWeight: "900", 
+                                color: NEON_GREEN, 
+                                textTransform: "uppercase", 
+                                letterSpacing: "0.8px",
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "6px",
+                                transition: "all 0.15s ease"
+                              }}
+                            >
+                              Sign In & Verify to Unlock ↗
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
                 ))}
               </div>
@@ -1031,21 +1087,66 @@ function AppContent() {
             </div>
 
             {/* Unlocked Brand Dugout Directory */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "48px" }}>
               {MARKET_SECTIONS.map((section, idx) => (
-                <div key={idx} style={{ borderBottom: "1px solid #141414", paddingBottom: "36px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
-                    <span style={{ fontSize: "22px" }}>{section.emoji}</span>
-                    <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "900", textTransform: "uppercase", letterSpacing: "1px", color: "#ffffff" }}>
-                      {section.title}
-                    </h3>
-                    <span style={{ fontSize: "11px", color: "#666666", fontWeight: "700", marginLeft: "auto" }}>
+                <div key={idx} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+                  
+                  {/* 🏷️ HIGHLIGHTED CATEGORY BANNER HEADER */}
+                  <div style={{ 
+                    display: "flex", 
+                    alignItems: "center", 
+                    justifyContent: "space-between",
+                    backgroundColor: "#0d0d0d",
+                    border: "1px solid #1f1f1f",
+                    borderLeft: `4px solid ${NEON_GREEN}`,
+                    borderRadius: "14px",
+                    padding: "14px 18px",
+                    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.4)",
+                    flexWrap: "wrap",
+                    gap: "10px"
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <span style={{ 
+                        fontSize: "22px", 
+                        backgroundColor: "rgba(166, 255, 0, 0.08)", 
+                        border: "1px solid rgba(166, 255, 0, 0.2)",
+                        width: "38px", 
+                        height: "38px", 
+                        borderRadius: "10px", 
+                        display: "flex", 
+                        alignItems: "center", 
+                        justifyContent: "center" 
+                      }}>
+                        {section.emoji}
+                      </span>
+                      <div>
+                        <span style={{ fontSize: "10px", color: NEON_GREEN, fontWeight: "900", letterSpacing: "1.5px", textTransform: "uppercase", display: "block" }}>
+                          Category
+                        </span>
+                        <h3 style={{ margin: 0, fontSize: "20px", fontWeight: "900", textTransform: "uppercase", letterSpacing: "1px", color: "#ffffff" }}>
+                          {section.title}
+                        </h3>
+                      </div>
+                    </div>
+
+                    <span style={{ 
+                      fontSize: "11px", 
+                      color: "#a1a1aa", 
+                      fontWeight: "800", 
+                      backgroundColor: "#171717", 
+                      border: "1px solid #262626",
+                      padding: "6px 14px", 
+                      borderRadius: "999px",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px"
+                    }}>
                       {section.brands.length} {section.brands.length === 1 ? "Partner" : "Partners"}
                     </span>
                   </div>
 
+                  {/* Brand Cards Grid */}
                   {section.brands.length > 0 ? (
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "20px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "16px" }}>
                       {section.brands.map((brand, bIdx) => {
                         const activeIntro = isIntroActive(brand.name);
                         return (
@@ -1054,7 +1155,7 @@ function AppContent() {
                             style={{ 
                               backgroundColor: "#0a0a0a", 
                               border: brand.isPrimary ? `1px solid ${NEON_GREEN}` : "1px solid #1f1f1f", 
-                              borderRadius: "16px", 
+                              borderRadius: "18px", 
                               padding: "24px", 
                               display: "flex", 
                               flexDirection: "column", 
@@ -1088,7 +1189,7 @@ function AppContent() {
                                   </span>
                                 )}
                               </div>
-                              <h4 style={{ fontSize: "19px", fontWeight: "900", color: "#ffffff", margin: "8px 0 10px 0", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                              <h4 style={{ fontSize: "20px", fontWeight: "900", color: "#ffffff", margin: "8px 0 10px 0", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                                 {brand.name}
                               </h4>
                               <p style={{ fontSize: "13px", color: "#888888", lineHeight: "1.55", margin: 0 }}>
@@ -1156,7 +1257,7 @@ function AppContent() {
                       })}
                     </div>
                   ) : (
-                    <div style={{ backgroundColor: "#050505", border: "1px dashed #1a1a1a", borderRadius: "14px", padding: "20px", textAlign: "center" }}>
+                    <div style={{ backgroundColor: "#080808", border: "1px dashed #1a1a1a", borderRadius: "14px", padding: "20px", textAlign: "center" }}>
                       <p style={{ margin: 0, fontSize: "12px", color: "#555555", fontWeight: "600" }}>
                         Partner announcements dropping soon for {section.title}.
                       </p>
