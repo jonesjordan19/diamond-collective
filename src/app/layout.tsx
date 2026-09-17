@@ -1,55 +1,47 @@
-import type { Metadata, Viewport } from "next";
-import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "The Diamond Collective | Powered by Slugger Coin ($SLUG)",
-  description:
-    "Your digital clubhouse for deals, gear & access. Exclusively for college baseball players.",
-  applicationName: "The Diamond Collective",
-  appleWebApp: {
-    capable: true,
-    title: "Diamond Collective",
-    statusBarStyle: "black-translucent",
-  },
-  openGraph: {
-    title: "The Diamond Collective | Powered by Slugger Coin ($SLUG)",
-    description:
-      "Your digital clubhouse for deals, gear & access. Exclusively for college baseball players.",
-    url: "https://sluggercoin.com",
-    siteName: "The Diamond Collective",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "The Diamond Collective | Powered by Slugger Coin ($SLUG)",
-    description:
-      "Your digital clubhouse for deals, gear & access. Exclusively for college baseball players.",
-  },
-};
+const inter = Inter({ subsets: ["latin"] });
 
-export const viewport: Viewport = {
-  themeColor: "#000000",
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
+export const metadata: Metadata = {
+  title: "The Diamond Collective | Powered by Slugger Coin",
+  description: "Collegiate Baseball Honor-Code Registry & NIL Brand Exchange",
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
+  const GA_MEASUREMENT_ID = "G-QRBM2SC148";
+
   return (
-    <html lang="en" style={{ backgroundColor: "#000000" }}>
+    <html lang="en">
       <head>
-        <meta name="apple-mobile-web-app-title" content="Diamond Collective" />
+        {/* Google Analytics Tag */}
+        <Script
+          strategy="afterInteractive"
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+        />
+        <Script
+          id="google-analytics"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${GA_MEASUREMENT_ID}', {
+                page_path: window.location.pathname,
+              });
+            `,
+          }}
+        />
       </head>
-      <body style={{ margin: 0, padding: 0, backgroundColor: "#000000" }}>
+      <body className={inter.className} style={{ margin: 0, backgroundColor: "#000000" }}>
         {children}
-        <Analytics />
-        <SpeedInsights />
       </body>
     </html>
   );
