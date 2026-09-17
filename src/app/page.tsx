@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { createThirdwebClient, getContract } from "thirdweb";
 import { base } from "thirdweb/chains";
 import { 
@@ -290,20 +290,17 @@ const FAQS = [
   },
   {
     q: "What is the National Scouting Scoreboard?",
-    a: "A member-only honor-code data registry where verified athletes log their hitting, pitching, and 60-yard metrics with date stamps and social links for collegiate transfer portal coaches and professional scouts.",
-  },
-  {
-    q: "What happens when I request a Direct Brand Intro?",
-    a: "Our automated system packages your athletic dossier, verified roster bio, contact information, and social media reach into a formal introduction dispatched directly to the brand's partnership team and CC'd to your email.",
+    a: "A public, honor-code data registry where verified athletes log their hitting, pitching, and 60-yard metrics with timestamps and social links for collegiate transfer portal coaches and professional scouts.",
   },
 ];
 
-interface AthleteProfile {
+export interface AthleteProfile {
   verificationStatus?: string;
   fullName: string;
   email: string;
   phone: string;
   college: string;
+  state?: string;
   position: string;
   collegeYear: string;
   playerStatus: string;
@@ -315,22 +312,19 @@ interface AthleteProfile {
   xUrl: string;
   xFollowers: string;
   
-  // Scouting Matrix & Leaderboard Attributes
-  primaryRole?: "HITTER" | "PITCHER" | "TWP";
-  isProfileVisible?: boolean;
+  primaryRole: "HITTER" | "PITCHER" | "TWP";
+  isProfileVisible: boolean;
   social1_Type?: string;
   social1_Url?: string;
   social2_Type?: string;
   social2_Url?: string;
 
-  // Hitter Metrics
   maxExitVelo?: string;
   ninetyEV?: string;
   batSpeed?: string;
   sixtyTime?: string;
   recordedDateHitting?: string;
 
-  // Pitcher Metrics
   peakFB?: string;
   sittingFB?: string;
   offSpeedVelo?: string;
@@ -347,6 +341,7 @@ const emptyProfile: AthleteProfile = {
   email: "",
   phone: "",
   college: "",
+  state: "UT",
   position: "",
   collegeYear: "Freshman",
   playerStatus: "Incoming Freshman",
@@ -378,6 +373,73 @@ const emptyProfile: AthleteProfile = {
   recordedDatePitching: "",
 };
 
+// Initial roster so visitors always see that the board is active
+const INITIAL_PUBLIC_ROSTER: AthleteProfile[] = [
+  {
+    ...emptyProfile,
+    fullName: "Jordan Jones",
+    college: "University of Utah",
+    state: "UT",
+    position: "LHP",
+    primaryRole: "PITCHER",
+    playerStatus: "Incoming Freshman",
+    peakFB: "85.0",
+    sittingFB: "82-84",
+    offSpeedType: "Curveball",
+    offSpeedVelo: "74.0",
+    fbSpinRate: "2280",
+    offSpeedSpinRate: "2410",
+    firstPitchStrike: "66",
+    recordedDatePitching: "09/17/2026",
+    social1_Type: "X",
+    social1_Url: "https://x.com",
+    social2_Type: "IG",
+    social2_Url: "https://instagram.com",
+  },
+  {
+    ...emptyProfile,
+    fullName: "Carter Davis",
+    college: "Salt Lake CC",
+    state: "UT",
+    position: "OF / RHP",
+    primaryRole: "TWP",
+    playerStatus: "Transfer Portal",
+    maxExitVelo: "104.2",
+    ninetyEV: "100.8",
+    batSpeed: "77.5",
+    sixtyTime: "6.58",
+    peakFB: "93.4",
+    sittingFB: "90-92",
+    offSpeedType: "Slider",
+    offSpeedVelo: "82.5",
+    fbSpinRate: "2450",
+    offSpeedSpinRate: "2610",
+    firstPitchStrike: "70",
+    recordedDateHitting: "09/15/2026",
+    recordedDatePitching: "09/15/2026",
+    social1_Type: "X",
+    social1_Url: "https://x.com",
+    social2_Type: "IG",
+    social2_Url: "https://instagram.com",
+  },
+  {
+    ...emptyProfile,
+    fullName: "Tyler Brooks",
+    college: "Central Arizona",
+    state: "AZ",
+    position: "SS",
+    primaryRole: "HITTER",
+    playerStatus: "Juco Uncommitted",
+    maxExitVelo: "99.4",
+    ninetyEV: "96.2",
+    batSpeed: "75.1",
+    sixtyTime: "6.64",
+    recordedDateHitting: "09/12/2026",
+    social1_Type: "IG",
+    social1_Url: "https://instagram.com",
+  },
+];
+
 function AppContent() {
   const account = useActiveAccount();
   const { connect } = useConnectModal();
@@ -387,10 +449,15 @@ function AppContent() {
   // 50/50 Dual Tab
   const [activeMainTab, setActiveMainTab] = useState<"EXCHANGE" | "SCOREBOARD">("SCOREBOARD");
   
-  // Filter and Data states
-  const [scoutRoleFilter, setScoutRoleFilter] = useState<"ALL" | "HITTER" | "PITCHER" | "TWP">("ALL");
-  const [leaderboardRows, setLeaderboardRows] = useState<AthleteProfile[]>([]);
-  const [loadingScoreboard, setLoadingScoreboard] = useState(true);
+  // High-Utility Scout Filter State
+  const [roleFilter, setRoleFilter] = useState<"ALL" | "HITTER" | "PITCHER" | "TWP">("ALL");
+  const [positionFilter, setPositionFilter] = useState<string>("ALL");
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [stateFilter, setStateFilter] = useState<string>("ALL");
+  const [sortBy, setSortBy] = useState<"DEFAULT" | "MAX_EV" | "PEAK_FB" | "SIXTY">("DEFAULT");
+
+  const [leaderboardRows, setLeaderboardRows] = useState<AthleteProfile[]>(INITIAL_PUBLIC_ROSTER);
+  const [loadingScoreboard, setLoadingScoreboard] = useState(false);
 
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [dispatchedBrand, setDispatchedBrand] = useState<BrandItem | null>(null);
@@ -440,22 +507,25 @@ function AppContent() {
     return Date.now() - timestamp < NINETY_DAYS_MS;
   };
 
+  // Fetch Public Scoreboard (Loads for ALL visitors immediately)
   useEffect(() => {
     const sheetUrl = process.env.NEXT_PUBLIC_SCOUTING_SHEET_URL;
     if (sheetUrl) {
+      setLoadingScoreboard(true);
       fetch(sheetUrl)
         .then((res) => res.json())
         .then((data: any[]) => {
           if (Array.isArray(data) && data.length > 0) {
             const mapped: AthleteProfile[] = data.map((item) => ({
               ...emptyProfile,
-              fullName: item.fullName || item.athleteEmail?.split("@")[0] || "Member",
-              email: item.athleteEmail || "",
+              fullName: item.fullName || item.athleteEmail?.split("@")[0] || "Member Athlete",
+              email: item.athleteEmail || item.email || "",
               college: item.currentCollege || item.college || "Undeclared",
+              state: item.state || "UT",
               position: item.position || item.primaryRole || "ATH",
-              primaryRole: item.primaryRole || "HITTER",
+              primaryRole: (item.primaryRole as any) || "HITTER",
               playerStatus: item.portalStatus || item.playerStatus || "Active",
-              isProfileVisible: String(item.isProfileVisible).toUpperCase() === "TRUE" || item.isProfileVisible === true,
+              isProfileVisible: String(item.isProfileVisible).toUpperCase() !== "FALSE",
               maxExitVelo: item.maxExitVelo ? String(item.maxExitVelo) : "",
               ninetyEV: item.ninetyEV ? String(item.ninetyEV) : "",
               batSpeed: item.batSpeed ? String(item.batSpeed) : "",
@@ -474,18 +544,27 @@ function AppContent() {
               social2_Type: item.social2_Type || "IG",
               social2_Url: item.social2_Url || "",
             }));
-            setLeaderboardRows(mapped);
+
+            // Merge sheet records with local initial public roster, avoiding duplicates
+            setLeaderboardRows((prev) => {
+              const combined = [...mapped];
+              INITIAL_PUBLIC_ROSTER.forEach((initRow) => {
+                if (!combined.some((c) => c.fullName.toLowerCase() === initRow.fullName.toLowerCase())) {
+                  combined.push(initRow);
+                }
+              });
+              return combined;
+            });
           }
           setLoadingScoreboard(false);
         })
         .catch(() => {
           setLoadingScoreboard(false);
         });
-    } else {
-      setLoadingScoreboard(false);
     }
   }, []);
 
+  // Sync user profile when logged in
   useEffect(() => {
     if (account?.address) {
       const lowerWallet = account.address.toLowerCase();
@@ -564,9 +643,9 @@ function AppContent() {
     localStorage.setItem(localKey, JSON.stringify(updatedProfile));
 
     setLeaderboardRows((prev) => {
-      const exists = prev.some((p) => p.email.toLowerCase() === updatedProfile.email.toLowerCase());
+      const exists = prev.some((p) => p.email.toLowerCase() === updatedProfile.email.toLowerCase() || p.fullName.toLowerCase() === updatedProfile.fullName.toLowerCase());
       if (exists) {
-        return prev.map((p) => (p.email.toLowerCase() === updatedProfile.email.toLowerCase() ? updatedProfile : p));
+        return prev.map((p) => (p.email.toLowerCase() === updatedProfile.email.toLowerCase() || p.fullName.toLowerCase() === updatedProfile.fullName.toLowerCase() ? updatedProfile : p));
       }
       return [updatedProfile, ...prev];
     });
@@ -584,11 +663,11 @@ function AppContent() {
 
       setIsSavingProfile(false);
       setShowProfileModal(false);
-      alert("Metrics saved to registry!");
+      alert("Metrics saved to national scoreboard!");
     } catch {
       setIsSavingProfile(false);
       setShowProfileModal(false);
-      alert("Saved locally.");
+      alert("Metrics saved locally.");
     }
   };
 
@@ -630,13 +709,52 @@ function AppContent() {
     } catch {}
   };
 
-  if (!mounted) return null;
+  // High-performance filter and sort pipeline
+  const filteredScoreboard = useMemo(() => {
+    return leaderboardRows
+      .filter((ath) => {
+        if (ath.isProfileVisible === false) return false;
+        
+        // Role filter
+        if (roleFilter !== "ALL" && ath.primaryRole !== roleFilter) return false;
+        
+        // Position filter
+        if (positionFilter !== "ALL") {
+          const p = (ath.position || "").toUpperCase();
+          if (!p.includes(positionFilter.toUpperCase())) return false;
+        }
 
-  const filteredScoreboard = leaderboardRows.filter((ath) => {
-    if (ath.isProfileVisible === false) return false;
-    if (scoutRoleFilter === "ALL") return true;
-    return ath.primaryRole === scoutRoleFilter;
-  });
+        // Status / Portal filter
+        if (statusFilter !== "ALL") {
+          if (!ath.playerStatus || !ath.playerStatus.toLowerCase().includes(statusFilter.toLowerCase())) {
+            return false;
+          }
+        }
+
+        // State / Region filter
+        if (stateFilter !== "ALL") {
+          if (ath.state && ath.state !== stateFilter) return false;
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        if (sortBy === "MAX_EV") {
+          return (parseFloat(b.maxExitVelo || "0") || 0) - (parseFloat(a.maxExitVelo || "0") || 0);
+        }
+        if (sortBy === "PEAK_FB") {
+          return (parseFloat(b.peakFB || "0") || 0) - (parseFloat(a.peakFB || "0") || 0);
+        }
+        if (sortBy === "SIXTY") {
+          const aTime = parseFloat(a.sixtyTime || "99") || 99;
+          const bTime = parseFloat(b.sixtyTime || "99") || 99;
+          return aTime - bTime;
+        }
+        return 0;
+      });
+  }, [leaderboardRows, roleFilter, positionFilter, statusFilter, stateFilter, sortBy]);
+
+  if (!mounted) return null;
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#000000", color: "#ffffff", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
@@ -744,20 +862,22 @@ function AppContent() {
           </button>
         </div>
 
-        {/* PILLAR 1: THE NATIONAL SCOUTING SCOREBOARD */}
+        {/* ========================================================================= */}
+        {/* PILLAR 1: THE NATIONAL SCOUTING SCOREBOARD (PUBLIC DISCOVERY + FILTERS)  */}
+        {/* ========================================================================= */}
         {activeMainTab === "SCOREBOARD" && (
           <section style={{ marginBottom: "60px" }}>
-            <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "20px", padding: "30px 24px", marginBottom: "28px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px" }}>
+            <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "20px", padding: "26px 20px", marginBottom: "24px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px", marginBottom: "20px" }}>
                 <div>
-                  <div style={{ display: "inline-block", backgroundColor: "rgba(166, 255, 0, 0.08)", border: `1px solid ${NEON_GREEN}`, borderRadius: "999px", padding: "4px 12px", fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "10px" }}>
+                  <div style={{ display: "inline-block", backgroundColor: "rgba(166, 255, 0, 0.08)", border: `1px solid ${NEON_GREEN}`, borderRadius: "999px", padding: "4px 12px", fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "8px" }}>
                     Verified Collegiate Data Registry
                   </div>
-                  <h2 style={{ fontSize: "28px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", margin: "0 0 8px 0" }}>
+                  <h2 style={{ fontSize: "26px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", margin: "0 0 6px 0" }}>
                     National Scouting Scoreboard
                   </h2>
-                  <p style={{ fontSize: "14px", color: "#a1a1aa", maxWidth: "680px", margin: 0, lineHeight: "1.5" }}>
-                    A centralized, honor-code data matrix for active college athletes and transfer portal candidates. Verified members publish tracked bat speeds, exit velocities, and arm metrics directly to collegiate coaches and pro scouts.
+                  <p style={{ fontSize: "13px", color: "#a1a1aa", maxWidth: "680px", margin: 0, lineHeight: "1.5" }}>
+                    Direct scout discovery for active college ballplayers and transfer portal candidates. Filter verified bat speeds, velocities, and contact channels.
                   </p>
                 </div>
 
@@ -767,7 +887,7 @@ function AppContent() {
                     backgroundColor: NEON_GREEN,
                     color: "#000000",
                     fontWeight: "900",
-                    padding: "14px 22px",
+                    padding: "12px 20px",
                     borderRadius: "12px",
                     border: "none",
                     cursor: "pointer",
@@ -781,163 +901,237 @@ function AppContent() {
                 </button>
               </div>
 
-              {/* Discipline Filters */}
-              <div style={{ display: "flex", gap: "8px", marginTop: "24px", flexWrap: "wrap" }}>
-                {(["ALL", "HITTER", "PITCHER", "TWP"] as const).map((role) => (
+              {/* ROLE TOGGLE PILLS */}
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "16px" }}>
+                {(["ALL", "HITTER", "PITCHER", "TWP"] as const).map((r) => (
                   <button
-                    key={role}
-                    onClick={() => setScoutRoleFilter(role)}
+                    key={r}
+                    onClick={() => setRoleFilter(r)}
                     style={{
-                      backgroundColor: scoutRoleFilter === role ? NEON_GREEN : "#141414",
-                      color: scoutRoleFilter === role ? "#000000" : "#cccccc",
-                      border: scoutRoleFilter === role ? `1px solid ${NEON_GREEN}` : "1px solid #262626",
+                      backgroundColor: roleFilter === r ? NEON_GREEN : "#141414",
+                      color: roleFilter === r ? "#000000" : "#cccccc",
+                      border: roleFilter === r ? `1px solid ${NEON_GREEN}` : "1px solid #262626",
                       fontWeight: "800",
                       fontSize: "11px",
-                      padding: "8px 18px",
+                      padding: "7px 14px",
                       borderRadius: "999px",
                       textTransform: "uppercase",
-                      letterSpacing: "0.6px",
+                      letterSpacing: "0.5px",
                       cursor: "pointer",
                     }}
                   >
-                    {role === "TWP" ? "⚡ Two-Way Only" : role === "ALL" ? "All Athletes" : `${role}s Only`}
+                    {r === "TWP" ? "⚡ Two-Way" : r === "ALL" ? "All Athletes" : `${r}s`}
                   </button>
                 ))}
               </div>
+
+              {/* ADVANCED MULTI-DIMENSIONAL SCOUT FILTER BAR */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "8px", backgroundColor: "#050505", border: "1px solid #161616", borderRadius: "14px", padding: "12px" }}>
+                {/* Specific Position */}
+                <div>
+                  <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#666", textTransform: "uppercase", marginBottom: "3px" }}>Position</label>
+                  <select
+                    value={positionFilter}
+                    onChange={(e) => setPositionFilter(e.target.value)}
+                    style={{ width: "100%", backgroundColor: "#111", border: "1px solid #262626", color: "#fff", padding: "6px 8px", borderRadius: "8px", fontSize: "11px" }}
+                  >
+                    <option value="ALL">All Positions</option>
+                    <option value="C">Catcher (C)</option>
+                    <option value="MIF">Middle Inf (MIF)</option>
+                    <option value="SS">Shortstop (SS)</option>
+                    <option value="3B">Third Base (3B)</option>
+                    <option value="1B">First Base (1B)</option>
+                    <option value="OF">Outfield (OF)</option>
+                    <option value="RHP">RHP</option>
+                    <option value="LHP">LHP</option>
+                  </select>
+                </div>
+
+                {/* Status / Portal */}
+                <div>
+                  <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#666", textTransform: "uppercase", marginBottom: "3px" }}>Portal Status</label>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    style={{ width: "100%", backgroundColor: "#111", border: "1px solid #262626", color: "#fff", padding: "6px 8px", borderRadius: "8px", fontSize: "11px" }}
+                  >
+                    <option value="ALL">All Statuses</option>
+                    <option value="Transfer Portal">Transfer Portal</option>
+                    <option value="Juco Uncommitted">Juco Uncommitted</option>
+                    <option value="Returning">Returning College</option>
+                    <option value="Incoming Freshman">Incoming Freshman</option>
+                  </select>
+                </div>
+
+                {/* State / Region */}
+                <div>
+                  <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#666", textTransform: "uppercase", marginBottom: "3px" }}>Region / State</label>
+                  <select
+                    value={stateFilter}
+                    onChange={(e) => setStateFilter(e.target.value)}
+                    style={{ width: "100%", backgroundColor: "#111", border: "1px solid #262626", color: "#fff", padding: "6px 8px", borderRadius: "8px", fontSize: "11px" }}
+                  >
+                    <option value="ALL">All States</option>
+                    <option value="UT">Utah (UT)</option>
+                    <option value="AZ">Arizona (AZ)</option>
+                    <option value="CA">California (CA)</option>
+                    <option value="TX">Texas (TX)</option>
+                    <option value="FL">Florida (FL)</option>
+                    <option value="NV">Nevada (NV)</option>
+                    <option value="CO">Colorado (CO)</option>
+                    <option value="ID">Idaho (ID)</option>
+                  </select>
+                </div>
+
+                {/* Leaderboard Metric Sort */}
+                <div>
+                  <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: NEON_GREEN, textTransform: "uppercase", marginBottom: "3px" }}>Sort Leaderboard</label>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as any)}
+                    style={{ width: "100%", backgroundColor: "#111", border: `1px solid rgba(166, 255, 0, 0.4)`, color: NEON_GREEN, fontWeight: "700", padding: "6px 8px", borderRadius: "8px", fontSize: "11px" }}
+                  >
+                    <option value="DEFAULT">Latest Update</option>
+                    <option value="MAX_EV">Max Exit Velo ↓</option>
+                    <option value="PEAK_FB">Peak Fastball ↓</option>
+                    <option value="SIXTY">Fastest 60-Yd ↑</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
-            {/* Scoreboard Table */}
-            <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "16px", overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "13px" }}>
-                <thead>
-                  <tr style={{ backgroundColor: "#0f0f0f", borderBottom: "1px solid #222222", color: "#888888", textTransform: "uppercase", fontSize: "11px", letterSpacing: "1px" }}>
-                    <th style={{ padding: "16px" }}>Athlete / Program</th>
-                    <th style={{ padding: "16px" }}>Discipline</th>
-                    <th style={{ padding: "16px", textAlign: "right" }}>Primary Metrics</th>
-                    <th style={{ padding: "16px" }}>Honor Date</th>
-                    <th style={{ padding: "16px", textAlign: "center" }}>Scout Profiles</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredScoreboard.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} style={{ padding: "40px", textAlign: "center", color: "#666666" }}>
-                        {loadingScoreboard ? "Loading live national scoreboard..." : "No athletes published in this category yet. Be the first to post."}
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredScoreboard.map((ath, idx) => {
-                      const isTWP = ath.primaryRole === "TWP";
-                      const isPitcher = ath.primaryRole === "PITCHER" || isTWP;
-                      const isHitter = ath.primaryRole === "HITTER" || isTWP;
+            {/* RESPONSIVE SCOREBOARD CONTAINER (NO HORIZONTAL OVERFLOW) */}
+            <div style={{ width: "100%" }}>
+              {filteredScoreboard.length === 0 ? (
+                <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "16px", padding: "40px 20px", textAlign: "center", color: "#666666" }}>
+                  {loadingScoreboard ? "Loading live national scoreboard..." : "No athletes match these filter criteria. Reset filters to view all."}
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {filteredScoreboard.map((ath, idx) => {
+                    const isTWP = ath.primaryRole === "TWP";
+                    const isPitcher = ath.primaryRole === "PITCHER" || isTWP;
+                    const isHitter = ath.primaryRole === "HITTER" || isTWP;
 
-                      return (
-                        <tr key={idx} style={{ borderBottom: "1px solid #161616" }}>
-                          {/* Athlete & School Distinction */}
-                          <td style={{ padding: "16px" }}>
-                            <div style={{ fontWeight: "900", color: "#ffffff", fontSize: "15px" }}>
+                    return (
+                      <div
+                        key={idx}
+                        style={{
+                          backgroundColor: "#0a0a0a",
+                          border: "1px solid #1c1c1c",
+                          borderRadius: "16px",
+                          padding: "16px",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "12px",
+                        }}
+                      >
+                        {/* Header: Athlete Name, School, State & Role Badge */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px" }}>
+                          <div>
+                            <div style={{ fontWeight: "900", color: "#ffffff", fontSize: "16px", letterSpacing: "0.3px" }}>
                               {ath.fullName || "Member Athlete"}
                             </div>
                             <div style={{ color: NEON_GREEN, fontSize: "13px", fontWeight: "800", marginTop: "2px" }}>
-                              🏛️ {ath.college || "Undeclared College"}
+                              🏛️ {ath.college || "Undeclared College"} {ath.state ? `(${ath.state})` : ""}
                             </div>
                             <div style={{ color: "#888888", fontSize: "11px", marginTop: "2px" }}>
-                              {ath.position} • {ath.playerStatus}
+                              <strong style={{ color: "#cccccc" }}>{ath.position}</strong> • {ath.playerStatus}
                             </div>
-                          </td>
+                          </div>
 
-                          {/* Role Tag */}
-                          <td style={{ padding: "16px" }}>
+                          <div>
                             {isTWP ? (
-                              <span style={{ backgroundColor: "rgba(166, 255, 0, 0.15)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "4px 10px", borderRadius: "999px", fontSize: "10px", fontWeight: "900", textTransform: "uppercase" }}>
+                              <span style={{ backgroundColor: "rgba(166, 255, 0, 0.15)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "4px 8px", borderRadius: "999px", fontSize: "9px", fontWeight: "900", textTransform: "uppercase", whiteSpace: "nowrap" }}>
                                 ⚡ TWO-WAY
                               </span>
                             ) : (
-                              <span style={{ backgroundColor: "#171717", border: "1px solid #2a2a2a", color: "#cccccc", padding: "4px 10px", borderRadius: "999px", fontSize: "10px", fontWeight: "800", textTransform: "uppercase" }}>
+                              <span style={{ backgroundColor: "#171717", border: "1px solid #2a2a2a", color: "#cccccc", padding: "4px 8px", borderRadius: "999px", fontSize: "9px", fontWeight: "800", textTransform: "uppercase", whiteSpace: "nowrap" }}>
                                 {ath.primaryRole}
                               </span>
                             )}
-                          </td>
+                          </div>
+                        </div>
 
-                          {/* Primary Performance Metrics (with Spin Rates & FPS%) */}
-                          <td style={{ padding: "16px", textAlign: "right", fontFamily: "monospace" }}>
-                            {isPitcher && ath.peakFB && (
-                              <div style={{ color: "#ffffff", fontWeight: "800" }}>
-                                <span style={{ color: NEON_GREEN }}>FB:</span> {ath.peakFB} mph {ath.sittingFB ? `(${ath.sittingFB})` : ""}
-                                {ath.fbSpinRate && <span style={{ color: "#aaaaaa", fontSize: "11px", marginLeft: "6px" }}>{ath.fbSpinRate} RPM</span>}
-                              </div>
-                            )}
-                            {isPitcher && ath.offSpeedVelo && (
-                              <div style={{ color: "#888888", fontSize: "11px" }}>
-                                {ath.offSpeedType || "SL"}: {ath.offSpeedVelo} mph
-                                {ath.offSpeedSpinRate && <span style={{ color: "#666666", marginLeft: "4px" }}>({ath.offSpeedSpinRate} RPM)</span>}
-                              </div>
-                            )}
-                            {isPitcher && ath.firstPitchStrike && (
-                              <div style={{ color: NEON_GREEN, fontSize: "10px", fontWeight: "700" }}>
-                                FPS: {ath.firstPitchStrike}%
-                              </div>
-                            )}
-                            {isHitter && ath.maxExitVelo && (
-                              <div style={{ color: "#ffffff", fontWeight: "800", marginTop: isTWP ? "4px" : "0" }}>
-                                <span style={{ color: NEON_GREEN }}>Max EV:</span> {ath.maxExitVelo} mph
-                              </div>
-                            )}
-                            {isHitter && ath.batSpeed && (
-                              <div style={{ color: "#888888", fontSize: "11px" }}>
-                                Bat Speed: {ath.batSpeed} mph
-                              </div>
-                            )}
-                            {!ath.peakFB && !ath.maxExitVelo && (
-                              <span style={{ color: "#555555", fontSize: "12px", fontStyle: "italic" }}>
-                                Pending Live Metrics
-                              </span>
-                            )}
-                          </td>
-
-                          {/* Honor Date */}
-                          <td style={{ padding: "16px", fontSize: "11px", color: "#888888", fontFamily: "monospace" }}>
-                            {ath.recordedDatePitching && <div>P: {ath.recordedDatePitching}</div>}
-                            {ath.recordedDateHitting && <div>H: {ath.recordedDateHitting}</div>}
-                            {!ath.recordedDatePitching && !ath.recordedDateHitting && <div>Active Member</div>}
-                          </td>
-
-                          {/* Social Gateways */}
-                          <td style={{ padding: "16px", textAlign: "center" }}>
-                            <div style={{ display: "flex", justifyContent: "center", gap: "8px" }}>
-                              {ath.social1_Url ? (
-                                <a
-                                  href={ath.social1_Url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{ backgroundColor: "#171717", border: "1px solid #333333", color: NEON_GREEN, padding: "5px 10px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "800" }}
-                                >
-                                  {ath.social1_Type || "Social 1"} ↗
-                                </a>
-                              ) : null}
-
-                              {ath.social2_Url ? (
-                                <a
-                                  href={ath.social2_Url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{ backgroundColor: "#171717", border: "1px solid #333333", color: NEON_GREEN, padding: "5px 10px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "800" }}
-                                >
-                                  {ath.social2_Type || "Social 2"} ↗
-                                </a>
-                              ) : null}
-
-                              {!ath.social1_Url && !ath.social2_Url && (
-                                <span style={{ color: "#444444", fontSize: "11px" }}>—</span>
+                        {/* Mid Section: Performance Data Matrix */}
+                        <div style={{ backgroundColor: "#050505", border: "1px solid #161616", borderRadius: "10px", padding: "10px 12px", display: "grid", gridTemplateColumns: isTWP ? "1fr 1fr" : "1fr", gap: "10px", fontFamily: "monospace" }}>
+                          {isPitcher && (
+                            <div>
+                              <div style={{ fontSize: "9px", color: "#666666", textTransform: "uppercase", marginBottom: "3px", fontWeight: "700" }}>Pitching Metrics</div>
+                              {ath.peakFB ? (
+                                <div style={{ color: "#ffffff", fontWeight: "800", fontSize: "13px" }}>
+                                  <span style={{ color: NEON_GREEN }}>FB:</span> {ath.peakFB} mph {ath.sittingFB ? `(${ath.sittingFB})` : ""}
+                                </div>
+                              ) : (
+                                <div style={{ color: "#444444", fontSize: "11px" }}>FB: Unrecorded</div>
+                              )}
+                              {ath.fbSpinRate && <div style={{ color: "#aaaaaa", fontSize: "11px" }}>FB Spin: {ath.fbSpinRate} RPM</div>}
+                              {ath.offSpeedVelo && (
+                                <div style={{ color: "#888888", fontSize: "11px", marginTop: "2px" }}>
+                                  {ath.offSpeedType || "SL"}: {ath.offSpeedVelo} mph {ath.offSpeedSpinRate ? `(${ath.offSpeedSpinRate} RPM)` : ""}
+                                </div>
+                              )}
+                              {ath.firstPitchStrike && (
+                                <div style={{ color: NEON_GREEN, fontSize: "10px", fontWeight: "700", marginTop: "2px" }}>
+                                  First-Pitch Strike: {ath.firstPitchStrike}%
+                                </div>
                               )}
                             </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
+                          )}
+
+                          {isHitter && (
+                            <div>
+                              <div style={{ fontSize: "9px", color: "#666666", textTransform: "uppercase", marginBottom: "3px", fontWeight: "700" }}>Hitting Metrics</div>
+                              {ath.maxExitVelo ? (
+                                <div style={{ color: "#ffffff", fontWeight: "800", fontSize: "13px" }}>
+                                  <span style={{ color: NEON_GREEN }}>Max EV:</span> {ath.maxExitVelo} mph
+                                </div>
+                              ) : (
+                                <div style={{ color: "#444444", fontSize: "11px" }}>EV: Unrecorded</div>
+                              )}
+                              {ath.ninetyEV && <div style={{ color: "#aaaaaa", fontSize: "11px" }}>90th%: {ath.ninetyEV} mph</div>}
+                              {ath.batSpeed && <div style={{ color: "#888888", fontSize: "11px" }}>Bat Speed: {ath.batSpeed} mph</div>}
+                              {ath.sixtyTime && <div style={{ color: "#888888", fontSize: "11px" }}>60-Yard: {ath.sixtyTime}s</div>}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Footer: Date Stamp & Verified Social Links */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "4px" }}>
+                          <div style={{ fontSize: "10px", color: "#666666", fontFamily: "monospace" }}>
+                            {ath.recordedDatePitching && <span>Pitch: {ath.recordedDatePitching} </span>}
+                            {ath.recordedDateHitting && <span>Hit: {ath.recordedDateHitting}</span>}
+                            {!ath.recordedDatePitching && !ath.recordedDateHitting && <span>Member Verified</span>}
+                          </div>
+
+                          <div style={{ display: "flex", gap: "6px" }}>
+                            {ath.social1_Url && (
+                              <a
+                                href={ath.social1_Url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ backgroundColor: "#141414", border: "1px solid #2a2a2a", color: NEON_GREEN, padding: "5px 10px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "800" }}
+                              >
+                                {ath.social1_Type || "Social 1"} ↗
+                              </a>
+                            )}
+                            {ath.social2_Url && (
+                              <a
+                                href={ath.social2_Url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ backgroundColor: "#141414", border: "1px solid #2a2a2a", color: NEON_GREEN, padding: "5px 10px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "800" }}
+                              >
+                                {ath.social2_Type || "Social 2"} ↗
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </section>
         )}
@@ -1488,9 +1682,26 @@ function AppContent() {
                   </div>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "10px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "10px", marginBottom: "10px" }}>
                   <div>
-                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Primary Position *</label>
+                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>State *</label>
+                    <select
+                      value={profile.state || "UT"}
+                      onChange={(e) => setProfile({ ...profile, state: e.target.value })}
+                      style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "12px" }}
+                    >
+                      <option value="UT">UT</option>
+                      <option value="AZ">AZ</option>
+                      <option value="CA">CA</option>
+                      <option value="TX">TX</option>
+                      <option value="FL">FL</option>
+                      <option value="NV">NV</option>
+                      <option value="CO">CO</option>
+                      <option value="ID">ID</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Position *</label>
                     <input 
                       type="text" 
                       required
@@ -1501,7 +1712,7 @@ function AppContent() {
                     />
                   </div>
                   <div>
-                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Scout Role *</label>
+                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Role *</label>
                     <select
                       value={profile.primaryRole}
                       onChange={(e) => setProfile({ ...profile, primaryRole: e.target.value as any })}
@@ -1614,14 +1825,13 @@ function AppContent() {
                   </div>
                 )}
 
-                {/* PITCHER INPUTS (WITH SPIN RATES & FPS%) */}
+                {/* PITCHER INPUTS */}
                 {(profile.primaryRole === "PITCHER" || profile.primaryRole === "TWP") && (
                   <div style={{ backgroundColor: "#050505", border: "1px solid #1a1a1a", borderRadius: "10px", padding: "12px" }}>
                     <span style={{ fontSize: "10px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", display: "block", marginBottom: "8px" }}>
                       🎯 Pitching & Spin Benchmarks
                     </span>
                     
-                    {/* Velocity Row */}
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px", marginBottom: "10px" }}>
                       <div>
                         <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>PEAK FASTBALL</label>
@@ -1671,7 +1881,6 @@ function AppContent() {
                       </div>
                     </div>
 
-                    {/* Spin Rates & Command Row */}
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
                       <div>
                         <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: NEON_GREEN, marginBottom: "2px" }}>FB SPIN RATE (RPM)</label>
