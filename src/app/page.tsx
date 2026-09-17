@@ -484,7 +484,13 @@ function AppContent() {
               };
             });
 
-            setLeaderboardRows(mapped);
+            // Remove duplicates by email or full name (keeping the most updated one)
+            const uniqueMap = new Map();
+            mapped.forEach((item) => {
+              const key = (item.email || item.fullName).toLowerCase().trim();
+              uniqueMap.set(key, item);
+            });
+            setLeaderboardRows(Array.from(uniqueMap.values()));
           }
           setLoadingScoreboard(false);
         })
