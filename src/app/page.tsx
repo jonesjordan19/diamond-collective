@@ -428,6 +428,8 @@ function AppContent() {
   const remainingPercentage = Math.max(0, Math.min(100, Math.round(rawRemaining)));
 
   const balance = balanceData ? Number(balanceData.displayValue) : 0;
+  const isUnlocked = balance >= 100 || justClaimed;
+  const isApproved = profile.verificationStatus === "Approved";
   const hasProfile = Boolean(profile.fullName && profile.email);
 
   const isIntroActive = (brandName: string): boolean => {
@@ -689,37 +691,53 @@ function AppContent() {
         <strong style={{ color: "#ffffff" }}>NCAA NIL Compliance Note:</strong> All SLUGGER COINS distributed during the Founders phase have no current market value and are non-compensatory. Tokens are issued solely for community participation and access purposes.
       </div>
 
-      <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "32px 16px" }}>
+      <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "28px 16px" }}>
         {/* Navigation */}
         <header style={{ 
           display: "flex", 
           justifyContent: "space-between", 
           alignItems: "center", 
           borderBottom: "1px solid #1a1a1a", 
-          paddingBottom: "24px", 
+          paddingBottom: "20px", 
           flexWrap: "wrap", 
-          gap: "16px" 
+          gap: "14px" 
         }}>
           <div>
-            <h1 style={{ margin: 0, fontSize: "24px", fontWeight: "900", letterSpacing: "1.5px", color: "#ffffff", textTransform: "uppercase" }}>
+            <h1 style={{ margin: 0, fontSize: "22px", fontWeight: "900", letterSpacing: "1.5px", color: "#ffffff", textTransform: "uppercase" }}>
               The Diamond Collective
             </h1>
-            <p style={{ margin: "4px 0 0 0", fontSize: "12px", color: NEON_GREEN, fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase" }}>
+            <p style={{ margin: "4px 0 0 0", fontSize: "11px", color: NEON_GREEN, fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase" }}>
               Powered by Slugger Coin ($SLUG)
             </p>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            {account && hasProfile && (
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+            {account && (
+              <div style={{
+                backgroundColor: "#0d0d0d",
+                border: `1px solid ${NEON_GREEN}`,
+                borderRadius: "10px",
+                padding: "8px 12px",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px"
+              }}>
+                <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN }}>
+                  🪙 {balance !== undefined ? balance.toLocaleString() : "0"} $SLUG
+                </span>
+              </div>
+            )}
+
+            {account && (
               <button
                 onClick={() => setShowProfileModal(true)}
                 style={{
                   backgroundColor: "#111111",
                   border: `1px solid ${NEON_GREEN}`,
                   color: NEON_GREEN,
-                  fontSize: "12px",
+                  fontSize: "11px",
                   fontWeight: "800",
-                  padding: "10px 16px",
+                  padding: "8px 14px",
                   borderRadius: "10px",
                   cursor: "pointer",
                   textTransform: "uppercase",
@@ -729,6 +747,7 @@ function AppContent() {
                 Locker Matrix ⚙️
               </button>
             )}
+
             <ConnectButton
               client={client}
               wallets={supportedWallets}
@@ -743,8 +762,30 @@ function AppContent() {
           </div>
         </header>
 
+        {/* GLOBAL FOUNDERS POOL & NETWORK STATS TRACKER */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "10px", margin: "24px 0 28px 0" }}>
+          <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "14px", padding: "14px", textAlign: "center" }}>
+            <span style={{ display: "block", fontSize: "18px", fontWeight: "900", color: NEON_GREEN }}>15+</span>
+            <span style={{ fontSize: "10px", color: "#888888", textTransform: "uppercase", fontWeight: "700", letterSpacing: "0.5px" }}>Brand Partners</span>
+          </div>
+          <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "14px", padding: "14px", textAlign: "center" }}>
+            <span style={{ display: "block", fontSize: "18px", fontWeight: "900", color: "#ffffff" }}>Drop #001</span>
+            <span style={{ fontSize: "10px", color: "#888888", textTransform: "uppercase", fontWeight: "700", letterSpacing: "0.5px" }}>60 Grips Live</span>
+          </div>
+          <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "14px", padding: "14px", textAlign: "center" }}>
+            <span style={{ display: "block", fontSize: "18px", fontWeight: "900", color: NEON_GREEN }}>100 $SLUG</span>
+            <span style={{ fontSize: "10px", color: "#888888", textTransform: "uppercase", fontWeight: "700", letterSpacing: "0.5px" }}>Free Allocation</span>
+          </div>
+          <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "14px", padding: "14px", textAlign: "center" }}>
+            <span style={{ display: "block", fontSize: "18px", fontWeight: "900", color: "#ffffff" }}>
+              {totalSupplyData !== undefined ? `${remainingPercentage}% Remaining` : "Live Sync..."}
+            </span>
+            <span style={{ fontSize: "10px", color: "#888888", textTransform: "uppercase", fontWeight: "700", letterSpacing: "0.5px" }}>Founders Phase</span>
+          </div>
+        </div>
+
         {/* 50/50 PRIMARY NAV SPLIT PILLARS */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginTop: "32px", marginBottom: "32px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "28px" }}>
           <button
             onClick={() => setActiveMainTab("SCOREBOARD")}
             style={{
@@ -752,7 +793,7 @@ function AppContent() {
               border: activeMainTab === "SCOREBOARD" ? `2px solid ${NEON_GREEN}` : "1px solid #222222",
               boxShadow: activeMainTab === "SCOREBOARD" ? `0 0 25px rgba(166, 255, 0, 0.15)` : "none",
               borderRadius: "16px",
-              padding: "18px 14px",
+              padding: "16px 12px",
               cursor: "pointer",
               textAlign: "center",
               transition: "all 0.2s ease"
@@ -761,7 +802,7 @@ function AppContent() {
             <span style={{ display: "block", fontSize: "10px", fontWeight: "900", color: NEON_GREEN, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: "4px" }}>
               Scouting & Portal
             </span>
-            <span style={{ display: "block", fontSize: "17px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            <span style={{ display: "block", fontSize: "16px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.5px" }}>
               📊 National Scoreboard
             </span>
           </button>
@@ -773,7 +814,7 @@ function AppContent() {
               border: activeMainTab === "EXCHANGE" ? `2px solid ${NEON_GREEN}` : "1px solid #222222",
               boxShadow: activeMainTab === "EXCHANGE" ? `0 0 25px rgba(166, 255, 0, 0.15)` : "none",
               borderRadius: "16px",
-              padding: "18px 14px",
+              padding: "16px 12px",
               cursor: "pointer",
               textAlign: "center",
               transition: "all 0.2s ease"
@@ -782,7 +823,7 @@ function AppContent() {
             <span style={{ display: "block", fontSize: "10px", fontWeight: "900", color: NEON_GREEN, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: "4px" }}>
               Monetization & Gear
             </span>
-            <span style={{ display: "block", fontSize: "17px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            <span style={{ display: "block", fontSize: "16px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.5px" }}>
               🤝 The Brand Dugout
             </span>
           </button>
@@ -791,13 +832,13 @@ function AppContent() {
         {/* PILLAR 1: THE NATIONAL SCOUTING SCOREBOARD */}
         {activeMainTab === "SCOREBOARD" && (
           <section style={{ marginBottom: "60px" }}>
-            <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "20px", padding: "26px 20px", marginBottom: "24px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px", marginBottom: "20px" }}>
+            <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "20px", padding: "24px 18px", marginBottom: "20px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px", marginBottom: "18px" }}>
                 <div>
                   <div style={{ display: "inline-block", backgroundColor: "rgba(166, 255, 0, 0.08)", border: `1px solid ${NEON_GREEN}`, borderRadius: "999px", padding: "4px 12px", fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "8px" }}>
                     Verified Collegiate Data Registry
                   </div>
-                  <h2 style={{ fontSize: "26px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", margin: "0 0 6px 0" }}>
+                  <h2 style={{ fontSize: "24px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", margin: "0 0 6px 0" }}>
                     National Scouting Scoreboard
                   </h2>
                   <p style={{ fontSize: "13px", color: "#a1a1aa", maxWidth: "680px", margin: 0, lineHeight: "1.5" }}>
@@ -1059,28 +1100,6 @@ function AppContent() {
         {/* PILLAR 2: THE BRAND EXCHANGE & MONETIZATION */}
         {activeMainTab === "EXCHANGE" && (
           <div>
-            {/* Top Stat Counters */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px", maxWidth: "860px", margin: "0 auto 36px auto" }}>
-              <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "14px", padding: "16px", textAlign: "center" }}>
-                <span style={{ display: "block", fontSize: "20px", fontWeight: "900", color: NEON_GREEN }}>15+</span>
-                <span style={{ fontSize: "11px", color: "#888888", textTransform: "uppercase", fontWeight: "700", letterSpacing: "0.5px" }}>Brand Partners</span>
-              </div>
-              <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "14px", padding: "16px", textAlign: "center" }}>
-                <span style={{ display: "block", fontSize: "20px", fontWeight: "900", color: "#ffffff" }}>Drop #001</span>
-                <span style={{ fontSize: "11px", color: "#888888", textTransform: "uppercase", fontWeight: "700", letterSpacing: "0.5px" }}>60 Grips Live</span>
-              </div>
-              <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "14px", padding: "16px", textAlign: "center" }}>
-                <span style={{ display: "block", fontSize: "20px", fontWeight: "900", color: NEON_GREEN }}>100 $SLUG</span>
-                <span style={{ fontSize: "11px", color: "#888888", textTransform: "uppercase", fontWeight: "700", letterSpacing: "0.5px" }}>Free Allocation</span>
-              </div>
-              <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "14px", padding: "16px", textAlign: "center" }}>
-                <span style={{ display: "block", fontSize: "20px", fontWeight: "900", color: "#ffffff" }}>
-                  {totalSupplyData !== undefined ? `${remainingPercentage}% Remaining` : "Live Sync..."}
-                </span>
-                <span style={{ fontSize: "11px", color: "#888888", textTransform: "uppercase", fontWeight: "700", letterSpacing: "0.5px" }}>Founders Phase</span>
-              </div>
-            </div>
-
             {/* Member Status / Unlock Action Banner */}
             {!account ? (
               <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #222222", borderRadius: "20px", padding: "24px 20px", textAlign: "center", maxWidth: "680px", margin: "0 auto 36px auto" }}>
@@ -1111,6 +1130,33 @@ function AppContent() {
                 >
                   Fill Out Locker Profile ✍️
                 </button>
+              </div>
+            ) : !isUnlocked ? (
+              <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "20px", padding: "24px 20px", textAlign: "center", maxWidth: "680px", margin: "0 auto 36px auto" }}>
+                <h3 style={{ fontSize: "18px", fontWeight: "900", margin: "0 0 6px 0", color: "#ffffff", textTransform: "uppercase" }}>
+                  Claim Your 100 Slugger Coins
+                </h3>
+                <p style={{ fontSize: "13px", color: "#888888", margin: "0 0 16px 0" }}>
+                  {profile.fullName} • {profile.college} ({profile.position})
+                </p>
+                <TransactionButton
+                  transaction={() =>
+                    claimTo({
+                      contract: sluggerContract,
+                      to: account.address,
+                      quantity: "100",
+                    })
+                  }
+                  onTransactionConfirmed={() => {
+                    setJustClaimed(true);
+                    refetchBalance();
+                    refetchSupply();
+                  }}
+                  onError={(err) => alert(`Claim error: ${err.message}`)}
+                  style={{ backgroundColor: NEON_GREEN, color: "#000000", fontWeight: "900", textTransform: "uppercase", letterSpacing: "1px", padding: "12px 24px", borderRadius: "10px", border: "none", cursor: "pointer", fontSize: "13px" }}
+                >
+                  Claim 100 Free Slugger Coins
+                </TransactionButton>
               </div>
             ) : null}
 
