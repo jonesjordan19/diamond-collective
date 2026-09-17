@@ -373,8 +373,6 @@ const emptyProfile: AthleteProfile = {
   recordedDatePitching: "",
 };
 
-const INITIAL_PUBLIC_ROSTER: AthleteProfile[] = [];
-
 function AppContent() {
   const account = useActiveAccount();
   const { connect } = useConnectModal();
@@ -444,41 +442,50 @@ function AppContent() {
 
   // Fetch Public Scoreboard (Loads for ALL visitors immediately)
   useEffect(() => {
-    const sheetUrl = process.env.NEXT_PUBLIC_SCOUTING_SHEET_URL;
+    const sheetUrl = 
+      process.env.NEXT_PUBLIC_SCOUTING_SHEET_URL || 
+      "https://script.google.com/macros/s/AKfycbxhwqCXDFPT0C1I4Zt-ASCpUVbkD9piI-_7pO1Dx5WhHG3JtMrgxm-N1kn4zhKbOXRzIA/exec";
+
     if (sheetUrl) {
       setLoadingScoreboard(true);
       fetch(sheetUrl)
         .then((res) => res.json())
         .then((data: any[]) => {
           if (Array.isArray(data) && data.length > 0) {
-            const mapped: AthleteProfile[] = data.map((item) => ({
-              ...emptyProfile,
-              fullName: item.fullName || item.athleteEmail?.split("@")[0] || "Member Athlete",
-              email: item.athleteEmail || item.email || "",
-              college: item.currentCollege || item.college || "Undeclared",
-              state: item.state || "UT",
-              position: item.position || item.primaryRole || "ATH",
-              primaryRole: (item.primaryRole as any) || "HITTER",
-              playerStatus: item.portalStatus || item.playerStatus || "Active",
-              isProfileVisible: String(item.isProfileVisible).toUpperCase() !== "FALSE",
-              maxExitVelo: item.maxExitVelo ? String(item.maxExitVelo) : "",
-              ninetyEV: item.ninetyEV ? String(item.ninetyEV) : "",
-              batSpeed: item.batSpeed ? String(item.batSpeed) : "",
-              sixtyTime: item.sixtyTime ? String(item.sixtyTime) : "",
-              peakFB: item.peakFB ? String(item.peakFB) : "",
-              sittingFB: item.sittingFB ? String(item.sittingFB) : "",
-              offSpeedVelo: item.offSpeedVelo ? String(item.offSpeedVelo) : "",
-              offSpeedType: item.offSpeedType || "Slider",
-              fbSpinRate: item.fbSpinRate ? String(item.fbSpinRate) : "",
-              offSpeedSpinRate: item.offSpeedSpinRate ? String(item.offSpeedSpinRate) : "",
-              firstPitchStrike: item.firstPitchStrike ? String(item.firstPitchStrike) : "",
-              recordedDateHitting: item.recordedDateHitting || "",
-              recordedDatePitching: item.recordedDatePitching || "",
-              social1_Type: item.social1_Type || "X",
-              social1_Url: item.social1_Url || "",
-              social2_Type: item.social2_Type || "IG",
-              social2_Url: item.social2_Url || "",
-            }));
+            const mapped: AthleteProfile[] = data.map((item) => {
+              const nameFromEmail = item.athleteEmail ? item.athleteEmail.split("@")[0] : "Member Athlete";
+              const rawRole = (item.primaryRole || "HITTER").toUpperCase();
+              const validRole = rawRole === "PITCHER" || rawRole === "TWP" ? rawRole : "HITTER";
+
+              return {
+                ...emptyProfile,
+                fullName: item.fullName && item.fullName.trim() !== "" ? item.fullName : nameFromEmail,
+                email: item.athleteEmail || item.email || "",
+                college: item.currentCollege || item.college || "Undeclared",
+                state: item.state || "",
+                position: item.position || validRole,
+                primaryRole: validRole as "HITTER" | "PITCHER" | "TWP",
+                playerStatus: item.portalStatus || item.playerStatus || "Active",
+                isProfileVisible: String(item.isProfileVisible).toUpperCase() !== "FALSE",
+                maxExitVelo: item.maxExitVelo ? String(item.maxExitVelo) : "",
+                ninetyEV: item.ninetyEV ? String(item.ninetyEV) : "",
+                batSpeed: item.batSpeed ? String(item.batSpeed) : "",
+                sixtyTime: item.sixtyTime ? String(item.sixtyTime) : "",
+                peakFB: item.peakFB ? String(item.peakFB) : "",
+                sittingFB: item.sittingFB ? String(item.sittingFB) : "",
+                offSpeedVelo: item.offSpeedVelo ? String(item.offSpeedVelo) : "",
+                offSpeedType: item.offSpeedType || "Slider",
+                fbSpinRate: item.fbSpinRate ? String(item.fbSpinRate) : "",
+                offSpeedSpinRate: item.offSpeedSpinRate ? String(item.offSpeedSpinRate) : "",
+                firstPitchStrike: item.firstPitchStrike ? String(item.firstPitchStrike) : "",
+                recordedDateHitting: item.recordedDateHitting || "",
+                recordedDatePitching: item.recordedDatePitching || "",
+                social1_Type: item.social1_Type || "X",
+                social1_Url: item.social1_Url || "",
+                social2_Type: item.social2_Type || "IG",
+                social2_Url: item.social2_Url || "",
+              };
+            });
 
             setLeaderboardRows(mapped);
           }
@@ -635,31 +642,36 @@ function AppContent() {
     } catch {}
   };
 
-  // High-performance filter and sort pipeline
+  // Safe, permissive scout filter pipeline
   const filteredScoreboard = useMemo(() => {
     return leaderboardRows
       .filter((ath) => {
+        // Only hide if explicitly marked FALSE
         if (ath.isProfileVisible === false) return false;
         
-        // Role filter
-        if (roleFilter !== "ALL" && ath.primaryRole !== roleFilter) return false;
+        // Discipline Role filter
+        if (roleFilter !== "ALL") {
+          if (roleFilter === "TWP" && ath.primaryRole !== "TWP") return false;
+          if (roleFilter === "HITTER" && ath.primaryRole !== "HITTER" && ath.primaryRole !== "TWP") return false;
+          if (roleFilter === "PITCHER" && ath.primaryRole !== "PITCHER" && ath.primaryRole !== "TWP") return false;
+        }
         
         // Position filter
-        if (positionFilter !== "ALL") {
-          const p = (ath.position || "").toUpperCase();
+        if (positionFilter !== "ALL" && ath.position) {
+          const p = ath.position.toUpperCase();
           if (!p.includes(positionFilter.toUpperCase())) return false;
         }
 
         // Status / Portal filter
-        if (statusFilter !== "ALL") {
-          if (!ath.playerStatus || !ath.playerStatus.toLowerCase().includes(statusFilter.toLowerCase())) {
+        if (statusFilter !== "ALL" && ath.playerStatus) {
+          if (!ath.playerStatus.toLowerCase().includes(statusFilter.toLowerCase())) {
             return false;
           }
         }
 
-        // State / Region filter
-        if (stateFilter !== "ALL") {
-          if (ath.state && ath.state !== stateFilter) return false;
+        // State / Region filter (never hide athletes if state is unset)
+        if (stateFilter !== "ALL" && ath.state && ath.state.trim() !== "") {
+          if (ath.state.toUpperCase() !== stateFilter.toUpperCase()) return false;
         }
 
         return true;
@@ -788,9 +800,7 @@ function AppContent() {
           </button>
         </div>
 
-        {/* ========================================================================= */}
-        {/* PILLAR 1: THE NATIONAL SCOUTING SCOREBOARD (PUBLIC DISCOVERY + FILTERS)  */}
-        {/* ========================================================================= */}
+        {/* PILLAR 1: THE NATIONAL SCOUTING SCOREBOARD */}
         {activeMainTab === "SCOREBOARD" && (
           <section style={{ marginBottom: "60px" }}>
             <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "20px", padding: "26px 20px", marginBottom: "24px" }}>
@@ -926,7 +936,7 @@ function AppContent() {
               </div>
             </div>
 
-            {/* RESPONSIVE SCOREBOARD CONTAINER (NO HORIZONTAL OVERFLOW) */}
+            {/* RESPONSIVE SCOREBOARD CONTAINER */}
             <div style={{ width: "100%" }}>
               {filteredScoreboard.length === 0 ? (
                 <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "16px", padding: "40px 20px", textAlign: "center", color: "#666666" }}>
