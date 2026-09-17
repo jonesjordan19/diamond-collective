@@ -335,6 +335,9 @@ interface AthleteProfile {
   sittingFB?: string;
   offSpeedVelo?: string;
   offSpeedType?: string;
+  fbSpinRate?: string;
+  offSpeedSpinRate?: string;
+  firstPitchStrike?: string;
   recordedDatePitching?: string;
 }
 
@@ -369,6 +372,9 @@ const emptyProfile: AthleteProfile = {
   sittingFB: "",
   offSpeedVelo: "",
   offSpeedType: "Slider",
+  fbSpinRate: "",
+  offSpeedSpinRate: "",
+  firstPitchStrike: "",
   recordedDatePitching: "",
 };
 
@@ -378,10 +384,10 @@ function AppContent() {
   const [justClaimed, setJustClaimed] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // Active top-level mode: 50/50 split between Exchange and Scoreboard
+  // 50/50 Dual Tab
   const [activeMainTab, setActiveMainTab] = useState<"EXCHANGE" | "SCOREBOARD">("SCOREBOARD");
   
-  // Scoreboard filter state
+  // Filter and Data states
   const [scoutRoleFilter, setScoutRoleFilter] = useState<"ALL" | "HITTER" | "PITCHER" | "TWP">("ALL");
   const [leaderboardRows, setLeaderboardRows] = useState<AthleteProfile[]>([]);
   const [loadingScoreboard, setLoadingScoreboard] = useState(true);
@@ -434,7 +440,6 @@ function AppContent() {
     return Date.now() - timestamp < NINETY_DAYS_MS;
   };
 
-  // Fetch Public Scoreboard from Google Web App (or display fallback seed data)
   useEffect(() => {
     const sheetUrl = process.env.NEXT_PUBLIC_SCOUTING_SHEET_URL;
     if (sheetUrl) {
@@ -459,6 +464,9 @@ function AppContent() {
               sittingFB: item.sittingFB ? String(item.sittingFB) : "",
               offSpeedVelo: item.offSpeedVelo ? String(item.offSpeedVelo) : "",
               offSpeedType: item.offSpeedType || "Slider",
+              fbSpinRate: item.fbSpinRate ? String(item.fbSpinRate) : "",
+              offSpeedSpinRate: item.offSpeedSpinRate ? String(item.offSpeedSpinRate) : "",
+              firstPitchStrike: item.firstPitchStrike ? String(item.firstPitchStrike) : "",
               recordedDateHitting: item.recordedDateHitting || "",
               recordedDatePitching: item.recordedDatePitching || "",
               social1_Type: item.social1_Type || "X",
@@ -478,7 +486,6 @@ function AppContent() {
     }
   }, []);
 
-  // Sync profile & local intros
   useEffect(() => {
     if (account?.address) {
       const lowerWallet = account.address.toLowerCase();
@@ -556,7 +563,6 @@ function AppContent() {
     setProfile(updatedProfile);
     localStorage.setItem(localKey, JSON.stringify(updatedProfile));
 
-    // Update live local state for instant feedback
     setLeaderboardRows((prev) => {
       const exists = prev.some((p) => p.email.toLowerCase() === updatedProfile.email.toLowerCase());
       if (exists) {
@@ -578,11 +584,11 @@ function AppContent() {
 
       setIsSavingProfile(false);
       setShowProfileModal(false);
-      alert("Locker & Scouting Matrix saved successfully!");
+      alert("Metrics saved to registry!");
     } catch {
       setIsSavingProfile(false);
       setShowProfileModal(false);
-      alert("Profile and verified metrics saved locally.");
+      alert("Saved locally.");
     }
   };
 
@@ -626,7 +632,6 @@ function AppContent() {
 
   if (!mounted) return null;
 
-  // Filtered scoreboard data
   const filteredScoreboard = leaderboardRows.filter((ath) => {
     if (ath.isProfileVisible === false) return false;
     if (scoutRoleFilter === "ALL") return true;
@@ -739,12 +744,9 @@ function AppContent() {
           </button>
         </div>
 
-        {/* ========================================================================= */}
-        {/* PILLAR 1: THE NATIONAL SCOUTING SCOREBOARD (NEW HONOR CODE UTILITY)       */}
-        {/* ========================================================================= */}
+        {/* PILLAR 1: THE NATIONAL SCOUTING SCOREBOARD */}
         {activeMainTab === "SCOREBOARD" && (
           <section style={{ marginBottom: "60px" }}>
-            {/* Scoreboard Hero Banner */}
             <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "20px", padding: "30px 24px", marginBottom: "28px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px" }}>
                 <div>
@@ -831,13 +833,16 @@ function AppContent() {
 
                       return (
                         <tr key={idx} style={{ borderBottom: "1px solid #161616" }}>
-                          {/* Player & Program */}
+                          {/* Athlete & School Distinction */}
                           <td style={{ padding: "16px" }}>
-                            <div style={{ fontWeight: "900", color: "#ffffff", fontSize: "14px" }}>
+                            <div style={{ fontWeight: "900", color: "#ffffff", fontSize: "15px" }}>
                               {ath.fullName || "Member Athlete"}
                             </div>
-                            <div style={{ color: "#888888", fontSize: "12px", marginTop: "2px" }}>
-                              {ath.college} • <span style={{ color: NEON_GREEN }}>{ath.position}</span> ({ath.playerStatus})
+                            <div style={{ color: NEON_GREEN, fontSize: "13px", fontWeight: "800", marginTop: "2px" }}>
+                              🏛️ {ath.college || "Undeclared College"}
+                            </div>
+                            <div style={{ color: "#888888", fontSize: "11px", marginTop: "2px" }}>
+                              {ath.position} • {ath.playerStatus}
                             </div>
                           </td>
 
@@ -854,16 +859,23 @@ function AppContent() {
                             )}
                           </td>
 
-                          {/* Primary Performance Metrics */}
+                          {/* Primary Performance Metrics (with Spin Rates & FPS%) */}
                           <td style={{ padding: "16px", textAlign: "right", fontFamily: "monospace" }}>
                             {isPitcher && ath.peakFB && (
                               <div style={{ color: "#ffffff", fontWeight: "800" }}>
                                 <span style={{ color: NEON_GREEN }}>FB:</span> {ath.peakFB} mph {ath.sittingFB ? `(${ath.sittingFB})` : ""}
+                                {ath.fbSpinRate && <span style={{ color: "#aaaaaa", fontSize: "11px", marginLeft: "6px" }}>{ath.fbSpinRate} RPM</span>}
                               </div>
                             )}
                             {isPitcher && ath.offSpeedVelo && (
                               <div style={{ color: "#888888", fontSize: "11px" }}>
                                 {ath.offSpeedType || "SL"}: {ath.offSpeedVelo} mph
+                                {ath.offSpeedSpinRate && <span style={{ color: "#666666", marginLeft: "4px" }}>({ath.offSpeedSpinRate} RPM)</span>}
+                              </div>
+                            )}
+                            {isPitcher && ath.firstPitchStrike && (
+                              <div style={{ color: NEON_GREEN, fontSize: "10px", fontWeight: "700" }}>
+                                FPS: {ath.firstPitchStrike}%
                               </div>
                             )}
                             {isHitter && ath.maxExitVelo && (
@@ -930,12 +942,9 @@ function AppContent() {
           </section>
         )}
 
-        {/* ========================================================================= */}
-        {/* PILLAR 2: THE BRAND EXCHANGE & MONETIZATION (EXISTING INFRASTRUCTURE)     */}
-        {/* ========================================================================= */}
+        {/* PILLAR 2: THE BRAND EXCHANGE & MONETIZATION */}
         {activeMainTab === "EXCHANGE" && (
           <div>
-            {/* Live Metrics Bar */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px", maxWidth: "860px", margin: "0 auto 40px auto" }}>
               <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "14px", padding: "16px", textAlign: "center" }}>
                 <span style={{ display: "block", fontSize: "20px", fontWeight: "900", color: NEON_GREEN }}>15+</span>
@@ -957,10 +966,8 @@ function AppContent() {
               </div>
             </div>
 
-            {/* Dynamic Gatekeeper Flow */}
             {!account ? (
               <div>
-                {/* Drop #001 Teaser Card for Logged Out Players */}
                 <div style={{ backgroundColor: "#080808", border: `1px solid ${NEON_GREEN}`, borderRadius: "24px", padding: "32px 24px", maxWidth: "800px", margin: "0 auto 40px auto", boxShadow: "0 0 35px rgba(166, 255, 0, 0.1)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", marginBottom: "16px" }}>
                     <span style={{ backgroundColor: NEON_GREEN, color: "#000000", fontSize: "11px", fontWeight: "900", padding: "6px 14px", borderRadius: "999px", textTransform: "uppercase", letterSpacing: "1px" }}>
@@ -1000,7 +1007,6 @@ function AppContent() {
                   </div>
                 </div>
 
-                {/* Step 1: Sign in Hero Box */}
                 <div style={{ backgroundColor: "#0a0a0a", border: `1px solid #222222`, borderRadius: "24px", padding: "44px 20px", textAlign: "center", maxWidth: "600px", margin: "0 auto 48px auto" }}>
                   <h3 style={{ fontSize: "22px", fontWeight: "900", margin: "0 0 8px 0", color: "#ffffff", textTransform: "uppercase" }}>
                     Step 1: Open Your Athlete Locker
@@ -1105,7 +1111,6 @@ function AppContent() {
               </div>
             ) : (
               <div>
-                {/* Athlete Status Pill */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "18px", padding: "22px 28px", marginBottom: "28px", flexWrap: "wrap", gap: "16px" }}>
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -1126,7 +1131,6 @@ function AppContent() {
                   </button>
                 </div>
 
-                {/* FEATURED EXCLUSIVE MEMBER DROP #001 CARD */}
                 <div style={{ 
                   backgroundColor: "#0d0d0d", 
                   border: `2px solid ${NEON_GREEN}`, 
@@ -1195,7 +1199,7 @@ function AppContent() {
                   </div>
                 </div>
 
-                {/* Unlocked Brand Dugout Directory */}
+                {/* Directory */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "48px" }}>
                   {MARKET_SECTIONS.map((section, idx) => (
                     <div key={idx} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
@@ -1431,12 +1435,10 @@ function AppContent() {
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* 👤 COMPREHENSIVE ATHLETE PROFILE & SCOUTING MATRIX MODAL                  */}
-      {/* ========================================================================= */}
+      {/* 👤 ATHLETE PROFILE & SCOUTING MATRIX MODAL */}
       {showProfileModal && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.88)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000, padding: "16px" }}>
-          <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "20px", width: "100%", maxWidth: "620px", maxHeight: "90vh", overflowY: "auto", padding: "26px" }}>
+          <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "20px", width: "100%", maxWidth: "640px", maxHeight: "90vh", overflowY: "auto", padding: "26px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
               <div>
                 <h3 style={{ margin: 0, fontSize: "20px", fontWeight: "900", textTransform: "uppercase", color: "#ffffff" }}>
@@ -1448,7 +1450,7 @@ function AppContent() {
               </div>
               <button
                 onClick={() => setShowProfileModal(false)}
-                style={{ background: "none", border: "none", color: "#888", fontSize: "20px", cursor: "pointer" }}
+                style={{ background: "none", border: "none", color: "#888888", fontSize: "20px", cursor: "pointer" }}
               >
                 ✕
               </button>
@@ -1463,24 +1465,24 @@ function AppContent() {
                 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "10px" }}>
                   <div>
-                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaa", marginBottom: "4px" }}>Full Name *</label>
+                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Full Name *</label>
                     <input 
                       type="text" 
                       required
                       value={profile.fullName} 
                       onChange={(e) => setProfile({ ...profile, fullName: e.target.value })}
-                      placeholder="e.g. Carter Davis" 
+                      placeholder="e.g. Jordan Jones" 
                       style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "12px" }}
                     />
                   </div>
                   <div>
-                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaa", marginBottom: "4px" }}>College / Program *</label>
+                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>Current College / Program *</label>
                     <input 
                       type="text" 
                       required
                       value={profile.college} 
                       onChange={(e) => setProfile({ ...profile, college: e.target.value })}
-                      placeholder="e.g. Salt Lake CC" 
+                      placeholder="e.g. University of Utah" 
                       style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "12px" }}
                     />
                   </div>
@@ -1488,18 +1490,18 @@ function AppContent() {
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "10px" }}>
                   <div>
-                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaa", marginBottom: "4px" }}>Primary Position *</label>
+                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Primary Position *</label>
                     <input 
                       type="text" 
                       required
                       value={profile.position} 
                       onChange={(e) => setProfile({ ...profile, position: e.target.value })}
-                      placeholder="e.g. OF / RHP" 
+                      placeholder="e.g. LHP / OF" 
                       style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "12px" }}
                     />
                   </div>
                   <div>
-                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaa", marginBottom: "4px" }}>Scout Role *</label>
+                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Scout Role *</label>
                     <select
                       value={profile.primaryRole}
                       onChange={(e) => setProfile({ ...profile, primaryRole: e.target.value as any })}
@@ -1511,7 +1513,7 @@ function AppContent() {
                     </select>
                   </div>
                   <div>
-                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaa", marginBottom: "4px" }}>Status *</label>
+                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Status *</label>
                     <select
                       value={profile.playerStatus}
                       onChange={(e) => setProfile({ ...profile, playerStatus: e.target.value })}
@@ -1527,7 +1529,7 @@ function AppContent() {
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                   <div>
-                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaa", marginBottom: "4px" }}>Email *</label>
+                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Email *</label>
                     <input 
                       type="email" 
                       required
@@ -1538,7 +1540,7 @@ function AppContent() {
                     />
                   </div>
                   <div>
-                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaa", marginBottom: "4px" }}>Cell Phone *</label>
+                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Cell Phone *</label>
                     <input 
                       type="tel" 
                       required
@@ -1551,7 +1553,7 @@ function AppContent() {
                 </div>
               </div>
 
-              {/* SECTION: SCOUTING METRICS (HONOR CODE MATRIX) */}
+              {/* SECTION: SCOUTING METRICS */}
               <div style={{ borderBottom: "1px solid #1f1f1f", paddingBottom: "14px" }}>
                 <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: "10px" }}>
                   2. Honor-Code Scouting Metrics
@@ -1565,87 +1567,89 @@ function AppContent() {
                     </span>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px" }}>
                       <div>
-                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888", marginBottom: "2px" }}>MAX EXIT VELO</label>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>MAX EXIT VELO</label>
                         <input
                           type="number"
                           step="0.1"
                           placeholder="e.g. 103.2"
                           value={profile.maxExitVelo}
                           onChange={(e) => setProfile({ ...profile, maxExitVelo: e.target.value })}
-                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
                         />
                       </div>
                       <div>
-                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888", marginBottom: "2px" }}>90TH% EV</label>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>90TH% EV</label>
                         <input
                           type="number"
                           step="0.1"
                           placeholder="e.g. 99.4"
                           value={profile.ninetyEV}
                           onChange={(e) => setProfile({ ...profile, ninetyEV: e.target.value })}
-                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
                         />
                       </div>
                       <div>
-                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888", marginBottom: "2px" }}>BAT SPEED</label>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>BAT SPEED</label>
                         <input
                           type="number"
                           step="0.1"
                           placeholder="e.g. 76.8"
                           value={profile.batSpeed}
                           onChange={(e) => setProfile({ ...profile, batSpeed: e.target.value })}
-                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
                         />
                       </div>
                       <div>
-                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888", marginBottom: "2px" }}>60-YD TIME</label>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>60-YD TIME</label>
                         <input
                           type="number"
                           step="0.01"
                           placeholder="e.g. 6.65"
                           value={profile.sixtyTime}
                           onChange={(e) => setProfile({ ...profile, sixtyTime: e.target.value })}
-                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
                         />
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* PITCHER INPUTS */}
+                {/* PITCHER INPUTS (WITH SPIN RATES & FPS%) */}
                 {(profile.primaryRole === "PITCHER" || profile.primaryRole === "TWP") && (
                   <div style={{ backgroundColor: "#050505", border: "1px solid #1a1a1a", borderRadius: "10px", padding: "12px" }}>
                     <span style={{ fontSize: "10px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", display: "block", marginBottom: "8px" }}>
-                      🎯 Pitching Benchmarks
+                      🎯 Pitching & Spin Benchmarks
                     </span>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px" }}>
+                    
+                    {/* Velocity Row */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px", marginBottom: "10px" }}>
                       <div>
-                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888", marginBottom: "2px" }}>PEAK FASTBALL</label>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>PEAK FASTBALL</label>
                         <input
                           type="number"
                           step="0.1"
                           placeholder="e.g. 94.5"
                           value={profile.peakFB}
                           onChange={(e) => setProfile({ ...profile, peakFB: e.target.value })}
-                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
                         />
                       </div>
                       <div>
-                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888", marginBottom: "2px" }}>SITTING FB</label>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>SITTING FB</label>
                         <input
                           type="text"
                           placeholder="91-93"
                           value={profile.sittingFB}
                           onChange={(e) => setProfile({ ...profile, sittingFB: e.target.value })}
-                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
                         />
                       </div>
                       <div>
-                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888", marginBottom: "2px" }}>OFF-SPEED TYPE</label>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>OFF-SPEED TYPE</label>
                         <select
                           value={profile.offSpeedType}
                           onChange={(e) => setProfile({ ...profile, offSpeedType: e.target.value })}
-                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
                         >
                           <option value="Slider">Slider</option>
                           <option value="Curveball">Curveball</option>
@@ -1655,14 +1659,48 @@ function AppContent() {
                         </select>
                       </div>
                       <div>
-                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888", marginBottom: "2px" }}>OFF-SPEED VELO</label>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>OFF-SPEED VELO</label>
                         <input
                           type="number"
                           step="0.1"
                           placeholder="e.g. 83.4"
                           value={profile.offSpeedVelo}
                           onChange={(e) => setProfile({ ...profile, offSpeedVelo: e.target.value })}
-                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Spin Rates & Command Row */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
+                      <div>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: NEON_GREEN, marginBottom: "2px" }}>FB SPIN RATE (RPM)</label>
+                        <input
+                          type="number"
+                          placeholder="e.g. 2350"
+                          value={profile.fbSpinRate || ""}
+                          onChange={(e) => setProfile({ ...profile, fbSpinRate: e.target.value })}
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: NEON_GREEN, marginBottom: "2px" }}>SECONDARY SPIN (RPM)</label>
+                        <input
+                          type="number"
+                          placeholder="e.g. 2500"
+                          value={profile.offSpeedSpinRate || ""}
+                          onChange={(e) => setProfile({ ...profile, offSpeedSpinRate: e.target.value })}
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: NEON_GREEN, marginBottom: "2px" }}>FIRST PITCH STRIKE %</label>
+                        <input
+                          type="number"
+                          placeholder="e.g. 68"
+                          value={profile.firstPitchStrike || ""}
+                          onChange={(e) => setProfile({ ...profile, firstPitchStrike: e.target.value })}
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
                         />
                       </div>
                     </div>
@@ -1670,7 +1708,7 @@ function AppContent() {
                 )}
               </div>
 
-              {/* SECTION: SOCIAL GATEWAYS FOR THE SCOREBOARD */}
+              {/* SECTION: SOCIAL GATEWAYS */}
               <div>
                 <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: "10px" }}>
                   3. Public Social Gateways (Scoreboard Links)
@@ -1680,7 +1718,7 @@ function AppContent() {
                   <select
                     value={profile.social1_Type}
                     onChange={(e) => setProfile({ ...profile, social1_Type: e.target.value })}
-                    style={{ backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "8px", borderRadius: "8px", fontSize: "11px" }}
+                    style={{ backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "8px", borderRadius: "8px", fontSize: "11px" }}
                   >
                     <option value="X">X (Twitter)</option>
                     <option value="IG">Instagram</option>
@@ -1691,7 +1729,7 @@ function AppContent() {
                     placeholder="Link 1: e.g. https://x.com/athlete"
                     value={profile.social1_Url}
                     onChange={(e) => setProfile({ ...profile, social1_Url: e.target.value })}
-                    style={{ backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "8px 10px", borderRadius: "8px", fontSize: "11px" }}
+                    style={{ backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "11px" }}
                   />
                 </div>
 
@@ -1699,7 +1737,7 @@ function AppContent() {
                   <select
                     value={profile.social2_Type}
                     onChange={(e) => setProfile({ ...profile, social2_Type: e.target.value })}
-                    style={{ backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "8px", borderRadius: "8px", fontSize: "11px" }}
+                    style={{ backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "8px", borderRadius: "8px", fontSize: "11px" }}
                   >
                     <option value="IG">Instagram</option>
                     <option value="X">X (Twitter)</option>
@@ -1710,11 +1748,11 @@ function AppContent() {
                     placeholder="Link 2: e.g. https://instagram.com/athlete"
                     value={profile.social2_Url}
                     onChange={(e) => setProfile({ ...profile, social2_Url: e.target.value })}
-                    style={{ backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "8px 10px", borderRadius: "8px", fontSize: "11px" }}
+                    style={{ backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "11px" }}
                   />
                 </div>
 
-                <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "#ccc", cursor: "pointer" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "#cccccc", cursor: "pointer" }}>
                   <input
                     type="checkbox"
                     checked={profile.isProfileVisible !== false}
