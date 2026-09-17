@@ -1095,7 +1095,8 @@ function AppContent() {
         {/* PILLAR 2: THE BRAND EXCHANGE & MONETIZATION */}
         {activeMainTab === "EXCHANGE" && (
           <div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px", maxWidth: "860px", margin: "0 auto 40px auto" }}>
+            {/* Top Stat Counters */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px", maxWidth: "860px", margin: "0 auto 36px auto" }}>
               <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "14px", padding: "16px", textAlign: "center" }}>
                 <span style={{ display: "block", fontSize: "20px", fontWeight: "900", color: NEON_GREEN }}>15+</span>
                 <span style={{ fontSize: "11px", color: "#888888", textTransform: "uppercase", fontWeight: "700", letterSpacing: "0.5px" }}>Brand Partners</span>
@@ -1116,385 +1117,209 @@ function AppContent() {
               </div>
             </div>
 
+            {/* Member Status / Unlock Action Banner */}
             {!account ? (
-              <div>
-                <div style={{ backgroundColor: "#080808", border: `1px solid ${NEON_GREEN}`, borderRadius: "24px", padding: "32px 24px", maxWidth: "800px", margin: "0 auto 40px auto", boxShadow: "0 0 35px rgba(166, 255, 0, 0.1)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", marginBottom: "16px" }}>
-                    <span style={{ backgroundColor: NEON_GREEN, color: "#000000", fontSize: "11px", fontWeight: "900", padding: "6px 14px", borderRadius: "999px", textTransform: "uppercase", letterSpacing: "1px" }}>
-                      🔥 Exclusive Member Drop #001
-                    </span>
-                    <span style={{ fontSize: "12px", color: "#888888", fontWeight: "800", textTransform: "uppercase" }}>
-                      Limited to First 60 Verified Athletes
-                    </span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "20px" }}>
-                    <div style={{ flex: "1 1 340px" }}>
-                      <h3 style={{ fontSize: "24px", fontWeight: "900", margin: "0 0 8px 0", color: "#ffffff", textTransform: "uppercase" }}>
-                        "The Big Black Grip" Bat Grip ($0.00 Free)
-                      </h3>
-                      <p style={{ fontSize: "14px", color: "#a1a1aa", lineHeight: "1.5", margin: 0 }}>
-                        We're hooking up the first 60 verified college players with our premium pro-feel bat grip for $0.00 (just cover flat $8.99 USPS shipping & handling).
-                      </p>
-                    </div>
-                    <button
-                      onClick={handleOpenLogin}
-                      style={{ 
-                        backgroundColor: "#111111", 
-                        border: `1px solid ${NEON_GREEN}`, 
-                        color: NEON_GREEN, 
-                        fontWeight: "900", 
-                        textTransform: "uppercase", 
-                        letterSpacing: "1px", 
-                        padding: "14px 24px", 
-                        borderRadius: "12px", 
-                        cursor: "pointer", 
-                        fontSize: "13px",
-                        whiteSpace: "nowrap"
-                      }}
-                    >
-                      Sign In to Claim ➔
-                    </button>
-                  </div>
-                </div>
-
-                <div style={{ backgroundColor: "#0a0a0a", border: `1px solid #222222`, borderRadius: "24px", padding: "44px 20px", textAlign: "center", maxWidth: "600px", margin: "0 auto 48px auto" }}>
-                  <h3 style={{ fontSize: "22px", fontWeight: "900", margin: "0 0 8px 0", color: "#ffffff", textTransform: "uppercase" }}>
-                    Step 1: Open Your Athlete Locker
-                  </h3>
-                  <p style={{ fontSize: "14px", color: "#888888", margin: "0 0 24px 0", lineHeight: "1.5" }}>
-                    Tap below to connect with your Google, Apple, or phone ID and submit your collegiate verification.
-                  </p>
-                  <button
-                    onClick={handleOpenLogin}
-                    style={{ 
-                      backgroundColor: NEON_GREEN, 
-                      color: "#000000", 
-                      fontWeight: "900", 
-                      textTransform: "uppercase", 
-                      letterSpacing: "0.8px", 
-                      padding: "16px 28px", 
-                      borderRadius: "12px", 
-                      border: "none", 
-                      cursor: "pointer", 
-                      fontSize: "14px",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      textAlign: "center",
-                      gap: "8px",
-                      lineHeight: "1.2",
-                      width: "100%",
-                      maxWidth: "380px"
-                    }}
-                  >
-                    <span>Athlete Sign In & Verification</span>
-                    <span style={{ fontSize: "16px", fontWeight: "900" }}>↗</span>
-                  </button>
-                </div>
+              <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #222222", borderRadius: "20px", padding: "24px 20px", textAlign: "center", maxWidth: "680px", margin: "0 auto 36px auto" }}>
+                <h3 style={{ fontSize: "18px", fontWeight: "900", margin: "0 0 6px 0", color: "#ffffff", textTransform: "uppercase" }}>
+                  Active College Ballplayer?
+                </h3>
+                <p style={{ fontSize: "13px", color: "#888888", margin: "0 0 16px 0", lineHeight: "1.4" }}>
+                  Sign in with your Google, Apple, or phone ID to unlock direct intro requests and claim 100 $SLUG.
+                </p>
+                <button
+                  onClick={handleOpenLogin}
+                  style={{ backgroundColor: NEON_GREEN, color: "#000000", fontWeight: "900", textTransform: "uppercase", letterSpacing: "0.8px", padding: "12px 24px", borderRadius: "10px", border: "none", cursor: "pointer", fontSize: "12px" }}
+                >
+                  Athlete Sign In ➔
+                </button>
               </div>
             ) : !hasProfile ? (
-              <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "24px", padding: "40px 24px", textAlign: "center", maxWidth: "540px", margin: "0 auto", boxShadow: "0 0 30px rgba(166, 255, 0, 0.12)" }}>
-                <div style={{ fontSize: "44px", marginBottom: "12px" }}>📋</div>
-                <h3 style={{ fontSize: "24px", fontWeight: "900", margin: "0 0 6px 0", color: "#ffffff", textTransform: "uppercase" }}>
-                  Complete Athlete Verification
+              <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "20px", padding: "24px 20px", textAlign: "center", maxWidth: "680px", margin: "0 auto 36px auto" }}>
+                <h3 style={{ fontSize: "18px", fontWeight: "900", margin: "0 0 6px 0", color: "#ffffff", textTransform: "uppercase" }}>
+                  Complete Roster Verification
                 </h3>
-                <p style={{ fontSize: "14px", color: "#888888", margin: "0 0 24px 0", lineHeight: "1.5" }}>
-                  The Diamond Collective is exclusive to active collegiate baseball players. Submit your locker profile and proof link for approval.
+                <p style={{ fontSize: "13px", color: "#888888", margin: "0 0 16px 0" }}>
+                  Submit your college bio to enable 1-click Direct Intros with our brand network.
                 </p>
                 <button
                   onClick={() => setShowProfileModal(true)}
-                  style={{ width: "100%", backgroundColor: NEON_GREEN, color: "#000000", fontWeight: "900", textTransform: "uppercase", letterSpacing: "1px", padding: "16px", borderRadius: "12px", border: "none", cursor: "pointer", fontSize: "15px" }}
+                  style={{ backgroundColor: NEON_GREEN, color: "#000000", fontWeight: "900", textTransform: "uppercase", letterSpacing: "0.8px", padding: "12px 24px", borderRadius: "10px", border: "none", cursor: "pointer", fontSize: "12px" }}
                 >
                   Fill Out Locker Profile ✍️
                 </button>
               </div>
-            ) : !isApproved && balance < 100 ? (
-              <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #eab308", borderRadius: "24px", padding: "40px 24px", textAlign: "center", maxWidth: "540px", margin: "0 auto", boxShadow: "0 0 30px rgba(234, 179, 8, 0.1)" }}>
-                <div style={{ fontSize: "44px", marginBottom: "12px" }}>⏳</div>
-                <h3 style={{ fontSize: "22px", fontWeight: "900", margin: "0 0 6px 0", color: "#ffffff", textTransform: "uppercase" }}>
-                  Verification Under Review
-                </h3>
-                <p style={{ fontSize: "14px", color: "#a1a1aa", margin: "0 0 20px 0", lineHeight: "1.5" }}>
-                  Thanks, <strong style={{ color: "#ffffff" }}>{profile.fullName}</strong>. Your profile at <strong style={{ color: "#ffffff" }}>{profile.college}</strong> is currently being verified.
-                </p>
-                <div style={{ backgroundColor: "#000000", border: "1px solid #2a2a2a", borderRadius: "12px", padding: "12px 18px", fontSize: "12px", color: "#eab308", fontWeight: "800", textTransform: "uppercase", letterSpacing: "1px", display: "inline-block" }}>
-                  Status: Pending Approval
-                </div>
-                <p style={{ fontSize: "12px", color: "#666666", margin: "16px 0 0 0" }}>
-                  Once approved by collective admins, your 100 $SLUG claim button will unlock here automatically.
-                </p>
-              </div>
-            ) : !isUnlocked ? (
-              <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "24px", padding: "40px 24px", textAlign: "center", maxWidth: "540px", margin: "0 auto", boxShadow: "0 0 30px rgba(166, 255, 0, 0.12)" }}>
-                <div style={{ fontSize: "44px", marginBottom: "12px" }}>⚾</div>
-                <div style={{ display: "inline-block", backgroundColor: "rgba(166, 255, 0, 0.1)", border: `1px solid ${NEON_GREEN}`, borderRadius: "999px", padding: "4px 12px", fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", marginBottom: "12px" }}>
-                  ✓ Verified Collegiate Athlete
-                </div>
-                <h3 style={{ fontSize: "24px", fontWeight: "900", margin: "0 0 6px 0", color: "#ffffff", textTransform: "uppercase" }}>
-                  Claim Your 100 Slugger Coins
-                </h3>
-                <p style={{ fontSize: "13px", color: "#888888", margin: "0 0 24px 0" }}>
-                  {profile.fullName} • {profile.college} ({profile.position})
-                </p>
+            ) : null}
 
-                <TransactionButton
-                  transaction={() =>
-                    claimTo({
-                      contract: sluggerContract,
-                      to: account.address,
-                      quantity: "100",
-                    })
-                  }
-                  onTransactionConfirmed={() => {
-                    setJustClaimed(true);
-                    refetchBalance();
-                    refetchSupply();
-                  }}
-                  onError={(err) => alert(`Claim error: ${err.message}`)}
-                  style={{ width: "100%", backgroundColor: NEON_GREEN, color: "#000000", fontWeight: "900", textTransform: "uppercase", letterSpacing: "1px", padding: "16px", borderRadius: "12px", border: "none", cursor: "pointer", fontSize: "15px" }}
-                >
-                  Claim 100 Free Slugger Coins
-                </TransactionButton>
-                <p style={{ fontSize: "12px", color: "#666666", margin: "16px 0 0 0", fontWeight: "600" }}>
-                  Claims remaining: <span style={{ color: NEON_GREEN }}>{remainingPercentage}%</span> • Instant & Gasless on Base
+            {/* Free Member Drop Banner */}
+            <div style={{ 
+              backgroundColor: "#0d0d0d", 
+              border: `2px solid ${NEON_GREEN}`, 
+              borderRadius: "20px", 
+              padding: "24px", 
+              marginBottom: "40px", 
+              boxShadow: "0 0 30px rgba(166, 255, 0, 0.1)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "16px"
+            }}>
+              <div style={{ flex: "1 1 320px" }}>
+                <span style={{ backgroundColor: NEON_GREEN, color: "#000000", fontSize: "10px", fontWeight: "900", padding: "4px 10px", borderRadius: "999px", textTransform: "uppercase", letterSpacing: "1px", display: "inline-block", marginBottom: "8px" }}>
+                  Member Drop #001
+                </span>
+                <h3 style={{ fontSize: "20px", fontWeight: "900", color: "#ffffff", margin: "0 0 4px 0", textTransform: "uppercase" }}>
+                  "The Big Black Grip" Bat Grip ($0.00 Free)
+                </h3>
+                <p style={{ fontSize: "13px", color: "#a1a1aa", margin: 0, lineHeight: "1.4" }}>
+                  Seamless pro bat grip free for college ballplayers. Just cover flat $8.99 USPS postage.
                 </p>
               </div>
-            ) : (
-              <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "18px", padding: "22px 28px", marginBottom: "28px", flexWrap: "wrap", gap: "16px" }}>
-                  <div>
+
+              <a
+                href={STRIPE_GRIP_DROP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  backgroundColor: NEON_GREEN,
+                  color: "#000000",
+                  fontWeight: "900",
+                  padding: "12px 22px",
+                  borderRadius: "10px",
+                  fontSize: "12px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.8px",
+                  textDecoration: "none",
+                  whiteSpace: "nowrap"
+                }}
+              >
+                Claim Free Grip ($8.99 S&H) ↗
+              </a>
+            </div>
+
+            {/* Brand Directory — Publicly Visible */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "36px" }}>
+              {MARKET_SECTIONS.filter((s) => s.brands.length > 0).map((section, idx) => (
+                <div key={idx} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                  <div style={{ 
+                    display: "flex", 
+                    alignItems: "center", 
+                    justifyContent: "space-between",
+                    backgroundColor: "#0d0d0d",
+                    border: "1px solid #1f1f1f",
+                    borderLeft: `4px solid ${NEON_GREEN}`,
+                    borderRadius: "12px",
+                    padding: "12px 16px"
+                  }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                      <span style={{ height: "10px", width: "10px", borderRadius: "50%", backgroundColor: NEON_GREEN, display: "inline-block", boxShadow: `0 0 10px ${NEON_GREEN}` }}></span>
-                      <h3 style={{ margin: 0, fontSize: "20px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase" }}>
-                        The Brand Dugout (Unlocked)
+                      <span style={{ fontSize: "18px" }}>{section.emoji}</span>
+                      <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "900", textTransform: "uppercase", letterSpacing: "0.8px", color: "#ffffff" }}>
+                        {section.title}
                       </h3>
                     </div>
-                    <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "#888888" }}>
-                      Verified Member • Holding {balance >= 100 ? balance : "100"} $SLUG • {profile.fullName} ({profile.college})
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setShowProfileModal(true)}
-                    style={{ backgroundColor: "#141414", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontWeight: "800", padding: "10px 18px", borderRadius: "10px", fontSize: "12px", textTransform: "uppercase", letterSpacing: "1px", cursor: "pointer" }}
-                  >
-                    Edit Athlete Profile 👤
-                  </button>
-                </div>
-
-                <div style={{ 
-                  backgroundColor: "#0d0d0d", 
-                  border: `2px solid ${NEON_GREEN}`, 
-                  borderRadius: "22px", 
-                  padding: "30px 24px", 
-                  marginBottom: "40px", 
-                  boxShadow: "0 0 35px rgba(166, 255, 0, 0.15)",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "20px"
-                }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
-                    <div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-                        <span style={{ backgroundColor: NEON_GREEN, color: "#000000", fontSize: "11px", fontWeight: "900", padding: "4px 12px", borderRadius: "999px", textTransform: "uppercase", letterSpacing: "1px" }}>
-                          Member Drop #001
-                        </span>
-                        <span style={{ fontSize: "12px", color: "#888888", fontWeight: "800", textTransform: "uppercase" }}>
-                          First 60 Members Only
-                        </span>
-                      </div>
-                      <h3 style={{ fontSize: "26px", fontWeight: "900", color: "#ffffff", margin: "0 0 6px 0", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                        "The Big Black Grip" Bat Grip
-                      </h3>
-                      <p style={{ fontSize: "14px", color: "#a1a1aa", margin: 0, maxWidth: "600px", lineHeight: "1.5" }}>
-                        Single-sleeve, one-piece seamless bat grip with ultra durability and zero tape unraveling. 100% free for verified members (<span style={{ color: "#ffffff", textDecoration: "line-through" }}>$16.00 retail</span> → <strong style={{ color: NEON_GREEN }}>$0.00</strong>). Flat $8.99 USPS shipping & handling.
-                      </p>
-                    </div>
-
-                    <div style={{ textAlign: "right" }}>
-                      <span style={{ display: "block", fontSize: "28px", fontWeight: "900", color: NEON_GREEN }}>$0.00</span>
-                      <span style={{ fontSize: "11px", color: "#888888", textTransform: "uppercase", fontWeight: "700" }}>+ $8.99 Flat S&H</span>
-                    </div>
+                    <span style={{ fontSize: "10px", color: "#888888", fontWeight: "800", textTransform: "uppercase" }}>
+                      {section.brands.length} {section.brands.length === 1 ? "Partner" : "Partners"}
+                    </span>
                   </div>
 
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #1f1f1f", paddingTop: "18px", flexWrap: "wrap", gap: "14px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span style={{ height: "8px", width: "8px", borderRadius: "50%", backgroundColor: NEON_GREEN }}></span>
-                      <span style={{ fontSize: "12px", color: "#cccccc", fontWeight: "700" }}>
-                        📦 60 Units in Vault • USPS Ground with Tracking
-                      </span>
-                    </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "14px" }}>
+                    {section.brands.map((brand, bIdx) => {
+                      const isDirectIntro = brand.type === "email_intro";
+                      const activeIntro = isIntroActive(brand.name);
 
-                    <a
-                      href={STRIPE_GRIP_DROP_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        backgroundColor: NEON_GREEN,
-                        color: "#000000",
-                        fontWeight: "900",
-                        padding: "14px 28px",
-                        borderRadius: "10px",
-                        fontSize: "13px",
-                        textTransform: "uppercase",
-                        letterSpacing: "1px",
-                        textDecoration: "none",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "8px"
-                      }}
-                    >
-                      <span>Claim Your Free Grip ($8.99 S&H)</span>
-                      <span style={{ fontSize: "16px" }}>↗</span>
-                    </a>
-                  </div>
-                </div>
-
-                {/* Directory */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "48px" }}>
-                  {MARKET_SECTIONS.map((section, idx) => (
-                    <div key={idx} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-                      <div style={{ 
-                        display: "flex", 
-                        alignItems: "center", 
-                        justifyContent: "space-between",
-                        backgroundColor: "#0d0d0d",
-                        border: "1px solid #1f1f1f",
-                        borderLeft: `4px solid ${NEON_GREEN}`,
-                        borderRadius: "14px",
-                        padding: "14px 18px",
-                        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.4)",
-                        flexWrap: "wrap",
-                        gap: "10px"
-                      }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                          <span style={{ 
-                            fontSize: "22px", 
-                            backgroundColor: "rgba(166, 255, 0, 0.08)", 
-                            border: "1px solid rgba(166, 255, 0, 0.2)",
-                            width: "38px", 
-                            height: "38px", 
-                            borderRadius: "10px", 
+                      return (
+                        <div 
+                          key={bIdx}
+                          style={{ 
+                            backgroundColor: "#0a0a0a", 
+                            border: isDirectIntro ? `1px solid rgba(166, 255, 0, 0.4)` : "1px solid #1a1a1a", 
+                            borderRadius: "14px", 
+                            padding: "20px", 
                             display: "flex", 
-                            alignItems: "center", 
-                            justifyContent: "center" 
-                          }}>
-                            {section.emoji}
-                          </span>
+                            flexDirection: "column", 
+                            justifyContent: "space-between" 
+                          }}
+                        >
                           <div>
-                            <span style={{ fontSize: "10px", color: NEON_GREEN, fontWeight: "900", letterSpacing: "1.5px", textTransform: "uppercase", display: "block" }}>
-                              Category
-                            </span>
-                            <h3 style={{ margin: 0, fontSize: "20px", fontWeight: "900", textTransform: "uppercase", letterSpacing: "1px", color: "#ffffff" }}>
-                              {section.title}
-                            </h3>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+                              <span style={{ fontSize: "10px", fontWeight: "900", color: isDirectIntro ? NEON_GREEN : "#888888", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                                {isDirectIntro ? "⚡ DIRECT PARTNER INTRO" : "PORTAL COLLAB"}
+                              </span>
+                              {isDirectIntro && (
+                                <span style={{ backgroundColor: "rgba(166, 255, 0, 0.1)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontSize: "8px", fontWeight: "900", padding: "2px 6px", borderRadius: "4px", textTransform: "uppercase" }}>
+                                  Decision Maker Direct
+                                </span>
+                              )}
+                            </div>
+                            <h4 style={{ fontSize: "18px", fontWeight: "900", color: "#ffffff", margin: "0 0 6px 0", textTransform: "uppercase" }}>
+                              {brand.name}
+                            </h4>
+                            <p style={{ fontSize: "12px", color: "#888888", lineHeight: "1.5", margin: 0 }}>
+                              {brand.description}
+                            </p>
                           </div>
+
+                          {isDirectIntro ? (
+                            <button
+                              onClick={() => {
+                                if (!account) {
+                                  handleOpenLogin();
+                                } else if (!hasProfile) {
+                                  setShowProfileModal(true);
+                                } else {
+                                  handleRequestIntro(brand);
+                                }
+                              }}
+                              style={{ 
+                                width: "100%",
+                                backgroundColor: activeIntro ? "#15803d" : NEON_GREEN, 
+                                color: activeIntro ? "#ffffff" : "#000000", 
+                                border: "none", 
+                                fontWeight: "900", 
+                                padding: "12px", 
+                                borderRadius: "8px", 
+                                fontSize: "11px", 
+                                textTransform: "uppercase", 
+                                letterSpacing: "0.8px", 
+                                cursor: "pointer", 
+                                marginTop: "18px"
+                              }}
+                            >
+                              {activeIntro ? "Intro Dispatched ✓" : !account ? "Sign In to Request Intro ⚡" : brand.buttonText}
+                            </button>
+                          ) : (
+                            <a
+                              href={brand.link} 
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ 
+                                display: "block", 
+                                textAlign: "center", 
+                                backgroundColor: "#141414", 
+                                color: "#ffffff", 
+                                border: "1px solid #2a2a2a", 
+                                fontWeight: "800", 
+                                padding: "12px", 
+                                borderRadius: "8px", 
+                                fontSize: "11px", 
+                                textTransform: "uppercase", 
+                                letterSpacing: "0.8px", 
+                                textDecoration: "none", 
+                                marginTop: "18px" 
+                              }}
+                            >
+                              {brand.buttonText}
+                            </a>
+                          )}
                         </div>
-
-                        <span style={{ 
-                          fontSize: "11px", 
-                          color: "#a1a1aa", 
-                          fontWeight: "800", 
-                          backgroundColor: "#171717", 
-                          border: "1px solid #262626",
-                          padding: "6px 14px", 
-                          borderRadius: "999px", 
-                          textTransform: "uppercase", 
-                          letterSpacing: "0.5px" 
-                        }}>
-                          {section.brands.length} {section.brands.length === 1 ? "Partner" : "Partners"}
-                        </span>
-                      </div>
-
-                      {section.brands.length > 0 ? (
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "16px" }}>
-                          {section.brands.map((brand, bIdx) => {
-                            const activeIntro = isIntroActive(brand.name);
-                            return (
-                              <div 
-                                key={bIdx}
-                                style={{ 
-                                  backgroundColor: "#0a0a0a", 
-                                  border: brand.isPrimary ? `1px solid ${NEON_GREEN}` : "1px solid #1f1f1f", 
-                                  borderRadius: "18px", 
-                                  padding: "24px", 
-                                  display: "flex", 
-                                  flexDirection: "column", 
-                                  justifyContent: "space-between",
-                                }}
-                              >
-                                <div>
-                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px", marginBottom: "8px" }}>
-                                    <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "0.8px", flex: 1, lineHeight: "1.3" }}>
-                                      {brand.tagline}
-                                    </span>
-                                  </div>
-                                  <h4 style={{ fontSize: "20px", fontWeight: "900", color: "#ffffff", margin: "8px 0 10px 0", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                                    {brand.name}
-                                  </h4>
-                                  <p style={{ fontSize: "13px", color: "#888888", lineHeight: "1.55", margin: 0 }}>
-                                    {brand.description}
-                                  </p>
-                                </div>
-
-                                {brand.type === "email_intro" ? (
-                                  <button
-                                    onClick={() => handleRequestIntro(brand)}
-                                    style={{ 
-                                      width: "100%",
-                                      backgroundColor: activeIntro ? "#15803d" : NEON_GREEN, 
-                                      color: activeIntro ? "#ffffff" : "#000000", 
-                                      border: "none", 
-                                      fontWeight: "900", 
-                                      padding: "14px", 
-                                      borderRadius: "10px", 
-                                      fontSize: "12px", 
-                                      textTransform: "uppercase", 
-                                      letterSpacing: "1px", 
-                                      cursor: "pointer", 
-                                      marginTop: "22px",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                      gap: "6px"
-                                    }}
-                                  >
-                                    {activeIntro ? "Intro Dispatched ✓" : brand.buttonText}
-                                  </button>
-                                ) : (
-                                  <a
-                                    href={brand.link} 
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{ 
-                                      display: "block", 
-                                      textAlign: "center", 
-                                      backgroundColor: "#141414", 
-                                      color: "#ffffff", 
-                                      border: "1px solid #2a2a2a", 
-                                      fontWeight: "900", 
-                                      padding: "14px", 
-                                      borderRadius: "10px", 
-                                      fontSize: "12px", 
-                                      textTransform: "uppercase", 
-                                      letterSpacing: "1px", 
-                                      textDecoration: "none", 
-                                      marginTop: "22px" 
-                                    }}
-                                  >
-                                    {brand.buttonText}
-                                  </a>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : null}
-                    </div>
-                  ))}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            )}
-
+              ))}
+            </div>
+          </div>
+        )}
             {/* FAQ Accordion */}
             <section style={{ margin: "56px 0" }}>
               <div style={{ textAlign: "center", marginBottom: "32px" }}>
