@@ -373,72 +373,7 @@ const emptyProfile: AthleteProfile = {
   recordedDatePitching: "",
 };
 
-// Initial roster so visitors always see that the board is active
 const INITIAL_PUBLIC_ROSTER: AthleteProfile[] = [];
-  {
-    ...emptyProfile,
-    fullName: "Jordan Jones",
-    college: "University of Utah",
-    state: "UT",
-    position: "LHP",
-    primaryRole: "PITCHER",
-    playerStatus: "Incoming Freshman",
-    peakFB: "85.0",
-    sittingFB: "82-84",
-    offSpeedType: "Curveball",
-    offSpeedVelo: "74.0",
-    fbSpinRate: "2280",
-    offSpeedSpinRate: "2410",
-    firstPitchStrike: "66",
-    recordedDatePitching: "09/17/2026",
-    social1_Type: "X",
-    social1_Url: "https://x.com",
-    social2_Type: "IG",
-    social2_Url: "https://instagram.com",
-  },
-  {
-    ...emptyProfile,
-    fullName: "Carter Davis",
-    college: "Salt Lake CC",
-    state: "UT",
-    position: "OF / RHP",
-    primaryRole: "TWP",
-    playerStatus: "Transfer Portal",
-    maxExitVelo: "104.2",
-    ninetyEV: "100.8",
-    batSpeed: "77.5",
-    sixtyTime: "6.58",
-    peakFB: "93.4",
-    sittingFB: "90-92",
-    offSpeedType: "Slider",
-    offSpeedVelo: "82.5",
-    fbSpinRate: "2450",
-    offSpeedSpinRate: "2610",
-    firstPitchStrike: "70",
-    recordedDateHitting: "09/15/2026",
-    recordedDatePitching: "09/15/2026",
-    social1_Type: "X",
-    social1_Url: "https://x.com",
-    social2_Type: "IG",
-    social2_Url: "https://instagram.com",
-  },
-  {
-    ...emptyProfile,
-    fullName: "Tyler Brooks",
-    college: "Central Arizona",
-    state: "AZ",
-    position: "SS",
-    primaryRole: "HITTER",
-    playerStatus: "Juco Uncommitted",
-    maxExitVelo: "99.4",
-    ninetyEV: "96.2",
-    batSpeed: "75.1",
-    sixtyTime: "6.64",
-    recordedDateHitting: "09/12/2026",
-    social1_Type: "IG",
-    social1_Url: "https://instagram.com",
-  },
-];
 
 function AppContent() {
   const account = useActiveAccount();
@@ -545,16 +480,7 @@ function AppContent() {
               social2_Url: item.social2_Url || "",
             }));
 
-            // Merge sheet records with local initial public roster, avoiding duplicates
-            setLeaderboardRows((prev) => {
-              const combined = [...mapped];
-              INITIAL_PUBLIC_ROSTER.forEach((initRow) => {
-                if (!combined.some((c) => c.fullName.toLowerCase() === initRow.fullName.toLowerCase())) {
-                  combined.push(initRow);
-                }
-              });
-              return combined;
-            });
+            setLeaderboardRows(mapped);
           }
           setLoadingScoreboard(false);
         })
