@@ -19,7 +19,7 @@ const STRIPE_GRIP_DROP_URL = "https://buy.stripe.com/8x2eVeeW57dgc5I1hX8Vi01";
 const NEON_GREEN = "#a6ff00";
 
 const FOUNDERS_POOL_TOTAL = 100000;
-const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
+const SIXTY_DAYS_MS = 60 * 24 * 60 * 60 * 1000; // Strict 60-day contact window
 
 const client = createThirdwebClient({
   clientId: "770a552ed494b40543a6696298d41606",
@@ -392,6 +392,7 @@ function AppContent() {
 
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [dispatchedBrand, setDispatchedBrand] = useState<BrandItem | null>(null);
+  const [isLockoutModal, setIsLockoutModal] = useState(false);
   const [profile, setProfile] = useState<AthleteProfile>(emptyProfile);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [introTimestamps, setIntroTimestamps] = useState<{ [brandName: string]: number }>({});
@@ -429,15 +430,24 @@ function AppContent() {
 
   const balance = balanceData ? Number(balanceData.displayValue) : 0;
   const isUnlocked = balance >= 100 || justClaimed;
-  const isApproved = profile.verificationStatus === "Approved";
   const hasProfile = Boolean(profile.fullName && profile.email);
 
+  // Strict 60-Day Lockout Calculator
   const isIntroActive = (brandName: string): boolean => {
     const timestamp = introTimestamps[brandName];
     if (!timestamp) return false;
-    return Date.now() - timestamp < NINETY_DAYS_MS;
+    return Date.now() - timestamp < SIXTY_DAYS_MS;
   };
 
+  const getDaysRemaining = (brandName: string): number => {
+    const timestamp = introTimestamps[brandName];
+    if (!timestamp) return 0;
+    const elapsed = Date.now() - timestamp;
+    const remainingMs = SIXTY_DAYS_MS - elapsed;
+    return Math.max(1, Math.ceil(remainingMs / (24 * 60 * 60 * 1000)));
+  };
+
+  // Fetch Public Scoreboard feed
   useEffect(() => {
     const sheetUrl = 
       process.env.NEXT_PUBLIC_SCOUTING_SHEET_URL || 
@@ -484,7 +494,7 @@ function AppContent() {
               };
             });
 
-            // Remove duplicates by email or full name (keeping the most updated one)
+            // Prevent duplicate cards by unique email / name
             const uniqueMap = new Map();
             mapped.forEach((item) => {
               const key = (item.email || item.fullName).toLowerCase().trim();
@@ -500,6 +510,7 @@ function AppContent() {
     }
   }, []);
 
+  // Sync athlete locker & previous intro records
   useEffect(() => {
     if (account?.address) {
       const lowerWallet = account.address.toLowerCase();
@@ -533,10 +544,10 @@ function AppContent() {
           localStorage.setItem(localKey, JSON.stringify(data.profile));
         }
 
-        if (data && Array.isArray(data.existingIntros)) {
+        if (data && data.existingIntros) {
           const introsMap: { [brandName: string]: number } = {};
-          data.existingIntros.forEach((bName: string) => {
-            introsMap[bName] = Date.now();
+          Object.keys(data.existingIntros).forEach((bName: string) => {
+            introsMap[bName] = Number(data.existingIntros[bName]);
           });
           setIntroTimestamps((prev) => {
             const updated = { ...prev, ...introsMap };
@@ -607,8 +618,10 @@ function AppContent() {
   };
 
   const handleRequestIntro = async (brand: BrandItem) => {
+    // If inside 60-day lockout window: trigger informative cooldown popup
     if (isIntroActive(brand.name)) {
       setDispatchedBrand(brand);
+      setIsLockoutModal(true);
       return;
     }
 
@@ -627,6 +640,7 @@ function AppContent() {
     });
 
     setDispatchedBrand(brand);
+    setIsLockoutModal(false);
 
     try {
       await fetch(GOOGLE_SCRIPT_URL, {
@@ -993,7 +1007,6 @@ function AppContent() {
                           gap: "12px",
                         }}
                       >
-                        {/* Header: Athlete Name, School, State & Role Badge */}
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px" }}>
                           <div>
                             <div style={{ fontWeight: "900", color: "#ffffff", fontSize: "16px", letterSpacing: "0.3px" }}>
@@ -1020,7 +1033,6 @@ function AppContent() {
                           </div>
                         </div>
 
-                        {/* Mid Section: Performance Data Matrix */}
                         <div style={{ backgroundColor: "#050505", border: "1px solid #161616", borderRadius: "10px", padding: "10px 12px", display: "grid", gridTemplateColumns: isTWP ? "1fr 1fr" : "1fr", gap: "10px", fontFamily: "monospace" }}>
                           {isPitcher && (
                             <div>
@@ -1063,7 +1075,6 @@ function AppContent() {
                           )}
                         </div>
 
-                        {/* Footer: Date Stamp & Verified Social Links */}
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "4px" }}>
                           <div style={{ fontSize: "10px", color: "#666666", fontFamily: "monospace" }}>
                             {ath.recordedDatePitching && <span>Pitch: {ath.recordedDatePitching} </span>}
@@ -1106,7 +1117,6 @@ function AppContent() {
         {/* PILLAR 2: THE BRAND EXCHANGE & MONETIZATION */}
         {activeMainTab === "EXCHANGE" && (
           <div>
-            {/* Member Status / Unlock Action Banner */}
             {!account ? (
               <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #222222", borderRadius: "20px", padding: "24px 20px", textAlign: "center", maxWidth: "680px", margin: "0 auto 36px auto" }}>
                 <h3 style={{ fontSize: "18px", fontWeight: "900", margin: "0 0 6px 0", color: "#ffffff", textTransform: "uppercase" }}>
@@ -1213,7 +1223,7 @@ function AppContent() {
               </a>
             </div>
 
-            {/* Brand Directory — Publicly Visible */}
+            {/* Brand Directory */}
             <div style={{ display: "flex", flexDirection: "column", gap: "36px" }}>
               {MARKET_SECTIONS.filter((s) => s.brands.length > 0).map((section, idx) => (
                 <div key={idx} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
@@ -1278,6 +1288,12 @@ function AppContent() {
                           {isDirectIntro ? (
                             <button
                               onClick={() => {
+                                if (activeIntro) {
+                                  // Trigger 60-day lockout modal notification
+                                  setDispatchedBrand(brand);
+                                  setIsLockoutModal(true);
+                                  return;
+                                }
                                 if (!account) {
                                   handleOpenLogin();
                                 } else if (!hasProfile) {
@@ -1288,9 +1304,9 @@ function AppContent() {
                               }}
                               style={{ 
                                 width: "100%",
-                                backgroundColor: activeIntro ? "#15803d" : NEON_GREEN, 
-                                color: activeIntro ? "#ffffff" : "#000000", 
-                                border: "none", 
+                                backgroundColor: activeIntro ? "#18181b" : NEON_GREEN, 
+                                color: activeIntro ? "#71717a" : "#000000", 
+                                border: activeIntro ? "1px solid #27272a" : "none", 
                                 fontWeight: "900", 
                                 padding: "12px", 
                                 borderRadius: "8px", 
@@ -1298,10 +1314,23 @@ function AppContent() {
                                 textTransform: "uppercase", 
                                 letterSpacing: "0.8px", 
                                 cursor: "pointer", 
-                                marginTop: "18px"
+                                marginTop: "18px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "6px"
                               }}
                             >
-                              {activeIntro ? "Intro Dispatched ✓" : !account ? "Sign In to Request Intro ⚡" : brand.buttonText}
+                              {activeIntro ? (
+                                <>
+                                  <span>🔒 Intro Dispatched</span>
+                                  <span style={{ fontSize: "10px", color: "#a1a1aa" }}>({getDaysRemaining(brand.name)}d left)</span>
+                                </>
+                              ) : !account ? (
+                                "Sign In to Request Intro ⚡"
+                              ) : (
+                                brand.buttonText
+                              )}
                             </button>
                           ) : (
                             <a
@@ -1374,15 +1403,15 @@ function AppContent() {
         </section>
       </div>
 
-      {/* POST-INTRO CONFIRMATION NOTIFICATION MODAL */}
+      {/* 🚀 POST-INTRO & 60-DAY LOCKOUT POPUP NOTIFICATION MODAL */}
       {dispatchedBrand && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.88)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1100, padding: "16px" }}>
-          <div style={{ backgroundColor: "#0d0d0d", border: `2px solid ${NEON_GREEN}`, borderRadius: "24px", width: "100%", maxWidth: "520px", padding: "30px 26px", boxShadow: "0 0 45px rgba(166, 255, 0, 0.18)" }}>
+          <div style={{ backgroundColor: "#0d0d0d", border: `2px solid ${isLockoutModal ? "#eab308" : NEON_GREEN}`, borderRadius: "24px", width: "100%", maxWidth: "520px", padding: "30px 26px", boxShadow: isLockoutModal ? "0 0 45px rgba(234, 179, 8, 0.18)" : "0 0 45px rgba(166, 255, 0, 0.18)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-              <span style={{ fontSize: "28px" }}>⚡</span>
+              <span style={{ fontSize: "28px" }}>{isLockoutModal ? "⏳" : "⚡"}</span>
               <div>
-                <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>
-                  Direct Intro Dispatched
+                <span style={{ fontSize: "11px", fontWeight: "900", color: isLockoutModal ? "#eab308" : NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>
+                  {isLockoutModal ? "Direct Intro Already Active" : "Direct Intro Dispatched"}
                 </span>
                 <h3 style={{ margin: "2px 0 0 0", fontSize: "22px", fontWeight: "900", textTransform: "uppercase", color: "#ffffff" }}>
                   {dispatchedBrand.name}
@@ -1391,24 +1420,29 @@ function AppContent() {
             </div>
 
             <p style={{ fontSize: "14px", color: "#ffffff", fontWeight: "700", lineHeight: "1.5", margin: "16px 0 14px 0" }}>
-              Your athletic dossier is officially on the decision-maker's desk.
+              {isLockoutModal 
+                ? "You have already submitted a direct introduction request for this brand partner."
+                : "Your athletic dossier is officially on the decision-maker's desk."}
             </p>
 
             <div style={{ backgroundColor: "#050505", border: "1px solid #1f1f1f", borderRadius: "14px", padding: "16px", marginBottom: "18px", display: "flex", flexDirection: "column", gap: "12px" }}>
-              <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                <span style={{ fontSize: "14px" }}>📬</span>
-                <div style={{ fontSize: "12px", color: "#a1a1aa", lineHeight: "1.4" }}>
-                  <strong style={{ color: "#ffffff" }}>Direct Delivery:</strong> A verified snapshot with your college bio, position, contact info, and metrics has been delivered straight to the {dispatchedBrand.name} team.
-                </div>
+              <div style={{ fontSize: "13px", color: "#cccccc", lineHeight: "1.5" }}>
+                Brand representatives are provided a <strong style={{ color: "#ffffff" }}>60-day contact window</strong> to review your verified metrics, collegiate roster status, and initiate direct communication.
+              </div>
+              <div style={{ fontSize: "12px", color: isLockoutModal ? "#eab308" : NEON_GREEN, fontWeight: "800" }}>
+                🔒 60-Day Review Window: ~{getDaysRemaining(dispatchedBrand.name)} days remaining before re-submission unlocks.
               </div>
             </div>
 
             <button
-              onClick={() => setDispatchedBrand(null)}
+              onClick={() => {
+                setDispatchedBrand(null);
+                setIsLockoutModal(false);
+              }}
               style={{
                 width: "100%",
-                backgroundColor: NEON_GREEN,
-                color: "#000000",
+                backgroundColor: isLockoutModal ? "#262626" : NEON_GREEN,
+                color: isLockoutModal ? "#ffffff" : "#000000",
                 fontWeight: "900",
                 textTransform: "uppercase",
                 letterSpacing: "1px",
@@ -1419,13 +1453,13 @@ function AppContent() {
                 fontSize: "13px"
               }}
             >
-              Got It — Back to Dugout ➔
+              Back to Dugout ➔
             </button>
           </div>
         </div>
       )}
 
-      {/* ATHLETE PROFILE & SCOUTING MATRIX MODAL */}
+      {/* 👤 ATHLETE PROFILE & SCOUTING MATRIX MODAL */}
       {showProfileModal && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.88)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000, padding: "16px" }}>
           <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "20px", width: "100%", maxWidth: "640px", maxHeight: "90vh", overflowY: "auto", padding: "26px" }}>
