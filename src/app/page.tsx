@@ -374,7 +374,7 @@ const emptyProfile: AthleteProfile = {
 };
 
 // Initial roster so visitors always see that the board is active
-const INITIAL_PUBLIC_ROSTER: AthleteProfile[] = [
+const INITIAL_PUBLIC_ROSTER: AthleteProfile[] = [];
   {
     ...emptyProfile,
     fullName: "Jordan Jones",
