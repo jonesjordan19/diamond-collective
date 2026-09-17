@@ -646,30 +646,25 @@ function AppContent() {
   const filteredScoreboard = useMemo(() => {
     return leaderboardRows
       .filter((ath) => {
-        // Only hide if explicitly marked FALSE
         if (ath.isProfileVisible === false) return false;
         
-        // Discipline Role filter
         if (roleFilter !== "ALL") {
           if (roleFilter === "TWP" && ath.primaryRole !== "TWP") return false;
           if (roleFilter === "HITTER" && ath.primaryRole !== "HITTER" && ath.primaryRole !== "TWP") return false;
           if (roleFilter === "PITCHER" && ath.primaryRole !== "PITCHER" && ath.primaryRole !== "TWP") return false;
         }
         
-        // Position filter
         if (positionFilter !== "ALL" && ath.position) {
           const p = ath.position.toUpperCase();
           if (!p.includes(positionFilter.toUpperCase())) return false;
         }
 
-        // Status / Portal filter
         if (statusFilter !== "ALL" && ath.playerStatus) {
           if (!ath.playerStatus.toLowerCase().includes(statusFilter.toLowerCase())) {
             return false;
           }
         }
 
-        // State / Region filter (never hide athletes if state is unset)
         if (stateFilter !== "ALL" && ath.state && ath.state.trim() !== "") {
           if (ath.state.toUpperCase() !== stateFilter.toUpperCase()) return false;
         }
@@ -721,26 +716,51 @@ function AppContent() {
             </p>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", justifyContent: "flex-end" }}>
+            {/* PERMANENT LIVE SLUGGER COIN COUNTER */}
+            <div
+              style={{
+                backgroundColor: "#0a0a0a",
+                border: `1px solid ${account && balance > 0 ? NEON_GREEN : "#222222"}`,
+                borderRadius: "12px",
+                padding: "6px 12px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: account && balance > 0 ? "0 0 16px rgba(166, 255, 0, 0.15)" : "none",
+                minWidth: "72px",
+                transition: "all 0.3s ease"
+              }}
+            >
+              <span style={{ fontSize: "9px", fontWeight: "900", color: "#888888", textTransform: "uppercase", letterSpacing: "0.8px" }}>
+                $SLUG Balance
+              </span>
+              <span style={{ fontSize: "15px", fontWeight: "900", color: account && balance > 0 ? NEON_GREEN : "#ffffff", fontFamily: "monospace", lineHeight: "1.2" }}>
+                {account ? balance : 0}
+              </span>
+            </div>
+
             {account && hasProfile && (
               <button
                 onClick={() => setShowProfileModal(true)}
                 style={{
                   backgroundColor: "#111111",
-                  border: `1px solid ${NEON_GREEN}`,
-                  color: NEON_GREEN,
-                  fontSize: "12px",
+                  border: `1px solid #333333`,
+                  color: "#cccccc",
+                  fontSize: "11px",
                   fontWeight: "800",
-                  padding: "10px 16px",
+                  padding: "10px 12px",
                   borderRadius: "10px",
                   cursor: "pointer",
                   textTransform: "uppercase",
                   letterSpacing: "0.5px"
                 }}
               >
-                Locker Matrix ⚙️
+                Locker ⚙️
               </button>
             )}
+
             <ConnectButton
               client={client}
               wallets={supportedWallets}
