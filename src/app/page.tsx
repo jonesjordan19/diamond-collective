@@ -816,7 +816,7 @@ function AppContent() {
                     <th style={{ padding: "16px", textAlign: "center" }}>Scout Profiles</th>
                   </tr>
                 </thead>
-                <tbody style={{ divideY: "1px solid #1a1a1a" }}>
+                <tbody>
                   {filteredScoreboard.length === 0 ? (
                     <tr>
                       <td colSpan={5} style={{ padding: "40px", textAlign: "center", color: "#666666" }}>
