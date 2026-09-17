@@ -456,7 +456,7 @@ function AppContent() {
   const [stateFilter, setStateFilter] = useState<string>("ALL");
   const [sortBy, setSortBy] = useState<"DEFAULT" | "MAX_EV" | "PEAK_FB" | "SIXTY">("DEFAULT");
 
-  const [leaderboardRows, setLeaderboardRows] = useState<AthleteProfile[]>(INITIAL_PUBLIC_ROSTER);
+  const [leaderboardRows, setLeaderboardRows] = useState<AthleteProfile[]>([]);
   const [loadingScoreboard, setLoadingScoreboard] = useState(false);
 
   const [showProfileModal, setShowProfileModal] = useState(false);
