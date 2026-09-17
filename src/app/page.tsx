@@ -379,10 +379,8 @@ function AppContent() {
   const [justClaimed, setJustClaimed] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // 50/50 Dual Tab
   const [activeMainTab, setActiveMainTab] = useState<"EXCHANGE" | "SCOREBOARD">("SCOREBOARD");
   
-  // High-Utility Scout Filter State
   const [roleFilter, setRoleFilter] = useState<"ALL" | "HITTER" | "PITCHER" | "TWP">("ALL");
   const [positionFilter, setPositionFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
@@ -430,8 +428,6 @@ function AppContent() {
   const remainingPercentage = Math.max(0, Math.min(100, Math.round(rawRemaining)));
 
   const balance = balanceData ? Number(balanceData.displayValue) : 0;
-  const isUnlocked = balance >= 100 || justClaimed;
-  const isApproved = profile.verificationStatus === "Approved";
   const hasProfile = Boolean(profile.fullName && profile.email);
 
   const isIntroActive = (brandName: string): boolean => {
@@ -440,7 +436,6 @@ function AppContent() {
     return Date.now() - timestamp < NINETY_DAYS_MS;
   };
 
-  // Fetch Public Scoreboard (Loads for ALL visitors immediately)
   useEffect(() => {
     const sheetUrl = 
       process.env.NEXT_PUBLIC_SCOUTING_SHEET_URL || 
@@ -497,7 +492,6 @@ function AppContent() {
     }
   }, []);
 
-  // Sync user profile when logged in
   useEffect(() => {
     if (account?.address) {
       const lowerWallet = account.address.toLowerCase();
@@ -642,7 +636,6 @@ function AppContent() {
     } catch {}
   };
 
-  // Safe, permissive scout filter pipeline
   const filteredScoreboard = useMemo(() => {
     return leaderboardRows
       .filter((ath) => {
@@ -716,51 +709,26 @@ function AppContent() {
             </p>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", justifyContent: "flex-end" }}>
-            {/* PERMANENT LIVE SLUGGER COIN COUNTER */}
-            <div
-              style={{
-                backgroundColor: "#0a0a0a",
-                border: `1px solid ${account && balance > 0 ? NEON_GREEN : "#222222"}`,
-                borderRadius: "12px",
-                padding: "6px 12px",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: account && balance > 0 ? "0 0 16px rgba(166, 255, 0, 0.15)" : "none",
-                minWidth: "72px",
-                transition: "all 0.3s ease"
-              }}
-            >
-              <span style={{ fontSize: "9px", fontWeight: "900", color: "#888888", textTransform: "uppercase", letterSpacing: "0.8px" }}>
-                $SLUG Balance
-              </span>
-              <span style={{ fontSize: "15px", fontWeight: "900", color: account && balance > 0 ? NEON_GREEN : "#ffffff", fontFamily: "monospace", lineHeight: "1.2" }}>
-                {account ? balance : 0}
-              </span>
-            </div>
-
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             {account && hasProfile && (
               <button
                 onClick={() => setShowProfileModal(true)}
                 style={{
                   backgroundColor: "#111111",
-                  border: `1px solid #333333`,
-                  color: "#cccccc",
-                  fontSize: "11px",
+                  border: `1px solid ${NEON_GREEN}`,
+                  color: NEON_GREEN,
+                  fontSize: "12px",
                   fontWeight: "800",
-                  padding: "10px 12px",
+                  padding: "10px 16px",
                   borderRadius: "10px",
                   cursor: "pointer",
                   textTransform: "uppercase",
                   letterSpacing: "0.5px"
                 }}
               >
-                Locker ⚙️
+                Locker Matrix ⚙️
               </button>
             )}
-
             <ConnectButton
               client={client}
               wallets={supportedWallets}
@@ -883,7 +851,6 @@ function AppContent() {
 
               {/* ADVANCED MULTI-DIMENSIONAL SCOUT FILTER BAR */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "8px", backgroundColor: "#050505", border: "1px solid #161616", borderRadius: "14px", padding: "12px" }}>
-                {/* Specific Position */}
                 <div>
                   <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#666", textTransform: "uppercase", marginBottom: "3px" }}>Position</label>
                   <select
@@ -903,7 +870,6 @@ function AppContent() {
                   </select>
                 </div>
 
-                {/* Status / Portal */}
                 <div>
                   <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#666", textTransform: "uppercase", marginBottom: "3px" }}>Portal Status</label>
                   <select
@@ -919,7 +885,6 @@ function AppContent() {
                   </select>
                 </div>
 
-                {/* State / Region */}
                 <div>
                   <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#666", textTransform: "uppercase", marginBottom: "3px" }}>Region / State</label>
                   <select
@@ -939,7 +904,6 @@ function AppContent() {
                   </select>
                 </div>
 
-                {/* Leaderboard Metric Sort */}
                 <div>
                   <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: NEON_GREEN, textTransform: "uppercase", marginBottom: "3px" }}>Sort Leaderboard</label>
                   <select
@@ -1320,46 +1284,45 @@ function AppContent() {
             </div>
           </div>
         )}
-            {/* FAQ Accordion */}
-            <section style={{ margin: "56px 0" }}>
-              <div style={{ textAlign: "center", marginBottom: "32px" }}>
-                <span style={{ fontSize: "11px", fontWeight: "800", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>
-                  Got Questions?
-                </span>
-                <h3 style={{ fontSize: "26px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", margin: "6px 0 0 0" }}>
-                  Frequently Asked Questions
-                </h3>
-              </div>
 
-              <div style={{ maxWidth: "800px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "12px" }}>
-                {FAQS.map((faq, fIdx) => (
-                  <div 
-                    key={fIdx} 
-                    style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "14px", overflow: "hidden" }}
-                  >
-                    <button
-                      onClick={() => setOpenFaq(openFaq === fIdx ? null : fIdx)}
-                      style={{ width: "100%", textAlign: "left", padding: "18px 20px", background: "none", border: "none", color: "#ffffff", fontSize: "15px", fontWeight: "800", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
-                    >
-                      <span>{faq.q}</span>
-                      <span style={{ color: NEON_GREEN, fontSize: "18px", fontWeight: "900", marginLeft: "12px" }}>
-                        {openFaq === fIdx ? "−" : "+"}
-                      </span>
-                    </button>
-                    {openFaq === fIdx && (
-                      <div style={{ padding: "0 20px 20px 20px", color: "#a1a1aa", fontSize: "13px", lineHeight: "1.6" }}>
-                        {faq.a}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </section>
+        {/* FAQ Accordion */}
+        <section style={{ margin: "56px 0" }}>
+          <div style={{ textAlign: "center", marginBottom: "32px" }}>
+            <span style={{ fontSize: "11px", fontWeight: "800", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>
+              Got Questions?
+            </span>
+            <h3 style={{ fontSize: "26px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", margin: "6px 0 0 0" }}>
+              Frequently Asked Questions
+            </h3>
           </div>
-        )}
+
+          <div style={{ maxWidth: "800px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "12px" }}>
+            {FAQS.map((faq, fIdx) => (
+              <div 
+                key={fIdx} 
+                style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "14px", overflow: "hidden" }}
+              >
+                <button
+                  onClick={() => setOpenFaq(openFaq === fIdx ? null : fIdx)}
+                  style={{ width: "100%", textAlign: "left", padding: "18px 20px", background: "none", border: "none", color: "#ffffff", fontSize: "15px", fontWeight: "800", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                >
+                  <span>{faq.q}</span>
+                  <span style={{ color: NEON_GREEN, fontSize: "18px", fontWeight: "900", marginLeft: "12px" }}>
+                    {openFaq === fIdx ? "−" : "+"}
+                  </span>
+                </button>
+                {openFaq === fIdx && (
+                  <div style={{ padding: "0 20px 20px 20px", color: "#a1a1aa", fontSize: "13px", lineHeight: "1.6" }}>
+                    {faq.a}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
 
-      {/* 🚀 POST-INTRO CONFIRMATION NOTIFICATION MODAL */}
+      {/* POST-INTRO CONFIRMATION NOTIFICATION MODAL */}
       {dispatchedBrand && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.88)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1100, padding: "16px" }}>
           <div style={{ backgroundColor: "#0d0d0d", border: `2px solid ${NEON_GREEN}`, borderRadius: "24px", width: "100%", maxWidth: "520px", padding: "30px 26px", boxShadow: "0 0 45px rgba(166, 255, 0, 0.18)" }}>
@@ -1410,7 +1373,7 @@ function AppContent() {
         </div>
       )}
 
-      {/* 👤 ATHLETE PROFILE & SCOUTING MATRIX MODAL */}
+      {/* ATHLETE PROFILE & SCOUTING MATRIX MODAL */}
       {showProfileModal && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.88)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000, padding: "16px" }}>
           <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "20px", width: "100%", maxWidth: "640px", maxHeight: "90vh", overflowY: "auto", padding: "26px" }}>
