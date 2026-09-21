@@ -19,7 +19,7 @@ const STRIPE_GRIP_DROP_URL = "https://buy.stripe.com/8x2eVeeW57dgc5I1hX8Vi01";
 const NEON_GREEN = "#a6ff00";
 
 const FOUNDERS_POOL_TOTAL = 100000;
-const SIXTY_DAYS_MS = 60 * 24 * 60 * 60 * 1000; // Strict 60-day contact window
+const SIXTY_DAYS_MS = 60 * 24 * 60 * 60 * 1000;
 
 const client = createThirdwebClient({
   clientId: "770a552ed494b40543a6696298d41606",
@@ -373,6 +373,193 @@ const emptyProfile: AthleteProfile = {
   recordedDatePitching: "",
 };
 
+// =========================================================================
+// INSTANT MOBILE 4:5 SCOUT GRAPHIC ENGINE WITH OFFICIAL LOGO
+// =========================================================================
+async function triggerMobileScoutShare(athlete: AthleteProfile) {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  canvas.width = 1080;
+  canvas.height = 1350;
+
+  // 1. Carbon Dark Base
+  ctx.fillStyle = "#080808";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Border Frame
+  ctx.strokeStyle = "#1a1a1a";
+  ctx.lineWidth = 14;
+  ctx.strokeRect(34, 34, canvas.width - 68, canvas.height - 68);
+
+  // 2. Load & Draw Logo from /public/logo.png
+  const logo = new Image();
+  logo.crossOrigin = "anonymous";
+  logo.src = "/logo.png";
+
+  try {
+    await logo.decode();
+    // Maintain natural aspect ratio with a clean width
+    const targetW = 210;
+    const ratio = logo.naturalHeight / (logo.naturalWidth || 1);
+    const targetH = Math.min(targetW * ratio, 65);
+    ctx.drawImage(logo, 80, 75, targetW, targetH);
+  } catch (err) {
+    // Elegant fallback if logo is still propagating on CDN
+    ctx.fillStyle = "rgba(166, 255, 0, 0.08)";
+    ctx.fillRect(80, 80, 440, 52);
+    ctx.strokeStyle = "#a6ff00";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(80, 80, 440, 52);
+
+    ctx.fillStyle = "#a6ff00";
+    ctx.font = "900 20px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillText("THE DIAMOND COLLECTIVE", 100, 113);
+  }
+
+  // Verification Header Tag
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.textAlign = "right";
+  ctx.fillText("VERIFIED SCOUT CARD", canvas.width - 80, 113);
+  ctx.textAlign = "left";
+
+  // 3. Athlete Bio
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 66px -apple-system, BlinkMacSystemFont, sans-serif";
+  const name = (athlete.fullName || "MEMBER ATHLETE").toUpperCase();
+  ctx.fillText(name, 80, 230);
+
+  ctx.fillStyle = "#a6ff00";
+  ctx.font = "bold 34px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillText(`🏛️ ${athlete.college || "Undeclared College"} ${athlete.state ? `(${athlete.state})` : ""}`, 80, 285);
+
+  ctx.fillStyle = "#aaaaaa";
+  ctx.font = "600 28px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillText(`${athlete.position || "ATH"} • ${athlete.playerStatus || "Active Roster"}`, 80, 330);
+
+  // Divider
+  ctx.strokeStyle = "#222222";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(80, 370);
+  ctx.lineTo(canvas.width - 80, 370);
+  ctx.stroke();
+
+  // 4. Metric Grid Extraction
+  const isPitcher = athlete.primaryRole === "PITCHER" || athlete.primaryRole === "TWP";
+  const isHitter = athlete.primaryRole === "HITTER" || athlete.primaryRole === "TWP";
+
+  const metrics: { label: string; val: string; sub?: string }[] = [];
+
+  if (isPitcher) {
+    if (athlete.peakFB) metrics.push({ label: "PEAK FASTBALL", val: `${athlete.peakFB} MPH`, sub: athlete.sittingFB ? `Sitting ${athlete.sittingFB}` : undefined });
+    if (athlete.fbSpinRate) metrics.push({ label: "FB SPIN RATE", val: `${athlete.fbSpinRate} RPM` });
+    if (athlete.offSpeedVelo) metrics.push({ label: `${(athlete.offSpeedType || "SLIDER").toUpperCase()} VELO`, val: `${athlete.offSpeedVelo} MPH` });
+    if (athlete.firstPitchStrike) metrics.push({ label: "1ST PITCH STRIKE", val: `${athlete.firstPitchStrike}%` });
+  }
+
+  if (isHitter) {
+    if (athlete.maxExitVelo) metrics.push({ label: "MAX EXIT VELO", val: `${athlete.maxExitVelo} MPH` });
+    if (athlete.ninetyEV) metrics.push({ label: "90TH% EXIT VELO", val: `${athlete.ninetyEV} MPH` });
+    if (athlete.batSpeed) metrics.push({ label: "BAT SPEED", val: `${athlete.batSpeed} MPH` });
+    if (athlete.sixtyTime) metrics.push({ label: "60-YARD DASH", val: `${athlete.sixtyTime}s` });
+  }
+
+  // Draw 2x2 Metric Grid Boxes
+  const startY = 410;
+  const boxW = 430;
+  const boxH = 180;
+  const gap = 30;
+
+  metrics.slice(0, 4).forEach((m, idx) => {
+    const col = idx % 2;
+    const row = Math.floor(idx / 2);
+    const x = 80 + col * (boxW + gap + 30);
+    const y = startY + row * (boxH + gap);
+
+    ctx.fillStyle = "#111111";
+    ctx.fillRect(x, y, boxW, boxH);
+    ctx.strokeStyle = "#222222";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, boxW, boxH);
+
+    ctx.fillStyle = "#888888";
+    ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillText(m.label, x + 24, y + 44);
+
+    ctx.fillStyle = "#a6ff00";
+    ctx.font = "900 48px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillText(m.val, x + 24, y + 106);
+
+    if (m.sub) {
+      ctx.fillStyle = "#666666";
+      ctx.font = "bold 18px -apple-system, BlinkMacSystemFont, sans-serif";
+      ctx.fillText(m.sub, x + 24, y + 148);
+    }
+  });
+
+  // 5. Verification Registry Stamp
+  ctx.fillStyle = "#111111";
+  ctx.fillRect(80, 890, canvas.width - 160, 260);
+  ctx.strokeStyle = "#1f1f1f";
+  ctx.strokeRect(80, 890, canvas.width - 160, 260);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 26px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillText("HONOR-CODE VERIFIED DATA REGISTRY", 120, 950);
+
+  ctx.fillStyle = "#888888";
+  ctx.font = "400 22px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillText("Live metrics recorded on the National Scouting Scoreboard.", 120, 995);
+  ctx.fillText("Direct scout verification & NIL access powered by Slugger Coin ($SLUG).", 120, 1030);
+
+  if (athlete.social1_Url || athlete.social2_Url) {
+    ctx.fillStyle = "#a6ff00";
+    ctx.font = "bold 22px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillText(`Scout Link: ${athlete.social1_Url || athlete.social2_Url}`, 120, 1095);
+  }
+
+  // 6. Bottom Domain Stamp
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 24px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("SLUGGERCOIN.COM/SCOREBOARD", canvas.width / 2, 1260);
+
+  ctx.fillStyle = "#555555";
+  ctx.font = "600 16px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillText("THE DIAMOND COLLECTIVE • ALL RIGHTS RESERVED", canvas.width / 2, 1295);
+
+  // 7. Trigger Native Mobile Share Tray
+  canvas.toBlob(async (blob) => {
+    if (!blob) return;
+
+    const cleanName = (athlete.fullName || "athlete").replace(/\s+/g, "_");
+    const fileName = `${cleanName}_ScoutCard.png`;
+    const file = new File([blob], fileName, { type: "image/png" });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: `${athlete.fullName} Scout Card`,
+          text: `Check out my verified metrics on The Diamond Collective National Scoreboard!`,
+        });
+        return;
+      } catch {
+        return;
+      }
+    }
+
+    // Direct download fallback for desktop
+    const link = document.createElement("a");
+    link.download = fileName;
+    link.href = URL.createObjectURL(blob);
+    link.click();
+  }, "image/png");
+}
+
 function AppContent() {
   const account = useActiveAccount();
   const { connect } = useConnectModal();
@@ -432,7 +619,6 @@ function AppContent() {
   const isUnlocked = balance >= 100 || justClaimed;
   const hasProfile = Boolean(profile.fullName && profile.email);
 
-  // Strict 60-Day Lockout Calculator
   const isIntroActive = (brandName: string): boolean => {
     const timestamp = introTimestamps[brandName];
     if (!timestamp) return false;
@@ -447,7 +633,6 @@ function AppContent() {
     return Math.max(1, Math.ceil(remainingMs / (24 * 60 * 60 * 1000)));
   };
 
-  // Fetch Public Scoreboard feed
   useEffect(() => {
     const sheetUrl = 
       process.env.NEXT_PUBLIC_SCOUTING_SHEET_URL || 
@@ -494,7 +679,6 @@ function AppContent() {
               };
             });
 
-            // Prevent duplicate cards by unique email / name
             const uniqueMap = new Map();
             mapped.forEach((item) => {
               const key = (item.email || item.fullName).toLowerCase().trim();
@@ -510,7 +694,6 @@ function AppContent() {
     }
   }, []);
 
-  // Sync athlete locker & previous intro records
   useEffect(() => {
     if (account?.address) {
       const lowerWallet = account.address.toLowerCase();
@@ -618,7 +801,6 @@ function AppContent() {
   };
 
   const handleRequestIntro = async (brand: BrandItem) => {
-    // If inside 60-day lockout window: trigger informative cooldown popup
     if (isIntroActive(brand.name)) {
       setDispatchedBrand(brand);
       setIsLockoutModal(true);
@@ -782,7 +964,7 @@ function AppContent() {
           </div>
         </header>
 
-        {/* GLOBAL FOUNDERS POOL & NETWORK STATS TRACKER */}
+        {/* STATS TRACKER */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "10px", margin: "24px 0 28px 0" }}>
           <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "14px", padding: "14px", textAlign: "center" }}>
             <span style={{ display: "block", fontSize: "18px", fontWeight: "900", color: NEON_GREEN }}>15+</span>
@@ -804,7 +986,7 @@ function AppContent() {
           </div>
         </div>
 
-        {/* 50/50 PRIMARY NAV SPLIT PILLARS */}
+        {/* 50/50 PRIMARY NAV SPLIT */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "28px" }}>
           <button
             onClick={() => setActiveMainTab("SCOREBOARD")}
@@ -910,7 +1092,7 @@ function AppContent() {
                 ))}
               </div>
 
-              {/* ADVANCED MULTI-DIMENSIONAL SCOUT FILTER BAR */}
+              {/* ADVANCED FILTER BAR */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "8px", backgroundColor: "#050505", border: "1px solid #161616", borderRadius: "14px", padding: "12px" }}>
                 <div>
                   <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#666", textTransform: "uppercase", marginBottom: "3px" }}>Position</label>
@@ -1033,6 +1215,7 @@ function AppContent() {
                           </div>
                         </div>
 
+                        {/* Performance Data Matrix */}
                         <div style={{ backgroundColor: "#050505", border: "1px solid #161616", borderRadius: "10px", padding: "10px 12px", display: "grid", gridTemplateColumns: isTWP ? "1fr 1fr" : "1fr", gap: "10px", fontFamily: "monospace" }}>
                           {isPitcher && (
                             <div>
@@ -1075,20 +1258,43 @@ function AppContent() {
                           )}
                         </div>
 
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "4px" }}>
+                        {/* Footer: Date Stamp, Native Mobile 4:5 Card Share & Socials */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "4px", flexWrap: "wrap", gap: "8px" }}>
                           <div style={{ fontSize: "10px", color: "#666666", fontFamily: "monospace" }}>
                             {ath.recordedDatePitching && <span>Pitch: {ath.recordedDatePitching} </span>}
                             {ath.recordedDateHitting && <span>Hit: {ath.recordedDateHitting}</span>}
                             {!ath.recordedDatePitching && !ath.recordedDateHitting && <span>Member Verified</span>}
                           </div>
 
-                          <div style={{ display: "flex", gap: "6px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            {/* INSTANT MOBILE SHARE BUTTON */}
+                            <button
+                              onClick={() => triggerMobileScoutShare(ath)}
+                              style={{
+                                backgroundColor: "rgba(166, 255, 0, 0.1)",
+                                border: `1px solid ${NEON_GREEN}`,
+                                color: NEON_GREEN,
+                                padding: "6px 12px",
+                                borderRadius: "8px",
+                                fontSize: "11px",
+                                fontWeight: "800",
+                                cursor: "pointer",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "5px",
+                                whiteSpace: "nowrap"
+                              }}
+                            >
+                              <span>Share 4:5 Card</span>
+                              <span>📸</span>
+                            </button>
+
                             {ath.social1_Url && (
                               <a
                                 href={ath.social1_Url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                style={{ backgroundColor: "#141414", border: "1px solid #2a2a2a", color: NEON_GREEN, padding: "5px 10px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "800" }}
+                                style={{ backgroundColor: "#141414", border: "1px solid #2a2a2a", color: NEON_GREEN, padding: "6px 10px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "800" }}
                               >
                                 {ath.social1_Type || "Social 1"} ↗
                               </a>
@@ -1098,7 +1304,7 @@ function AppContent() {
                                 href={ath.social2_Url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                style={{ backgroundColor: "#141414", border: "1px solid #2a2a2a", color: NEON_GREEN, padding: "5px 10px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "800" }}
+                                style={{ backgroundColor: "#141414", border: "1px solid #2a2a2a", color: NEON_GREEN, padding: "6px 10px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "800" }}
                               >
                                 {ath.social2_Type || "Social 2"} ↗
                               </a>
@@ -1176,7 +1382,7 @@ function AppContent() {
               </div>
             ) : null}
 
-            {/* Free Member Drop Banner */}
+            {/* Member Drop Banner */}
             <div style={{ 
               backgroundColor: "#0d0d0d", 
               border: `2px solid ${NEON_GREEN}`, 
@@ -1289,7 +1495,6 @@ function AppContent() {
                             <button
                               onClick={() => {
                                 if (activeIntro) {
-                                  // Trigger 60-day lockout modal notification
                                   setDispatchedBrand(brand);
                                   setIsLockoutModal(true);
                                   return;
@@ -1403,7 +1608,7 @@ function AppContent() {
         </section>
       </div>
 
-      {/* 🚀 POST-INTRO & 60-DAY LOCKOUT POPUP NOTIFICATION MODAL */}
+      {/* 60-DAY LOCKOUT NOTIFICATION MODAL */}
       {dispatchedBrand && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.88)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1100, padding: "16px" }}>
           <div style={{ backgroundColor: "#0d0d0d", border: `2px solid ${isLockoutModal ? "#eab308" : NEON_GREEN}`, borderRadius: "24px", width: "100%", maxWidth: "520px", padding: "30px 26px", boxShadow: isLockoutModal ? "0 0 45px rgba(234, 179, 8, 0.18)" : "0 0 45px rgba(166, 255, 0, 0.18)" }}>
@@ -1459,7 +1664,7 @@ function AppContent() {
         </div>
       )}
 
-      {/* 👤 ATHLETE PROFILE & SCOUTING MATRIX MODAL */}
+      {/* ATHLETE PROFILE & SCOUTING MATRIX MODAL */}
       {showProfileModal && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.88)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000, padding: "16px" }}>
           <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "20px", width: "100%", maxWidth: "640px", maxHeight: "90vh", overflowY: "auto", padding: "26px" }}>
