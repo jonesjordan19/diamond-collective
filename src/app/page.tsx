@@ -689,7 +689,7 @@ function AppContent() {
   useEffect(() => {
     const sheetUrl = 
       process.env.NEXT_PUBLIC_SCOUTING_SHEET_URL || 
-      "https://script.google.com/macros/s/AKfycbxhwqCXDFPT0C1I4Zt-ASCpUVbkD9piI-_7pO1Dx5WhHG3JtMrgxm-N1kn4zhKbOXRzIA/exec";
+      "https://script.google.com/macros/s/AKfycbwe5YJxF93X4fJXpODhAGbJQ-1Xs3FiRHuLC2umjkGLGtsJTqj4VjO-0Ai0_hBqZMojdw/exec";
 
     if (sheetUrl) {
       setLoadingScoreboard(true);
