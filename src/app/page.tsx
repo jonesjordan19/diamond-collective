@@ -400,7 +400,6 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   canvas.width = 1080;
   canvas.height = 1350;
 
-  // 1. Dark Carbon Base & Outer Frame
   ctx.fillStyle = "#080808";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -408,7 +407,6 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   ctx.lineWidth = 14;
   ctx.strokeRect(34, 34, canvas.width - 68, canvas.height - 68);
 
-  // 2. Square Logo
   const logo = new Image();
   logo.crossOrigin = "anonymous";
   logo.src = "/logo.png";
@@ -433,14 +431,12 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   const isPitcher = athlete.primaryRole === "PITCHER" || isTWP;
   const isHitter = athlete.primaryRole === "HITTER" || isTWP;
 
-  // Header Badge
   ctx.fillStyle = isTWP ? "#a6ff00" : "#ffffff";
   ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.textAlign = "right";
   ctx.fillText(isTWP ? "⚡ VERIFIED TWO-WAY SCOUT CARD" : "VERIFIED SCOUT CARD", canvas.width - 80, 115);
   ctx.textAlign = "left";
 
-  // 3. Bio & Dimensions
   ctx.fillStyle = "#ffffff";
   ctx.font = "900 66px -apple-system, BlinkMacSystemFont, sans-serif";
   const name = (athlete.fullName || "MEMBER ATHLETE").toUpperCase();
@@ -462,7 +458,6 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   ctx.lineTo(canvas.width - 80, 365);
   ctx.stroke();
 
-  // 4. Metric Render Engine
   if (isTWP) {
     ctx.fillStyle = "#a6ff00";
     ctx.font = "900 16px -apple-system, BlinkMacSystemFont, sans-serif";
@@ -664,7 +659,6 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
     }
   }
 
-  // 5. Registry Verification Stamp
   const registryY = 960;
   ctx.fillStyle = "#121214";
   ctx.fillRect(80, registryY, canvas.width - 160, 200);
@@ -686,7 +680,6 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
     ctx.fillText(`Scout Gateway: ${athlete.social1_Url || athlete.social2_Url}`, 120, registryY + 168);
   }
 
-  // 6. Footer
   ctx.fillStyle = "#ffffff";
   ctx.font = "900 24px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.textAlign = "center";
@@ -1369,7 +1362,6 @@ function AppContent() {
                   )}
                 </div>
 
-                {/* SEARCH SUGGESTIONS DROPDOWN */}
                 {searchQuery.trim() !== "" && searchSuggestions.length > 0 && (
                   <div style={{
                     position: "absolute",
@@ -1507,14 +1499,14 @@ function AppContent() {
               </div>
             </div>
 
-            {/* LEADERBOARD LIST */}
+            {/* LEADERBOARD LIST WITH SPACIOUS CARD LAYOUT */}
             <div style={{ width: "100%" }}>
               {filteredScoreboard.length === 0 ? (
                 <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "16px", padding: "40px 20px", textAlign: "center", color: "#666666" }}>
                   {loadingScoreboard ? "Loading live national scoreboard..." : "No athletes match these filter criteria. Reset filters to view all."}
                 </div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   {filteredScoreboard.map((ath, idx) => {
                     const isAthleteTWP = ath.primaryRole === "TWP";
                     const isPitcherRole = ath.primaryRole === "PITCHER" || isAthleteTWP;
@@ -1524,25 +1516,26 @@ function AppContent() {
                       <div
                         key={idx}
                         style={{
-                          backgroundColor: "#0a0a0a",
-                          border: "1px solid #1c1c1c",
-                          borderRadius: "16px",
-                          padding: "16px",
+                          backgroundColor: "#0d0d0f",
+                          border: "1px solid #222226",
+                          borderRadius: "18px",
+                          padding: "20px",
                           display: "flex",
                           flexDirection: "column",
-                          gap: "12px",
+                          gap: "16px",
                         }}
                       >
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px" }}>
+                        {/* Athlete Header */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px", borderBottom: "1px solid #1a1a1e", paddingBottom: "12px" }}>
                           <div>
-                            <div style={{ fontWeight: "900", color: "#ffffff", fontSize: "16px", letterSpacing: "0.3px" }}>
+                            <div style={{ fontWeight: "900", color: "#ffffff", fontSize: "18px", letterSpacing: "0.5px" }}>
                               {ath.fullName || "Member Athlete"}
                             </div>
-                            <div style={{ color: NEON_GREEN, fontSize: "13px", fontWeight: "800", marginTop: "2px" }}>
+                            <div style={{ color: NEON_GREEN, fontSize: "14px", fontWeight: "800", marginTop: "3px" }}>
                               🏛️ {ath.college || "Undeclared College"} {ath.state ? `(${ath.state})` : ""}
                             </div>
-                            <div style={{ color: "#888888", fontSize: "11px", marginTop: "2px" }}>
-                              <strong style={{ color: "#cccccc" }}>{ath.position}</strong>
+                            <div style={{ color: "#999999", fontSize: "12px", marginTop: "4px" }}>
+                              <strong style={{ color: "#ffffff" }}>{ath.position}</strong>
                               {ath.height && ath.weight && <span> • {ath.height}, {ath.weight} lbs</span>}
                               <span> • {ath.playerStatus}</span>
                             </div>
@@ -1550,91 +1543,103 @@ function AppContent() {
 
                           <div>
                             {isAthleteTWP ? (
-                              <span style={{ backgroundColor: "rgba(166, 255, 0, 0.15)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "4px 8px", borderRadius: "999px", fontSize: "9px", fontWeight: "900", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+                              <span style={{ backgroundColor: "rgba(166, 255, 0, 0.15)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "6px 12px", borderRadius: "999px", fontSize: "10px", fontWeight: "900", textTransform: "uppercase", whiteSpace: "nowrap" }}>
                                 ⚡ TWO-WAY
                               </span>
                             ) : (
-                              <span style={{ backgroundColor: "#171717", border: "1px solid #2a2a2a", color: "#cccccc", padding: "4px 8px", borderRadius: "999px", fontSize: "9px", fontWeight: "800", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+                              <span style={{ backgroundColor: "#161619", border: "1px solid #333338", color: "#cccccc", padding: "6px 12px", borderRadius: "999px", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", whiteSpace: "nowrap" }}>
                                 {ath.primaryRole}
                               </span>
                             )}
                           </div>
                         </div>
 
-                        {/* Performance Data Matrix */}
-                        <div style={{ backgroundColor: "#050505", border: "1px solid #161616", borderRadius: "10px", padding: "12px", display: "grid", gridTemplateColumns: isAthleteTWP ? "1fr 1fr" : "1fr", gap: "12px", fontFamily: "monospace" }}>
+                        {/* SPACIOUS DATA BLOCKS FOR PITCHING & HITTING */}
+                        <div style={{ display: "grid", gridTemplateColumns: isAthleteTWP ? "1fr 1fr" : "1fr", gap: "16px" }}>
+                          
+                          {/* PITCHING SECTOR */}
                           {isPitcherRole && (
-                            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                            <div style={{ backgroundColor: "#060608", border: "1px solid #1c1c22", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                <span style={{ fontSize: "9px", color: "#888", textTransform: "uppercase", fontWeight: "800" }}>Pitching & Modeling</span>
+                                <span style={{ fontSize: "10px", color: NEON_GREEN, textTransform: "uppercase", fontWeight: "900", letterSpacing: "0.8px" }}>⚾ Mound Telemetry</span>
                                 {ath.stuffPlus && (
-                                  <span style={{ backgroundColor: "rgba(166, 255, 0, 0.1)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "2px 6px", borderRadius: "4px", fontSize: "10px", fontWeight: "900" }}>
+                                  <span style={{ backgroundColor: "rgba(166, 255, 0, 0.12)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "3px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: "900" }}>
                                     Stuff+ {ath.stuffPlus}
                                   </span>
                                 )}
                               </div>
 
-                              <div style={{ color: "#ffffff", fontWeight: "800", fontSize: "13px" }}>
+                              <div style={{ color: "#ffffff", fontWeight: "900", fontSize: "15px", fontFamily: "monospace" }}>
                                 <span style={{ color: NEON_GREEN }}>FB:</span> {ath.peakFB ? `${ath.peakFB} mph` : "Unrecorded"} {ath.sittingFB ? `(${ath.sittingFB})` : ""}
-                                {ath.fbSpinRate && <span style={{ color: "#888", fontWeight: "400", fontSize: "11px" }}> • {ath.fbSpinRate} RPM</span>}
+                                {ath.fbSpinRate && <span style={{ color: "#888", fontWeight: "600", fontSize: "12px" }}> • {ath.fbSpinRate} RPM</span>}
                               </div>
 
-                              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", fontSize: "10px", color: "#cccccc" }}>
-                                {ath.inducedVertBreak && <span style={{ backgroundColor: "#121212", border: "1px solid #222", padding: "3px 6px", borderRadius: "4px" }}>IVB: <strong style={{ color: NEON_GREEN }}>{ath.inducedVertBreak}"</strong></span>}
-                                {ath.horizontalBreak && <span style={{ backgroundColor: "#121212", border: "1px solid #222", padding: "3px 6px", borderRadius: "4px" }}>HB: <strong>{ath.horizontalBreak}"</strong></span>}
-                                {ath.releaseExtension && <span style={{ backgroundColor: "#121212", border: "1px solid #222", padding: "3px 6px", borderRadius: "4px" }}>Ext: <strong>{ath.releaseExtension}ft</strong></span>}
-                                {ath.vertApproachAngle && <span style={{ backgroundColor: "#121212", border: "1px solid #222", padding: "3px 6px", borderRadius: "4px" }}>VAA: <strong>{ath.vertApproachAngle}°</strong></span>}
-                                {ath.kMinusBbPercentage && <span style={{ backgroundColor: "#121212", border: "1px solid #222", padding: "3px 6px", borderRadius: "4px" }}>K-BB: <strong style={{ color: NEON_GREEN }}>{ath.kMinusBbPercentage}%</strong></span>}
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", fontSize: "11px", color: "#e4e4e7", fontFamily: "monospace" }}>
+                                {ath.inducedVertBreak && <span style={{ backgroundColor: "#111116", border: "1px solid #282830", padding: "5px 8px", borderRadius: "6px" }}>IVB: <strong style={{ color: NEON_GREEN }}>{ath.inducedVertBreak}"</strong></span>}
+                                {ath.horizontalBreak && <span style={{ backgroundColor: "#111116", border: "1px solid #282830", padding: "5px 8px", borderRadius: "6px" }}>HB: <strong>{ath.horizontalBreak}"</strong></span>}
+                                {ath.releaseExtension && <span style={{ backgroundColor: "#111116", border: "1px solid #282830", padding: "5px 8px", borderRadius: "6px" }}>Ext: <strong>{ath.releaseExtension}ft</strong></span>}
+                                {ath.vertApproachAngle && <span style={{ backgroundColor: "#111116", border: "1px solid #282830", padding: "5px 8px", borderRadius: "6px" }}>VAA: <strong>{ath.vertApproachAngle}°</strong></span>}
+                                {ath.kMinusBbPercentage && <span style={{ backgroundColor: "#111116", border: "1px solid #282830", padding: "5px 8px", borderRadius: "6px" }}>K-BB: <strong style={{ color: NEON_GREEN }}>{ath.kMinusBbPercentage}%</strong></span>}
                               </div>
 
                               {ath.offSpeedVelo && (
-                                <div style={{ color: "#888888", fontSize: "11px" }}>
-                                  {ath.offSpeedType || "SL"}: {ath.offSpeedVelo} mph {ath.offSpeedSpinRate ? `(${ath.offSpeedSpinRate} RPM)` : ""}
+                                <div style={{ color: "#a1a1aa", fontSize: "12px", fontFamily: "monospace" }}>
+                                  {ath.offSpeedType || "Slider"}: {ath.offSpeedVelo} mph {ath.offSpeedSpinRate ? `(${ath.offSpeedSpinRate} RPM)` : ""}
                                 </div>
                               )}
                             </div>
                           )}
 
+                          {/* HITTING SECTOR */}
                           {isHitterRole && (
-                            <div>
-                              <div style={{ fontSize: "9px", color: "#666666", textTransform: "uppercase", marginBottom: "3px", fontWeight: "700" }}>Hitting Metrics</div>
-                              {ath.maxExitVelo ? (
-                                <div style={{ color: "#ffffff", fontWeight: "800", fontSize: "13px" }}>
-                                  <span style={{ color: NEON_GREEN }}>Max EV:</span> {ath.maxExitVelo} mph
-                                </div>
-                              ) : (
-                                <div style={{ color: "#444444", fontSize: "11px" }}>EV: Unrecorded</div>
-                              )}
-                              {ath.ninetyEV && <div style={{ color: "#aaaaaa", fontSize: "11px" }}>90th%: {ath.ninetyEV} mph</div>}
-                              {ath.batSpeed && <div style={{ color: "#888888", fontSize: "11px" }}>Bat Speed: {ath.batSpeed} mph</div>}
-                              {ath.sixtyTime && <div style={{ color: "#888888", fontSize: "11px" }}>60-Yard: {ath.sixtyTime}s</div>}
+                            <div style={{ backgroundColor: "#060608", border: "1px solid #1c1c22", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                <span style={{ fontSize: "10px", color: NEON_GREEN, textTransform: "uppercase", fontWeight: "900", letterSpacing: "0.8px" }}>💥 Batter's Box Telemetry</span>
+                              </div>
+
+                              <div style={{ color: "#ffffff", fontWeight: "900", fontSize: "15px", fontFamily: "monospace" }}>
+                                {ath.maxExitVelo ? (
+                                  <div>
+                                    <span style={{ color: NEON_GREEN }}>Max EV:</span> {ath.maxExitVelo} mph
+                                  </div>
+                                ) : (
+                                  <div style={{ color: "#555" }}>Exit Velo: Unrecorded</div>
+                                )}
+                              </div>
+
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", fontSize: "11px", color: "#e4e4e7", fontFamily: "monospace" }}>
+                                {ath.ninetyEV && <span style={{ backgroundColor: "#111116", border: "1px solid #282830", padding: "5px 8px", borderRadius: "6px" }}>90th%: <strong>{ath.ninetyEV} mph</strong></span>}
+                                {ath.batSpeed && <span style={{ backgroundColor: "#111116", border: "1px solid #282830", padding: "5px 8px", borderRadius: "6px" }}>Bat Speed: <strong>{ath.batSpeed} mph</strong></span>}
+                                {ath.sixtyTime && <span style={{ backgroundColor: "#111116", border: "1px solid #282830", padding: "5px 8px", borderRadius: "6px" }}>60-Yard: <strong>{ath.sixtyTime}s</strong></span>}
+                              </div>
                             </div>
                           )}
+
                         </div>
 
-                        {/* Footer */}
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "4px", flexWrap: "wrap", gap: "8px" }}>
-                          <div style={{ fontSize: "10px", color: "#666666", fontFamily: "monospace" }}>
+                        {/* Footer Controls */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "6px", flexWrap: "wrap", gap: "10px", borderTop: "1px solid #1a1a1e" }}>
+                          <div style={{ fontSize: "11px", color: "#71717a", fontFamily: "monospace" }}>
                             {ath.recordedDatePitching && <span>Pitch: {ath.recordedDatePitching} </span>}
                             {ath.recordedDateHitting && <span>Hit: {ath.recordedDateHitting}</span>}
                             {!ath.recordedDatePitching && !ath.recordedDateHitting && <span>Member Verified</span>}
                           </div>
 
-                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                             <button
                               onClick={() => triggerMobileScoutShare(ath)}
                               style={{
-                                backgroundColor: "rgba(166, 255, 0, 0.1)",
+                                backgroundColor: "rgba(166, 255, 0, 0.12)",
                                 border: `1px solid ${NEON_GREEN}`,
                                 color: NEON_GREEN,
-                                padding: "6px 12px",
+                                padding: "8px 14px",
                                 borderRadius: "8px",
                                 fontSize: "11px",
-                                fontWeight: "800",
+                                fontWeight: "900",
                                 cursor: "pointer",
                                 display: "inline-flex",
                                 alignItems: "center",
-                                gap: "5px",
+                                gap: "6px",
                                 whiteSpace: "nowrap"
                               }}
                             >
@@ -1647,7 +1652,7 @@ function AppContent() {
                                 href={ath.social1_Url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                style={{ backgroundColor: "#141414", border: "1px solid #2a2a2a", color: NEON_GREEN, padding: "6px 10px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "800" }}
+                                style={{ backgroundColor: "#161619", border: "1px solid #333338", color: NEON_GREEN, padding: "8px 12px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "800" }}
                               >
                                 {ath.social1_Type || "Social 1"} ↗
                               </a>
@@ -1657,7 +1662,7 @@ function AppContent() {
                                 href={ath.social2_Url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                style={{ backgroundColor: "#141414", border: "1px solid #2a2a2a", color: NEON_GREEN, padding: "6px 10px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "800" }}
+                                style={{ backgroundColor: "#161619", border: "1px solid #333338", color: NEON_GREEN, padding: "8px 12px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "800" }}
                               >
                                 {ath.social2_Type || "Social 2"} ↗
                               </a>
