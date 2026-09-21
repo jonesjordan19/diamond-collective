@@ -823,7 +823,7 @@ function AppContent() {
     }
   }, [account?.address]);
 
-  // FULL EXPLICIT PAYLOAD PERSISTENCE HANDLER
+  // FULL EXPLICIT PAYLOAD PERSISTENCE HANDLER (CORS PREFLIGHT SAFE)
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!account?.address) return;
@@ -915,7 +915,7 @@ function AppContent() {
       await fetch(GOOGLE_SCRIPT_URL, {
         method: "POST",
         mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(payload),
       });
 
@@ -957,6 +957,7 @@ function AppContent() {
       await fetch(GOOGLE_SCRIPT_URL, {
         method: "POST",
         mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
           action: "requestIntro",
           walletAddress: lowerWallet,
