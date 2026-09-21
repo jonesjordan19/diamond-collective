@@ -400,7 +400,7 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   canvas.width = 1080;
   canvas.height = 1350;
 
-  // 1. Carbon Dark Base
+  // 1. Dark Carbon Base & Outer Frame
   ctx.fillStyle = "#080808";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -429,11 +429,15 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
     ctx.fillText("THE DIAMOND COLLECTIVE", 100, 113);
   }
 
+  const isTWP = athlete.primaryRole === "TWP";
+  const isPitcher = athlete.primaryRole === "PITCHER" || isTWP;
+  const isHitter = athlete.primaryRole === "HITTER" || isTWP;
+
   // Header Badge
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = isTWP ? "#a6ff00" : "#ffffff";
   ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.textAlign = "right";
-  ctx.fillText("VERIFIED SCOUT CARD", canvas.width - 80, 115);
+  ctx.fillText(isTWP ? "⚡ VERIFIED TWO-WAY SCOUT CARD" : "VERIFIED SCOUT CARD", canvas.width - 80, 115);
   ctx.textAlign = "left";
 
   // 3. Bio & Dimensions
@@ -458,125 +462,243 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   ctx.lineTo(canvas.width - 80, 365);
   ctx.stroke();
 
-  // 4. Extract Populated Metrics
-  const isPitcher = athlete.primaryRole === "PITCHER" || athlete.primaryRole === "TWP";
-  const isHitter = athlete.primaryRole === "HITTER" || athlete.primaryRole === "TWP";
+  // 4. Metric Render Engine
+  if (isTWP) {
+    // ==========================================
+    // DEDICATED TWO-WAY (TWP) BALANCED LAYOUT
+    // ==========================================
 
-  const metrics: { label: string; val: string; sub?: string }[] = [];
-
-  if (isPitcher) {
-    if (athlete.peakFB) {
-      metrics.push({ label: "PEAK FASTBALL", val: `${athlete.peakFB} MPH`, sub: athlete.sittingFB ? `Sitting ${athlete.sittingFB}` : undefined });
-    }
-    if (athlete.stuffPlus) {
-      metrics.push({ label: "STUFF+ GRADE", val: athlete.stuffPlus, sub: "100 = Avg" });
-    }
-    if (athlete.inducedVertBreak) {
-      metrics.push({ label: "INDUCED VERT BREAK", val: `${athlete.inducedVertBreak}"`, sub: "Carry & Rise" });
-    }
-    if (athlete.horizontalBreak) {
-      metrics.push({ label: "HORIZONTAL BREAK", val: `${athlete.horizontalBreak}"`, sub: "Arm Run" });
-    }
-    if (athlete.fbSpinRate) {
-      metrics.push({ label: "FB SPIN RATE", val: `${athlete.fbSpinRate} RPM` });
-    }
-    if (athlete.offSpeedVelo) {
-      metrics.push({ label: `${(athlete.offSpeedType || "SLIDER").toUpperCase()} VELO`, val: `${athlete.offSpeedVelo} MPH`, sub: athlete.offSpeedSpinRate ? `${athlete.offSpeedSpinRate} RPM` : undefined });
-    }
-    if (athlete.kMinusBbPercentage) {
-      metrics.push({ label: "K - BB COMMAND %", val: `${athlete.kMinusBbPercentage}%`, sub: athlete.kPercentage ? `${athlete.kPercentage}% K%` : undefined });
-    } else if (athlete.firstPitchStrike) {
-      metrics.push({ label: "1ST PITCH STRIKE", val: `${athlete.firstPitchStrike}%` });
-    }
-    if (athlete.pitchingPlus) {
-      metrics.push({ label: "PITCHING+ ARSENAL", val: athlete.pitchingPlus, sub: "Stuff + Loc" });
-    }
-  }
-
-  if (isHitter) {
-    if (athlete.maxExitVelo) metrics.push({ label: "MAX EXIT VELO", val: `${athlete.maxExitVelo} MPH` });
-    if (athlete.ninetyEV) metrics.push({ label: "90TH% EXIT VELO", val: `${athlete.ninetyEV} MPH` });
-    if (athlete.batSpeed) metrics.push({ label: "BAT SPEED", val: `${athlete.batSpeed} MPH` });
-    if (athlete.sixtyTime) metrics.push({ label: "60-YARD DASH", val: `${athlete.sixtyTime}s` });
-  }
-
-  const displayList = metrics.slice(0, 8);
-  const startY = 385;
-  const boxW = 440;
-  const boxH = displayList.length > 4 ? 105 : 140;
-  const gapX = 40;
-  const gapY = 16;
-
-  displayList.forEach((m, idx) => {
-    const col = idx % 2;
-    const row = Math.floor(idx / 2);
-    const x = 80 + col * (boxW + gapX);
-    const y = startY + row * (boxH + gapY);
-
-    ctx.fillStyle = "#121214";
-    ctx.fillRect(x, y, boxW, boxH);
-    ctx.strokeStyle = "#27272a";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(x, y, boxW, boxH);
-
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 15px -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.fillText(m.label, x + 20, y + (displayList.length > 4 ? 30 : 38));
-
+    // Sector A: Mound Telemetry
     ctx.fillStyle = "#a6ff00";
-    ctx.font = `900 ${displayList.length > 4 ? "36px" : "44px"} -apple-system, BlinkMacSystemFont, sans-serif`;
-    ctx.fillText(m.val, x + 20, y + (displayList.length > 4 ? 76 : 94));
+    ctx.font = "900 16px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillText("⚾ MOUND TELEMETRY", 80, 400);
 
-    if (m.sub) {
-      ctx.fillStyle = "#d4d4d8";
-      ctx.font = "bold 15px -apple-system, BlinkMacSystemFont, sans-serif";
-      ctx.textAlign = "right";
-      ctx.fillText(m.sub, x + boxW - 20, y + (displayList.length > 4 ? 76 : 94));
-      ctx.textAlign = "left";
+    const pitchMetrics: { label: string; val: string; sub?: string }[] = [];
+    if (athlete.peakFB) pitchMetrics.push({ label: "PEAK FASTBALL", val: `${athlete.peakFB} MPH`, sub: athlete.sittingFB ? `Sitting ${athlete.sittingFB}` : undefined });
+    if (athlete.stuffPlus) pitchMetrics.push({ label: "STUFF+ GRADE", val: athlete.stuffPlus, sub: "100 = Avg" });
+    if (athlete.inducedVertBreak) pitchMetrics.push({ label: "INDUCED VERT BREAK", val: `${athlete.inducedVertBreak}"`, sub: "Carry & Rise" });
+    if (athlete.offSpeedVelo) {
+      pitchMetrics.push({ label: `${(athlete.offSpeedType || "SLIDER").toUpperCase()} VELO`, val: `${athlete.offSpeedVelo} MPH`, sub: athlete.offSpeedSpinRate ? `${athlete.offSpeedSpinRate} RPM` : undefined });
+    } else if (athlete.fbSpinRate) {
+      pitchMetrics.push({ label: "FB SPIN RATE", val: `${athlete.fbSpinRate} RPM` });
     }
-  });
 
-  // 5. Biomechanical Release Strip
-  const stripY = startY + Math.ceil(displayList.length / 2) * (boxH + gapY) + 4;
-  if (isPitcher && (athlete.releaseExtension || athlete.releaseHeight || athlete.vertApproachAngle)) {
-    ctx.fillStyle = "rgba(166, 255, 0, 0.06)";
-    ctx.fillRect(80, stripY, canvas.width - 160, 48);
-    ctx.strokeStyle = "#3f3f46";
-    ctx.strokeRect(80, stripY, canvas.width - 160, 48);
+    // Default fallbacks if empty
+    while (pitchMetrics.length < 4) {
+      if (!pitchMetrics.some(m => m.label === "PEAK FASTBALL")) pitchMetrics.push({ label: "PEAK FASTBALL", val: "---", sub: "Mound" });
+      else if (!pitchMetrics.some(m => m.label === "STUFF+ GRADE")) pitchMetrics.push({ label: "STUFF+ GRADE", val: "---", sub: "100 = Avg" });
+      else if (!pitchMetrics.some(m => m.label === "INDUCED VERT BREAK")) pitchMetrics.push({ label: "INDUCED VERT BREAK", val: "---", sub: "Carry" });
+      else pitchMetrics.push({ label: "COMMAND & ARSENAL", val: "---", sub: "Loc+" });
+    }
 
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 15px monospace";
-    let biomechText = "";
-    if (athlete.releaseExtension) biomechText += `EXTENSION: ${athlete.releaseExtension} FT   `;
-    if (athlete.releaseHeight) biomechText += `REL HEIGHT: ${athlete.releaseHeight} FT   `;
-    if (athlete.vertApproachAngle) biomechText += `VAA: ${athlete.vertApproachAngle}°`;
+    const startYP = 415;
+    const boxW = 440;
+    const boxH = 92;
+    const gapX = 40;
+    const gapY = 12;
 
-    ctx.fillText(biomechText.trim(), 105, stripY + 30);
+    pitchMetrics.slice(0, 4).forEach((m, idx) => {
+      const col = idx % 2;
+      const row = Math.floor(idx / 2);
+      const x = 80 + col * (boxW + gapX);
+      const y = startYP + row * (boxH + gapY);
+
+      ctx.fillStyle = "#121214";
+      ctx.fillRect(x, y, boxW, boxH);
+      ctx.strokeStyle = "#27272a";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, boxW, boxH);
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, sans-serif";
+      ctx.fillText(m.label, x + 18, y + 26);
+
+      ctx.fillStyle = "#a6ff00";
+      ctx.font = "900 32px -apple-system, BlinkMacSystemFont, sans-serif";
+      ctx.fillText(m.val, x + 18, y + 68);
+
+      if (m.sub) {
+        ctx.fillStyle = "#d4d4d8";
+        ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, sans-serif";
+        ctx.textAlign = "right";
+        ctx.fillText(m.sub, x + boxW - 18, y + 68);
+        ctx.textAlign = "left";
+      }
+    });
+
+    // Sector B: Batter's Box Telemetry
+    const startYH_Label = startYP + 2 * (boxH + gapY) + 18;
+    ctx.fillStyle = "#a6ff00";
+    ctx.font = "900 16px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillText("💥 BATTER'S BOX TELEMETRY", 80, startYH_Label);
+
+    const hitMetrics: { label: string; val: string; sub?: string }[] = [];
+    if (athlete.maxExitVelo) hitMetrics.push({ label: "MAX EXIT VELO", val: `${athlete.maxExitVelo} MPH` });
+    if (athlete.ninetyEV) hitMetrics.push({ label: "90TH% EXIT VELO", val: `${athlete.ninetyEV} MPH`, sub: "Hard-Hit" });
+    if (athlete.batSpeed) hitMetrics.push({ label: "BAT SPEED", val: `${athlete.batSpeed} MPH`, sub: "Blast" });
+    if (athlete.sixtyTime) hitMetrics.push({ label: "60-YARD DASH", val: `${athlete.sixtyTime}s`, sub: "Laser" });
+
+    while (hitMetrics.length < 4) {
+      if (!hitMetrics.some(m => m.label === "MAX EXIT VELO")) hitMetrics.push({ label: "MAX EXIT VELO", val: "---" });
+      else if (!hitMetrics.some(m => m.label === "90TH% EXIT VELO")) hitMetrics.push({ label: "90TH% EXIT VELO", val: "---" });
+      else if (!hitMetrics.some(m => m.label === "BAT SPEED")) hitMetrics.push({ label: "BAT SPEED", val: "---" });
+      else hitMetrics.push({ label: "60-YARD DASH", val: "---" });
+    }
+
+    const startYH = startYH_Label + 14;
+    hitMetrics.slice(0, 4).forEach((m, idx) => {
+      const col = idx % 2;
+      const row = Math.floor(idx / 2);
+      const x = 80 + col * (boxW + gapX);
+      const y = startYH + row * (boxH + gapY);
+
+      ctx.fillStyle = "#121214";
+      ctx.fillRect(x, y, boxW, boxH);
+      ctx.strokeStyle = "#27272a";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, boxW, boxH);
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, sans-serif";
+      ctx.fillText(m.label, x + 18, y + 26);
+
+      ctx.fillStyle = "#a6ff00";
+      ctx.font = "900 32px -apple-system, BlinkMacSystemFont, sans-serif";
+      ctx.fillText(m.val, x + 18, y + 68);
+
+      if (m.sub) {
+        ctx.fillStyle = "#d4d4d8";
+        ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, sans-serif";
+        ctx.textAlign = "right";
+        ctx.fillText(m.sub, x + boxW - 18, y + 68);
+        ctx.textAlign = "left";
+      }
+    });
+
+    // Biomechanical Release Banner for TWP
+    const stripY = startYH + 2 * (boxH + gapY) + 12;
+    if (athlete.releaseExtension || athlete.releaseHeight || athlete.vertApproachAngle) {
+      ctx.fillStyle = "rgba(166, 255, 0, 0.06)";
+      ctx.fillRect(80, stripY, canvas.width - 160, 44);
+      ctx.strokeStyle = "#3f3f46";
+      ctx.strokeRect(80, stripY, canvas.width - 160, 44);
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 14px monospace";
+      let biomechText = "";
+      if (athlete.releaseExtension) biomechText += `EXTENSION: ${athlete.releaseExtension} FT   `;
+      if (athlete.releaseHeight) biomechText += `REL HEIGHT: ${athlete.releaseHeight} FT   `;
+      if (athlete.vertApproachAngle) biomechText += `VAA: ${athlete.vertApproachAngle}°`;
+      ctx.fillText(biomechText.trim(), 105, stripY + 28);
+    }
+
+  } else {
+    // ==========================================
+    // FOCUSED SINGLE ROLE (HITTER OR PITCHER)
+    // ==========================================
+    const metrics: { label: string; val: string; sub?: string }[] = [];
+
+    if (isPitcher) {
+      if (athlete.peakFB) metrics.push({ label: "PEAK FASTBALL", val: `${athlete.peakFB} MPH`, sub: athlete.sittingFB ? `Sitting ${athlete.sittingFB}` : undefined });
+      if (athlete.stuffPlus) metrics.push({ label: "STUFF+ GRADE", val: athlete.stuffPlus, sub: "100 = Avg" });
+      if (athlete.inducedVertBreak) metrics.push({ label: "INDUCED VERT BREAK", val: `${athlete.inducedVertBreak}"`, sub: "Carry & Rise" });
+      if (athlete.horizontalBreak) metrics.push({ label: "HORIZONTAL BREAK", val: `${athlete.horizontalBreak}"`, sub: "Arm Run" });
+      if (athlete.fbSpinRate) metrics.push({ label: "FB SPIN RATE", val: `${athlete.fbSpinRate} RPM` });
+      if (athlete.offSpeedVelo) {
+        metrics.push({ label: `${(athlete.offSpeedType || "SLIDER").toUpperCase()} VELO`, val: `${athlete.offSpeedVelo} MPH`, sub: athlete.offSpeedSpinRate ? `${athlete.offSpeedSpinRate} RPM` : undefined });
+      }
+      if (athlete.kMinusBbPercentage) {
+        metrics.push({ label: "K - BB COMMAND %", val: `${athlete.kMinusBbPercentage}%`, sub: athlete.kPercentage ? `${athlete.kPercentage}% K%` : undefined });
+      } else if (athlete.firstPitchStrike) {
+        metrics.push({ label: "1ST PITCH STRIKE", val: `${athlete.firstPitchStrike}%` });
+      }
+      if (athlete.pitchingPlus) metrics.push({ label: "PITCHING+ ARSENAL", val: athlete.pitchingPlus, sub: "Stuff + Loc" });
+    }
+
+    if (isHitter) {
+      if (athlete.maxExitVelo) metrics.push({ label: "MAX EXIT VELO", val: `${athlete.maxExitVelo} MPH` });
+      if (athlete.ninetyEV) metrics.push({ label: "90TH% EXIT VELO", val: `${athlete.ninetyEV} MPH`, sub: "Consistency" });
+      if (athlete.batSpeed) metrics.push({ label: "BAT SPEED", val: `${athlete.batSpeed} MPH`, sub: "Blast Motion" });
+      if (athlete.sixtyTime) metrics.push({ label: "60-YARD DASH", val: `${athlete.sixtyTime}s`, sub: "Laser Timed" });
+    }
+
+    const displayList = metrics.slice(0, 8);
+    const startY = 395;
+    const boxW = 440;
+    const boxH = displayList.length > 4 ? 105 : 135;
+    const gapX = 40;
+    const gapY = 16;
+
+    displayList.forEach((m, idx) => {
+      const col = idx % 2;
+      const row = Math.floor(idx / 2);
+      const x = 80 + col * (boxW + gapX);
+      const y = startY + row * (boxH + gapY);
+
+      ctx.fillStyle = "#121214";
+      ctx.fillRect(x, y, boxW, boxH);
+      ctx.strokeStyle = "#27272a";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, boxW, boxH);
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 15px -apple-system, BlinkMacSystemFont, sans-serif";
+      ctx.fillText(m.label, x + 20, y + (displayList.length > 4 ? 30 : 38));
+
+      ctx.fillStyle = "#a6ff00";
+      ctx.font = `900 ${displayList.length > 4 ? "36px" : "44px"} -apple-system, BlinkMacSystemFont, sans-serif`;
+      ctx.fillText(m.val, x + 20, y + (displayList.length > 4 ? 76 : 94));
+
+      if (m.sub) {
+        ctx.fillStyle = "#d4d4d8";
+        ctx.font = "bold 15px -apple-system, BlinkMacSystemFont, sans-serif";
+        ctx.textAlign = "right";
+        ctx.fillText(m.sub, x + boxW - 20, y + (displayList.length > 4 ? 76 : 94));
+        ctx.textAlign = "left";
+      }
+    });
+
+    // Biomechanical Release Strip
+    const stripY = startY + Math.ceil(displayList.length / 2) * (boxH + gapY) + 4;
+    if (isPitcher && (athlete.releaseExtension || athlete.releaseHeight || athlete.vertApproachAngle)) {
+      ctx.fillStyle = "rgba(166, 255, 0, 0.06)";
+      ctx.fillRect(80, stripY, canvas.width - 160, 48);
+      ctx.strokeStyle = "#3f3f46";
+      ctx.strokeRect(80, stripY, canvas.width - 160, 48);
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 15px monospace";
+      let biomechText = "";
+      if (athlete.releaseExtension) biomechText += `EXTENSION: ${athlete.releaseExtension} FT   `;
+      if (athlete.releaseHeight) biomechText += `REL HEIGHT: ${athlete.releaseHeight} FT   `;
+      if (athlete.vertApproachAngle) biomechText += `VAA: ${athlete.vertApproachAngle}°`;
+      ctx.fillText(biomechText.trim(), 105, stripY + 30);
+    }
   }
 
-  // 6. Registry Stamp
-  const registryY = 930;
+  // 5. Registry Verification Stamp
+  const registryY = 960;
   ctx.fillStyle = "#121214";
-  ctx.fillRect(80, registryY, canvas.width - 160, 220);
+  ctx.fillRect(80, registryY, canvas.width - 160, 200);
   ctx.strokeStyle = "#27272a";
-  ctx.strokeRect(80, registryY, canvas.width - 160, 220);
+  ctx.strokeRect(80, registryY, canvas.width - 160, 200);
 
   ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 24px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText("HONOR-CODE VERIFIED DATA REGISTRY", 120, registryY + 52);
+  ctx.font = "bold 22px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillText("HONOR-CODE VERIFIED DATA REGISTRY", 120, registryY + 48);
 
   ctx.fillStyle = "#d4d4d8";
-  ctx.font = "400 20px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText("TrackMan, Hawkeye, and verified metrics published on National Scoreboard.", 120, registryY + 92);
-  ctx.fillText("Direct scout verification & NIL access powered by Slugger Coin ($SLUG).", 120, registryY + 125);
+  ctx.font = "400 19px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillText("TrackMan, Hawkeye, and verified metrics published on National Scoreboard.", 120, registryY + 86);
+  ctx.fillText("Direct scout verification & NIL access powered by Slugger Coin ($SLUG).", 120, registryY + 118);
 
   if (athlete.social1_Url || athlete.social2_Url) {
     ctx.fillStyle = "#a6ff00";
-    ctx.font = "bold 22px -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.fillText(`Scout Gateway: ${athlete.social1_Url || athlete.social2_Url}`, 120, registryY + 180);
+    ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillText(`Scout Gateway: ${athlete.social1_Url || athlete.social2_Url}`, 120, registryY + 168);
   }
 
-  // 7. Footer
+  // 6. Footer
   ctx.fillStyle = "#ffffff";
   ctx.font = "900 24px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.textAlign = "center";
@@ -923,7 +1045,7 @@ function AppContent() {
 
       setIsSavingProfile(false);
       setShowProfileModal(false);
-      alert("✅ Data Saved To National Scoreboard!");
+      alert("Pro metrics saved to national scoreboard database!");
     } catch (err: any) {
       setIsSavingProfile(false);
       setShowProfileModal(false);
@@ -975,32 +1097,27 @@ function AppContent() {
   const filteredScoreboard = useMemo(() => {
     return leaderboardRows
       .filter((ath) => {
-        // Only hide if explicitly set to false
         if (ath.isProfileVisible === false || String(ath.isProfileVisible).toLowerCase() === "false") {
           return false;
         }
         
-        // Role Filter
         if (roleFilter !== "ALL") {
           if (roleFilter === "TWP" && ath.primaryRole !== "TWP") return false;
           if (roleFilter === "HITTER" && ath.primaryRole !== "HITTER" && ath.primaryRole !== "TWP") return false;
           if (roleFilter === "PITCHER" && ath.primaryRole !== "PITCHER" && ath.primaryRole !== "TWP") return false;
         }
         
-        // Position Filter
         if (positionFilter !== "ALL" && ath.position) {
           const p = ath.position.toUpperCase();
           if (!p.includes(positionFilter.toUpperCase())) return false;
         }
 
-        // Status Filter (Only filter if athlete actually has a status entered)
         if (statusFilter !== "ALL" && ath.playerStatus) {
           if (!ath.playerStatus.toLowerCase().includes(statusFilter.toLowerCase())) {
             return false;
           }
         }
 
-        // State Filter (Only filter if athlete actually has a state entered)
         if (stateFilter !== "ALL" && ath.state && ath.state.trim() !== "") {
           if (ath.state.toUpperCase() !== stateFilter.toUpperCase()) return false;
         }
@@ -1023,7 +1140,7 @@ function AppContent() {
         return 0;
       });
   }, [leaderboardRows, roleFilter, positionFilter, statusFilter, stateFilter, sortBy]);
-  
+
   if (!mounted) return null;
 
   return (
@@ -1313,9 +1430,9 @@ function AppContent() {
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                   {filteredScoreboard.map((ath, idx) => {
-                    const isTWP = ath.primaryRole === "TWP";
-                    const isPitcher = ath.primaryRole === "PITCHER" || isTWP;
-                    const isHitter = ath.primaryRole === "HITTER" || isTWP;
+                    const isAthleteTWP = ath.primaryRole === "TWP";
+                    const isPitcherRole = ath.primaryRole === "PITCHER" || isAthleteTWP;
+                    const isHitterRole = ath.primaryRole === "HITTER" || isAthleteTWP;
 
                     return (
                       <div
@@ -1346,7 +1463,7 @@ function AppContent() {
                           </div>
 
                           <div>
-                            {isTWP ? (
+                            {isAthleteTWP ? (
                               <span style={{ backgroundColor: "rgba(166, 255, 0, 0.15)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "4px 8px", borderRadius: "999px", fontSize: "9px", fontWeight: "900", textTransform: "uppercase", whiteSpace: "nowrap" }}>
                                 ⚡ TWO-WAY
                               </span>
@@ -1359,8 +1476,8 @@ function AppContent() {
                         </div>
 
                         {/* Performance Data Matrix */}
-                        <div style={{ backgroundColor: "#050505", border: "1px solid #161616", borderRadius: "10px", padding: "12px", display: "grid", gridTemplateColumns: isTWP ? "1fr 1fr" : "1fr", gap: "12px", fontFamily: "monospace" }}>
-                          {isPitcher && (
+                        <div style={{ backgroundColor: "#050505", border: "1px solid #161616", borderRadius: "10px", padding: "12px", display: "grid", gridTemplateColumns: isAthleteTWP ? "1fr 1fr" : "1fr", gap: "12px", fontFamily: "monospace" }}>
+                          {isPitcherRole && (
                             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                 <span style={{ fontSize: "9px", color: "#888", textTransform: "uppercase", fontWeight: "800" }}>Pitching & Modeling</span>
@@ -1392,7 +1509,7 @@ function AppContent() {
                             </div>
                           )}
 
-                          {isHitter && (
+                          {isHitterRole && (
                             <div>
                               <div style={{ fontSize: "9px", color: "#666666", textTransform: "uppercase", marginBottom: "3px", fontWeight: "700" }}>Hitting Metrics</div>
                               {ath.maxExitVelo ? (
