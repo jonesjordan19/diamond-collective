@@ -923,7 +923,7 @@ function AppContent() {
 
       setIsSavingProfile(false);
       setShowProfileModal(false);
-      alert("✅ Data sent to Google Sheet!");
+      alert("✅ Data Saved To National Scoreboard!");
     } catch (err: any) {
       setIsSavingProfile(false);
       setShowProfileModal(false);
