@@ -865,7 +865,6 @@ function AppContent() {
     }
   }, []);
 
-  // AUTO-POPULATE EMAIL FROM WALLET LOGIN SESSION
   useEffect(() => {
     if (account?.address) {
       const lowerWallet = account.address.toLowerCase();
@@ -885,7 +884,6 @@ function AppContent() {
           }
         } catch {}
       } else {
-        // Pre-fill email from account session if available
         setProfile((prev) => ({
           ...prev,
           email: account.email || prev.email || ""
@@ -1316,7 +1314,7 @@ function AppContent() {
                   <h2 style={{ fontSize: "24px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", margin: "0 0 6px 0" }}>
                     National Scouting Scoreboard
                   </h2>
-                  <p style={{ fontSize: "13px", color: "#a1a1aa", maxWidth: "680px", margin: 0, lineHeight: "1.5" }}>
+                  <p style={{ fontSize: "13px", color: "#d4d4d8", maxWidth: "680px", margin: 0, lineHeight: "1.5" }}>
                     Direct scout discovery for active college ballplayers and transfer portal candidates. Filter verified bat speeds, pitch modeling (Stuff+), IVB, and release extension.
                   </p>
                 </div>
@@ -1352,7 +1350,7 @@ function AppContent() {
                     style={{
                       width: "100%",
                       backgroundColor: "#141416",
-                      border: `1px solid ${searchQuery ? NEON_GREEN : "#2a2a2e"}`,
+                      border: `1px solid ${searchQuery ? NEON_GREEN : "#333338"}`,
                       color: "#ffffff",
                       padding: "12px 16px",
                       borderRadius: "12px",
@@ -1414,7 +1412,7 @@ function AppContent() {
                           <div style={{ fontWeight: "900", color: "#ffffff", fontSize: "14px" }}>{ath.fullName}</div>
                           <div style={{ fontSize: "11px", color: NEON_GREEN, fontWeight: "700" }}>{ath.college} ({ath.position})</div>
                         </div>
-                        <span style={{ fontSize: "11px", color: "#888", textTransform: "uppercase" }}>Tap to view ↗</span>
+                        <span style={{ fontSize: "11px", color: "#bbb", textTransform: "uppercase" }}>Tap to view ↗</span>
                       </div>
                     ))}
                   </div>
@@ -1429,8 +1427,8 @@ function AppContent() {
                     onClick={() => setRoleFilter(r)}
                     style={{
                       backgroundColor: roleFilter === r ? NEON_GREEN : "#141414",
-                      color: roleFilter === r ? "#000000" : "#cccccc",
-                      border: roleFilter === r ? `1px solid ${NEON_GREEN}` : "1px solid #262626",
+                      color: roleFilter === r ? "#000000" : "#ffffff",
+                      border: roleFilter === r ? `1px solid ${NEON_GREEN}` : "1px solid #333338",
                       fontWeight: "800",
                       fontSize: "11px",
                       padding: "7px 14px",
@@ -1448,11 +1446,11 @@ function AppContent() {
               {/* ADVANCED FILTER BAR */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "8px", backgroundColor: "#050505", border: "1px solid #161616", borderRadius: "14px", padding: "12px" }}>
                 <div>
-                  <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#666", textTransform: "uppercase", marginBottom: "3px" }}>Position</label>
+                  <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#aaa", textTransform: "uppercase", marginBottom: "3px" }}>Position</label>
                   <select
                     value={positionFilter}
                     onChange={(e) => setPositionFilter(e.target.value)}
-                    style={{ width: "100%", backgroundColor: "#111", border: "1px solid #262626", color: "#fff", padding: "6px 8px", borderRadius: "8px", fontSize: "11px" }}
+                    style={{ width: "100%", backgroundColor: "#111", border: "1px solid #333", color: "#fff", padding: "6px 8px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}
                   >
                     <option value="ALL">All Positions</option>
                     <option value="RHP">RHP</option>
@@ -1467,11 +1465,11 @@ function AppContent() {
                 </div>
 
                 <div>
-                  <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#666", textTransform: "uppercase", marginBottom: "3px" }}>Portal Status</label>
+                  <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#aaa", textTransform: "uppercase", marginBottom: "3px" }}>Portal Status</label>
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    style={{ width: "100%", backgroundColor: "#111", border: "1px solid #262626", color: "#fff", padding: "6px 8px", borderRadius: "8px", fontSize: "11px" }}
+                    style={{ width: "100%", backgroundColor: "#111", border: "1px solid #333", color: "#fff", padding: "6px 8px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}
                   >
                     <option value="ALL">All Statuses</option>
                     <option value="Transfer Portal">Transfer Portal</option>
@@ -1482,11 +1480,11 @@ function AppContent() {
                 </div>
 
                 <div>
-                  <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#666", textTransform: "uppercase", marginBottom: "3px" }}>Region / State</label>
+                  <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#aaa", textTransform: "uppercase", marginBottom: "3px" }}>Region / State</label>
                   <select
                     value={stateFilter}
                     onChange={(e) => setStateFilter(e.target.value)}
-                    style={{ width: "100%", backgroundColor: "#111", border: "1px solid #262626", color: "#fff", padding: "6px 8px", borderRadius: "8px", fontSize: "11px" }}
+                    style={{ width: "100%", backgroundColor: "#111", border: "1px solid #333", color: "#fff", padding: "6px 8px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}
                   >
                     <option value="ALL">All States</option>
                     <option value="UT">Utah (UT)</option>
@@ -1505,7 +1503,7 @@ function AppContent() {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as any)}
-                    style={{ width: "100%", backgroundColor: "#111", border: `1px solid rgba(166, 255, 0, 0.4)`, color: NEON_GREEN, fontWeight: "700", padding: "6px 8px", borderRadius: "8px", fontSize: "11px" }}
+                    style={{ width: "100%", backgroundColor: "#111", border: `1px solid rgba(166, 255, 0, 0.4)`, color: NEON_GREEN, fontWeight: "900", padding: "6px 8px", borderRadius: "8px", fontSize: "11px" }}
                   >
                     <option value="DEFAULT">Latest Update</option>
                     <option value="PEAK_FB">Peak Fastball ↓</option>
@@ -1517,10 +1515,10 @@ function AppContent() {
               </div>
             </div>
 
-            {/* LEADERBOARD LIST */}
+            {/* LEADERBOARD LIST WITH HIGH-CONTRAST READABILITY */}
             <div style={{ width: "100%" }}>
               {filteredScoreboard.length === 0 ? (
-                <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "16px", padding: "40px 20px", textAlign: "center", color: "#666666" }}>
+                <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "16px", padding: "40px 20px", textAlign: "center", color: "#888888" }}>
                   {loadingScoreboard ? "Loading live national scoreboard..." : "No athletes match these filter criteria. Reset filters to view all."}
                 </div>
               ) : (
@@ -1534,25 +1532,26 @@ function AppContent() {
                       <div
                         key={idx}
                         style={{
-                          backgroundColor: "#0d0d0f",
-                          border: "1px solid #222226",
+                          backgroundColor: "#0f0f13",
+                          border: "1px solid #2a2a32",
                           borderRadius: "18px",
                           padding: "20px",
                           display: "flex",
                           flexDirection: "column",
                           gap: "16px",
+                          boxShadow: "0 4px 20px rgba(0,0,0,0.5)"
                         }}
                       >
                         {/* Athlete Header */}
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px", borderBottom: "1px solid #1a1a1e", paddingBottom: "12px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px", borderBottom: "1px solid #22222a", paddingBottom: "14px" }}>
                           <div>
-                            <div style={{ fontWeight: "900", color: "#ffffff", fontSize: "18px", letterSpacing: "0.5px" }}>
+                            <div style={{ fontWeight: "900", color: "#ffffff", fontSize: "20px", letterSpacing: "0.5px" }}>
                               {ath.fullName || "Member Athlete"}
                             </div>
-                            <div style={{ color: NEON_GREEN, fontSize: "14px", fontWeight: "800", marginTop: "3px" }}>
+                            <div style={{ color: NEON_GREEN, fontSize: "15px", fontWeight: "900", marginTop: "4px" }}>
                               🏛️ {ath.college || "Undeclared College"} {ath.state ? `(${ath.state})` : ""}
                             </div>
-                            <div style={{ color: "#999999", fontSize: "12px", marginTop: "4px" }}>
+                            <div style={{ color: "#d4d4d8", fontSize: "13px", fontWeight: "700", marginTop: "4px" }}>
                               <strong style={{ color: "#ffffff" }}>{ath.position}</strong>
                               {ath.height && ath.weight && <span> • {ath.height}, {ath.weight} lbs</span>}
                               <span> • {ath.playerStatus}</span>
@@ -1561,47 +1560,47 @@ function AppContent() {
 
                           <div>
                             {isAthleteTWP ? (
-                              <span style={{ backgroundColor: "rgba(166, 255, 0, 0.15)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "6px 12px", borderRadius: "999px", fontSize: "10px", fontWeight: "900", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+                              <span style={{ backgroundColor: "rgba(166, 255, 0, 0.18)", border: `1.5px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "6px 14px", borderRadius: "999px", fontSize: "11px", fontWeight: "900", textTransform: "uppercase", whiteSpace: "nowrap" }}>
                                 ⚡ TWO-WAY
                               </span>
                             ) : (
-                              <span style={{ backgroundColor: "#161619", border: "1px solid #333338", color: "#cccccc", padding: "6px 12px", borderRadius: "999px", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+                              <span style={{ backgroundColor: "#1e1e24", border: "1.5px solid #44444f", color: "#ffffff", padding: "6px 14px", borderRadius: "999px", fontSize: "11px", fontWeight: "900", textTransform: "uppercase", whiteSpace: "nowrap" }}>
                                 {ath.primaryRole}
                               </span>
                             )}
                           </div>
                         </div>
 
-                        {/* DATA BLOCKS */}
+                        {/* HIGH-CONTRAST DATA BLOCKS */}
                         <div style={{ display: "grid", gridTemplateColumns: isAthleteTWP ? "1fr 1fr" : "1fr", gap: "16px" }}>
                           
                           {/* PITCHING SECTOR */}
                           {isPitcherRole && (
-                            <div style={{ backgroundColor: "#060608", border: "1px solid #1c1c22", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                            <div style={{ backgroundColor: "#08080c", border: "1px solid #262630", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                <span style={{ fontSize: "10px", color: NEON_GREEN, textTransform: "uppercase", fontWeight: "900", letterSpacing: "0.8px" }}>⚾ Mound Telemetry</span>
+                                <span style={{ fontSize: "11px", color: NEON_GREEN, textTransform: "uppercase", fontWeight: "900", letterSpacing: "1px" }}>⚾ Mound Telemetry</span>
                                 {ath.stuffPlus && (
-                                  <span style={{ backgroundColor: "rgba(166, 255, 0, 0.12)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "3px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: "900" }}>
+                                  <span style={{ backgroundColor: "rgba(166, 255, 0, 0.15)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "3px 9px", borderRadius: "6px", fontSize: "12px", fontWeight: "900" }}>
                                     Stuff+ {ath.stuffPlus}
                                   </span>
                                 )}
                               </div>
 
-                              <div style={{ color: "#ffffff", fontWeight: "900", fontSize: "15px", fontFamily: "monospace" }}>
+                              <div style={{ color: "#ffffff", fontWeight: "900", fontSize: "16px", fontFamily: "monospace" }}>
                                 <span style={{ color: NEON_GREEN }}>FB:</span> {ath.peakFB ? `${ath.peakFB} mph` : "Unrecorded"} {ath.sittingFB ? `(${ath.sittingFB})` : ""}
-                                {ath.fbSpinRate && <span style={{ color: "#888", fontWeight: "600", fontSize: "12px" }}> • {ath.fbSpinRate} RPM</span>}
+                                {ath.fbSpinRate && <span style={{ color: "#d4d4d8", fontWeight: "800", fontSize: "13px" }}> • {ath.fbSpinRate} RPM</span>}
                               </div>
 
-                              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", fontSize: "11px", color: "#e4e4e7", fontFamily: "monospace" }}>
-                                {ath.inducedVertBreak && <span style={{ backgroundColor: "#111116", border: "1px solid #282830", padding: "5px 8px", borderRadius: "6px" }}>IVB: <strong style={{ color: NEON_GREEN }}>{ath.inducedVertBreak}"</strong></span>}
-                                {ath.horizontalBreak && <span style={{ backgroundColor: "#111116", border: "1px solid #282830", padding: "5px 8px", borderRadius: "6px" }}>HB: <strong>{ath.horizontalBreak}"</strong></span>}
-                                {ath.releaseExtension && <span style={{ backgroundColor: "#111116", border: "1px solid #282830", padding: "5px 8px", borderRadius: "6px" }}>Ext: <strong>{ath.releaseExtension}ft</strong></span>}
-                                {ath.vertApproachAngle && <span style={{ backgroundColor: "#111116", border: "1px solid #282830", padding: "5px 8px", borderRadius: "6px" }}>VAA: <strong>{ath.vertApproachAngle}°</strong></span>}
-                                {ath.kMinusBbPercentage && <span style={{ backgroundColor: "#111116", border: "1px solid #282830", padding: "5px 8px", borderRadius: "6px" }}>K-BB: <strong style={{ color: NEON_GREEN }}>{ath.kMinusBbPercentage}%</strong></span>}
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", fontSize: "12px", color: "#ffffff", fontFamily: "monospace", fontWeight: "700" }}>
+                                {ath.inducedVertBreak && <span style={{ backgroundColor: "#16161d", border: "1px solid #33333f", padding: "6px 10px", borderRadius: "6px" }}>IVB: <strong style={{ color: NEON_GREEN }}>{ath.inducedVertBreak}"</strong></span>}
+                                {ath.horizontalBreak && <span style={{ backgroundColor: "#16161d", border: "1px solid #33333f", padding: "6px 10px", borderRadius: "6px" }}>HB: <strong style={{ color: "#ffffff" }}>{ath.horizontalBreak}"</strong></span>}
+                                {ath.releaseExtension && <span style={{ backgroundColor: "#16161d", border: "1px solid #33333f", padding: "6px 10px", borderRadius: "6px" }}>Ext: <strong style={{ color: "#ffffff" }}>{ath.releaseExtension}ft</strong></span>}
+                                {ath.vertApproachAngle && <span style={{ backgroundColor: "#16161d", border: "1px solid #33333f", padding: "6px 10px", borderRadius: "6px" }}>VAA: <strong style={{ color: "#ffffff" }}>{ath.vertApproachAngle}°</strong></span>}
+                                {ath.kMinusBbPercentage && <span style={{ backgroundColor: "#16161d", border: "1px solid #33333f", padding: "6px 10px", borderRadius: "6px" }}>K-BB: <strong style={{ color: NEON_GREEN }}>{ath.kMinusBbPercentage}%</strong></span>}
                               </div>
 
                               {ath.offSpeedVelo && (
-                                <div style={{ color: "#a1a1aa", fontSize: "12px", fontFamily: "monospace" }}>
+                                <div style={{ color: "#e4e4e7", fontSize: "13px", fontFamily: "monospace", fontWeight: "800" }}>
                                   {ath.offSpeedType || "Slider"}: {ath.offSpeedVelo} mph {ath.offSpeedSpinRate ? `(${ath.offSpeedSpinRate} RPM)` : ""}
                                 </div>
                               )}
@@ -1610,25 +1609,25 @@ function AppContent() {
 
                           {/* HITTING SECTOR */}
                           {isHitterRole && (
-                            <div style={{ backgroundColor: "#060608", border: "1px solid #1c1c22", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                            <div style={{ backgroundColor: "#08080c", border: "1px solid #262630", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                <span style={{ fontSize: "10px", color: NEON_GREEN, textTransform: "uppercase", fontWeight: "900", letterSpacing: "0.8px" }}>💥 Batter's Box Telemetry</span>
+                                <span style={{ fontSize: "11px", color: NEON_GREEN, textTransform: "uppercase", fontWeight: "900", letterSpacing: "1px" }}>💥 Batter's Box Telemetry</span>
                               </div>
 
-                              <div style={{ color: "#ffffff", fontWeight: "900", fontSize: "15px", fontFamily: "monospace" }}>
+                              <div style={{ color: "#ffffff", fontWeight: "900", fontSize: "16px", fontFamily: "monospace" }}>
                                 {ath.maxExitVelo ? (
                                   <div>
                                     <span style={{ color: NEON_GREEN }}>Max EV:</span> {ath.maxExitVelo} mph
                                   </div>
                                 ) : (
-                                  <div style={{ color: "#555" }}>Exit Velo: Unrecorded</div>
+                                  <div style={{ color: "#777" }}>Exit Velo: Unrecorded</div>
                                 )}
                               </div>
 
-                              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", fontSize: "11px", color: "#e4e4e7", fontFamily: "monospace" }}>
-                                {ath.ninetyEV && <span style={{ backgroundColor: "#111116", border: "1px solid #282830", padding: "5px 8px", borderRadius: "6px" }}>90th%: <strong>{ath.ninetyEV} mph</strong></span>}
-                                {ath.batSpeed && <span style={{ backgroundColor: "#111116", border: "1px solid #282830", padding: "5px 8px", borderRadius: "6px" }}>Bat Speed: <strong>{ath.batSpeed} mph</strong></span>}
-                                {ath.sixtyTime && <span style={{ backgroundColor: "#111116", border: "1px solid #282830", padding: "5px 8px", borderRadius: "6px" }}>60-Yard: <strong>{ath.sixtyTime}s</strong></span>}
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", fontSize: "12px", color: "#ffffff", fontFamily: "monospace", fontWeight: "700" }}>
+                                {ath.ninetyEV && <span style={{ backgroundColor: "#16161d", border: "1px solid #33333f", padding: "6px 10px", borderRadius: "6px" }}>90th%: <strong style={{ color: "#ffffff" }}>{ath.ninetyEV} mph</strong></span>}
+                                {ath.batSpeed && <span style={{ backgroundColor: "#16161d", border: "1px solid #33333f", padding: "6px 10px", borderRadius: "6px" }}>Bat Speed: <strong style={{ color: "#ffffff" }}>{ath.batSpeed} mph</strong></span>}
+                                {ath.sixtyTime && <span style={{ backgroundColor: "#16161d", border: "1px solid #33333f", padding: "6px 10px", borderRadius: "6px" }}>60-Yard: <strong style={{ color: "#ffffff" }}>{ath.sixtyTime}s</strong></span>}
                               </div>
                             </div>
                           )}
@@ -1636,8 +1635,8 @@ function AppContent() {
                         </div>
 
                         {/* Footer Controls */}
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "6px", flexWrap: "wrap", gap: "10px", borderTop: "1px solid #1a1a1e" }}>
-                          <div style={{ fontSize: "11px", color: "#71717a", fontFamily: "monospace" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "8px", flexWrap: "wrap", gap: "10px", borderTop: "1px solid #22222a" }}>
+                          <div style={{ fontSize: "12px", color: "#d4d4d8", fontFamily: "monospace", fontWeight: "700" }}>
                             {ath.recordedDatePitching && <span>Pitch: {ath.recordedDatePitching} </span>}
                             {ath.recordedDateHitting && <span>Hit: {ath.recordedDateHitting}</span>}
                             {!ath.recordedDatePitching && !ath.recordedDateHitting && <span>Member Verified</span>}
@@ -1647,12 +1646,12 @@ function AppContent() {
                             <button
                               onClick={() => triggerMobileScoutShare(ath)}
                               style={{
-                                backgroundColor: "rgba(166, 255, 0, 0.12)",
-                                border: `1px solid ${NEON_GREEN}`,
+                                backgroundColor: "rgba(166, 255, 0, 0.15)",
+                                border: `1.5px solid ${NEON_GREEN}`,
                                 color: NEON_GREEN,
-                                padding: "8px 14px",
-                                borderRadius: "8px",
-                                fontSize: "11px",
+                                padding: "9px 16px",
+                                borderRadius: "10px",
+                                fontSize: "12px",
                                 fontWeight: "900",
                                 cursor: "pointer",
                                 display: "inline-flex",
@@ -1670,7 +1669,7 @@ function AppContent() {
                                 href={ath.social1_Url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                style={{ backgroundColor: "#161619", border: "1px solid #333338", color: NEON_GREEN, padding: "8px 12px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "800" }}
+                                style={{ backgroundColor: "#1c1c24", border: "1px solid #44444f", color: NEON_GREEN, padding: "9px 14px", borderRadius: "10px", textDecoration: "none", fontSize: "12px", fontWeight: "900" }}
                               >
                                 {ath.social1_Type || "Social 1"} ↗
                               </a>
@@ -1680,7 +1679,7 @@ function AppContent() {
                                 href={ath.social2_Url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                style={{ backgroundColor: "#161619", border: "1px solid #333338", color: NEON_GREEN, padding: "8px 12px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "800" }}
+                                style={{ backgroundColor: "#1c1c24", border: "1px solid #44444f", color: NEON_GREEN, padding: "9px 14px", borderRadius: "10px", textDecoration: "none", fontSize: "12px", fontWeight: "900" }}
                               >
                                 {ath.social2_Type || "Social 2"} ↗
                               </a>
@@ -1704,7 +1703,7 @@ function AppContent() {
                 <h3 style={{ fontSize: "18px", fontWeight: "900", margin: "0 0 6px 0", color: "#ffffff", textTransform: "uppercase" }}>
                   Active College Ballplayer?
                 </h3>
-                <p style={{ fontSize: "13px", color: "#888888", margin: "0 0 16px 0", lineHeight: "1.4" }}>
+                <p style={{ fontSize: "13px", color: "#d4d4d8", margin: "0 0 16px 0", lineHeight: "1.4" }}>
                   Sign in with your Google, Apple, or phone ID to unlock direct intro requests and claim 100 $SLUG.
                 </p>
                 <button
@@ -1719,7 +1718,7 @@ function AppContent() {
                 <h3 style={{ fontSize: "18px", fontWeight: "900", margin: "0 0 6px 0", color: "#ffffff", textTransform: "uppercase" }}>
                   Complete Roster Verification
                 </h3>
-                <p style={{ fontSize: "13px", color: "#888888", margin: "0 0 16px 0" }}>
+                <p style={{ fontSize: "13px", color: "#d4d4d8", margin: "0 0 16px 0" }}>
                   Submit your college bio to enable 1-click Direct Intros with our brand network.
                 </p>
                 <button
@@ -1734,7 +1733,7 @@ function AppContent() {
                 <h3 style={{ fontSize: "18px", fontWeight: "900", margin: "0 0 6px 0", color: "#ffffff", textTransform: "uppercase" }}>
                   Claim Your 100 Slugger Coins
                 </h3>
-                <p style={{ fontSize: "13px", color: "#888888", margin: "0 0 16px 0" }}>
+                <p style={{ fontSize: "13px", color: "#d4d4d8", margin: "0 0 16px 0" }}>
                   {profile.fullName} • {profile.college} ({profile.position})
                 </p>
                 <TransactionButton
@@ -1779,7 +1778,7 @@ function AppContent() {
                 <h3 style={{ fontSize: "20px", fontWeight: "900", color: "#ffffff", margin: "0 0 4px 0", textTransform: "uppercase" }}>
                   "The Big Black Grip" Bat Grip ($0.00 Free)
                 </h3>
-                <p style={{ fontSize: "13px", color: "#a1a1aa", margin: 0, lineHeight: "1.4" }}>
+                <p style={{ fontSize: "13px", color: "#d4d4d8", margin: 0, lineHeight: "1.4" }}>
                   Seamless pro bat grip free for college ballplayers. Just cover flat $8.99 USPS postage.
                 </p>
               </div>
@@ -1825,7 +1824,7 @@ function AppContent() {
                         {section.title}
                       </h3>
                     </div>
-                    <span style={{ fontSize: "10px", color: "#888888", fontWeight: "800", textTransform: "uppercase" }}>
+                    <span style={{ fontSize: "10px", color: "#d4d4d8", fontWeight: "900", textTransform: "uppercase" }}>
                       {section.brands.length} {section.brands.length === 1 ? "Partner" : "Partners"}
                     </span>
                   </div>
@@ -1850,7 +1849,7 @@ function AppContent() {
                         >
                           <div>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-                              <span style={{ fontSize: "10px", fontWeight: "900", color: isDirectIntro ? NEON_GREEN : "#888888", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                              <span style={{ fontSize: "10px", fontWeight: "900", color: isDirectIntro ? NEON_GREEN : "#d4d4d8", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                                 {isDirectIntro ? "⚡ DIRECT PARTNER INTRO" : "PORTAL COLLAB"}
                               </span>
                               {isDirectIntro && (
@@ -1862,7 +1861,7 @@ function AppContent() {
                             <h4 style={{ fontSize: "18px", fontWeight: "900", color: "#ffffff", margin: "0 0 6px 0", textTransform: "uppercase" }}>
                               {brand.name}
                             </h4>
-                            <p style={{ fontSize: "12px", color: "#888888", lineHeight: "1.5", margin: 0 }}>
+                            <p style={{ fontSize: "12px", color: "#d4d4d8", lineHeight: "1.5", margin: 0 }}>
                               {brand.description}
                             </p>
                           </div>
@@ -1886,7 +1885,7 @@ function AppContent() {
                               style={{ 
                                 width: "100%",
                                 backgroundColor: activeIntro ? "#18181b" : NEON_GREEN, 
-                                color: activeIntro ? "#71717a" : "#000000", 
+                                color: activeIntro ? "#a1a1aa" : "#000000", 
                                 border: activeIntro ? "1px solid #27272a" : "none", 
                                 fontWeight: "900", 
                                 padding: "12px", 
@@ -1905,7 +1904,7 @@ function AppContent() {
                               {activeIntro ? (
                                 <>
                                   <span>🔒 Intro Dispatched</span>
-                                  <span style={{ fontSize: "10px", color: "#a1a1aa" }}>({getDaysRemaining(brand.name)}d left)</span>
+                                  <span style={{ fontSize: "10px", color: "#d4d4d8" }}>({getDaysRemaining(brand.name)}d left)</span>
                                 </>
                               ) : !account ? (
                                 "Sign In to Request Intro ⚡"
@@ -1974,7 +1973,7 @@ function AppContent() {
                   </span>
                 </button>
                 {openFaq === fIdx && (
-                  <div style={{ padding: "0 20px 20px 20px", color: "#a1a1aa", fontSize: "13px", lineHeight: "1.6" }}>
+                  <div style={{ padding: "0 20px 20px 20px", color: "#d4d4d8", fontSize: "13px", lineHeight: "1.6" }}>
                     {faq.a}
                   </div>
                 )}
@@ -2007,7 +2006,7 @@ function AppContent() {
             </p>
 
             <div style={{ backgroundColor: "#050505", border: "1px solid #1f1f1f", borderRadius: "14px", padding: "16px", marginBottom: "18px", display: "flex", flexDirection: "column", gap: "12px" }}>
-              <div style={{ fontSize: "13px", color: "#cccccc", lineHeight: "1.5" }}>
+              <div style={{ fontSize: "13px", color: "#d4d4d8", lineHeight: "1.5" }}>
                 Brand representatives are provided a <strong style={{ color: "#ffffff" }}>60-day contact window</strong> to review your verified metrics, collegiate roster status, and initiate direct communication.
               </div>
               <div style={{ fontSize: "12px", color: isLockoutModal ? "#eab308" : NEON_GREEN, fontWeight: "800" }}>
@@ -2040,7 +2039,7 @@ function AppContent() {
         </div>
       )}
 
-      {/* ATHLETE LOCKER MODAL WITH TABBED SCREENS */}
+      {/* ATHLETE LOCKER MODAL */}
       {showProfileModal && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.88)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000, padding: "16px" }}>
           <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "20px", width: "100%", maxWidth: "680px", maxHeight: "90vh", overflowY: "auto", padding: "26px" }}>
@@ -2051,27 +2050,27 @@ function AppContent() {
                 <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "900", textTransform: "uppercase", color: "#ffffff" }}>
                   Athlete Locker & Scouting Matrix
                 </h3>
-                <p style={{ fontSize: "11px", color: "#888888", margin: "2px 0 0 0" }}>
+                <p style={{ fontSize: "11px", color: "#d4d4d8", margin: "2px 0 0 0" }}>
                   Auto-populated session bio & tracked metrics.
                 </p>
               </div>
               <button
                 onClick={() => setShowProfileModal(false)}
-                style={{ background: "none", border: "none", color: "#888888", fontSize: "20px", cursor: "pointer" }}
+                style={{ background: "none", border: "none", color: "#d4d4d8", fontSize: "20px", cursor: "pointer" }}
               >
                 ✕
               </button>
             </div>
 
-            {/* TAB SELECTOR FOR EASY SINGLE-SCREEN ENTRY */}
+            {/* TAB SELECTOR */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "20px" }}>
               <button
                 type="button"
                 onClick={() => setActiveMatrixTab("BIO")}
                 style={{
                   backgroundColor: activeMatrixTab === "BIO" ? NEON_GREEN : "#141416",
-                  color: activeMatrixTab === "BIO" ? "#000000" : "#cccccc",
-                  border: activeMatrixTab === "BIO" ? `1px solid ${NEON_GREEN}` : "1px solid #222226",
+                  color: activeMatrixTab === "BIO" ? "#000000" : "#ffffff",
+                  border: activeMatrixTab === "BIO" ? `1px solid ${NEON_GREEN}` : "1px solid #333338",
                   padding: "10px",
                   borderRadius: "10px",
                   fontWeight: "900",
@@ -2087,8 +2086,8 @@ function AppContent() {
                 onClick={() => setActiveMatrixTab("HITTING")}
                 style={{
                   backgroundColor: activeMatrixTab === "HITTING" ? NEON_GREEN : "#141414",
-                  color: activeMatrixTab === "HITTING" ? "#000000" : "#cccccc",
-                  border: activeMatrixTab === "HITTING" ? `1px solid ${NEON_GREEN}` : "1px solid #222226",
+                  color: activeMatrixTab === "HITTING" ? "#000000" : "#ffffff",
+                  border: activeMatrixTab === "HITTING" ? `1px solid ${NEON_GREEN}` : "1px solid #333338",
                   padding: "10px",
                   borderRadius: "10px",
                   fontWeight: "900",
@@ -2104,8 +2103,8 @@ function AppContent() {
                 onClick={() => setActiveMatrixTab("PITCHING")}
                 style={{
                   backgroundColor: activeMatrixTab === "PITCHING" ? NEON_GREEN : "#141414",
-                  color: activeMatrixTab === "PITCHER" || activeMatrixTab === "PITCHING" ? "#000000" : "#cccccc",
-                  border: activeMatrixTab === "PITCHING" ? `1px solid ${NEON_GREEN}` : "1px solid #222226",
+                  color: activeMatrixTab === "PITCHING" ? "#000000" : "#ffffff",
+                  border: activeMatrixTab === "PITCHING" ? `1px solid ${NEON_GREEN}` : "1px solid #333338",
                   padding: "10px",
                   borderRadius: "10px",
                   fontWeight: "900",
@@ -2125,13 +2124,13 @@ function AppContent() {
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                     <div>
-                      <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Full Name *</label>
+                      <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#ffffff", marginBottom: "4px" }}>Full Name *</label>
                       <input 
                         type="text" 
                         value={profile.fullName} 
                         onChange={(e) => setProfile({ ...profile, fullName: e.target.value })}
                         placeholder="e.g. Jordan Jones" 
-                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "10px", borderRadius: "8px", fontSize: "12px" }}
+                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #444", color: "#ffffff", padding: "10px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}
                       />
                     </div>
                     <div>
@@ -2141,40 +2140,40 @@ function AppContent() {
                         value={profile.college} 
                         onChange={(e) => setProfile({ ...profile, college: e.target.value })}
                         placeholder="e.g. University of Utah" 
-                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "10px", borderRadius: "8px", fontSize: "12px" }}
+                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #444", color: "#ffffff", padding: "10px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}
                       />
                     </div>
                   </div>
 
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px" }}>
                     <div>
-                      <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#aaa", marginBottom: "4px" }}>Height</label>
+                      <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>Height</label>
                       <input 
                         type="text" 
                         value={profile.height || ""} 
                         onChange={(e) => setProfile({ ...profile, height: e.target.value })}
                         placeholder="6'3&quot;" 
-                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #2a2a2a", color: "#fff", padding: "10px 8px", borderRadius: "8px", fontSize: "12px" }}
+                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px 8px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}
                       />
                     </div>
                     <div>
-                      <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#aaa", marginBottom: "4px" }}>Weight</label>
+                      <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>Weight</label>
                       <input 
                         type="number" 
                         value={profile.weight || ""} 
                         onChange={(e) => setProfile({ ...profile, weight: e.target.value })}
                         placeholder="210" 
-                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #2a2a2a", color: "#fff", padding: "10px 8px", borderRadius: "8px", fontSize: "12px" }}
+                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px 8px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}
                       />
                     </div>
                     <div>
-                      <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#aaa", marginBottom: "4px" }}>Position</label>
+                      <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>Position</label>
                       <input 
                         type="text" 
                         value={profile.position} 
                         onChange={(e) => setProfile({ ...profile, position: e.target.value })}
                         placeholder="RHP / OF" 
-                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #2a2a2a", color: "#fff", padding: "10px 8px", borderRadius: "8px", fontSize: "12px" }}
+                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px 8px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}
                       />
                     </div>
                     <div>
@@ -2182,7 +2181,7 @@ function AppContent() {
                       <select
                         value={profile.primaryRole}
                         onChange={(e) => setProfile({ ...profile, primaryRole: e.target.value as any })}
-                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "10px 4px", borderRadius: "8px", fontSize: "11px", fontWeight: "800" }}
+                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "10px 4px", borderRadius: "8px", fontSize: "11px", fontWeight: "900" }}
                       >
                         <option value="HITTER">Hitter</option>
                         <option value="PITCHER">Pitcher</option>
@@ -2193,11 +2192,11 @@ function AppContent() {
 
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
                     <div>
-                      <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#aaa", marginBottom: "4px" }}>State</label>
+                      <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>State</label>
                       <select
                         value={profile.state || "UT"}
                         onChange={(e) => setProfile({ ...profile, state: e.target.value })}
-                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #2a2a2a", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "12px" }}
+                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}
                       >
                         <option value="UT">UT</option>
                         <option value="AZ">AZ</option>
@@ -2210,11 +2209,11 @@ function AppContent() {
                       </select>
                     </div>
                     <div>
-                      <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#aaa", marginBottom: "4px" }}>Status</label>
+                      <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>Status</label>
                       <select
                         value={profile.playerStatus}
                         onChange={(e) => setProfile({ ...profile, playerStatus: e.target.value })}
-                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #2a2a2a", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "11px" }}
+                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}
                       >
                         <option value="Transfer Portal">Transfer Portal</option>
                         <option value="Returning College Player">Returning</option>
@@ -2223,11 +2222,11 @@ function AppContent() {
                       </select>
                     </div>
                     <div>
-                      <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#aaa", marginBottom: "4px" }}>Class Year</label>
+                      <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>Class Year</label>
                       <select
                         value={profile.collegeYear}
                         onChange={(e) => setProfile({ ...profile, collegeYear: e.target.value })}
-                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #2a2a2a", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "11px" }}
+                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}
                       >
                         <option value="Freshman">Freshman</option>
                         <option value="Sophomore">Sophomore</option>
@@ -2246,17 +2245,17 @@ function AppContent() {
                         value={profile.email} 
                         onChange={(e) => setProfile({ ...profile, email: e.target.value })}
                         placeholder="athlete@school.edu" 
-                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: `1px solid rgba(166,255,0,0.4)`, color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "12px" }}
+                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: `1px solid rgba(166,255,0,0.6)`, color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}
                       />
                     </div>
                     <div>
-                      <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Cell Phone *</label>
+                      <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#ffffff", marginBottom: "4px" }}>Cell Phone *</label>
                       <input 
                         type="tel" 
                         value={profile.phone} 
                         onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
                         placeholder="(555) 000-0000" 
-                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #2a2a2a", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "12px" }}
+                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}
                       />
                     </div>
                   </div>
@@ -2264,7 +2263,7 @@ function AppContent() {
                   <button
                     type="button"
                     onClick={() => setActiveMatrixTab("HITTING")}
-                    style={{ backgroundColor: "#1c1c22", color: NEON_GREEN, border: `1px solid ${NEON_GREEN}`, padding: "12px", borderRadius: "10px", fontWeight: "900", cursor: "pointer", textTransform: "uppercase", marginTop: "8px" }}
+                    style={{ backgroundColor: "#1c1c24", color: NEON_GREEN, border: `1px solid ${NEON_GREEN}`, padding: "12px", borderRadius: "10px", fontWeight: "900", cursor: "pointer", textTransform: "uppercase", marginTop: "8px" }}
                   >
                     Next: Hitting Metrics ➔
                   </button>
@@ -2274,56 +2273,56 @@ function AppContent() {
               {/* TAB 2: HITTING */}
               {activeMatrixTab === "HITTING" && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                  <div style={{ backgroundColor: "#050507", border: "1px solid #1f1f26", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <div style={{ backgroundColor: "#060609", border: "1px solid #22222a", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
                     <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase" }}>
                       💥 Batter's Box Benchmarks
                     </span>
 
                     <div>
-                      <label style={{ display: "block", fontSize: "10px", fontWeight: "800", color: "#aaa", marginBottom: "4px" }}>MAX EXIT VELO (MPH)</label>
+                      <label style={{ display: "block", fontSize: "10px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>MAX EXIT VELO (MPH)</label>
                       <input
                         type="number"
                         step="0.1"
                         placeholder="103.2"
                         value={profile.maxExitVelo}
                         onChange={(e) => setProfile({ ...profile, maxExitVelo: e.target.value })}
-                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "14px" }}
+                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "14px", fontWeight: "700" }}
                       />
                     </div>
 
                     <div>
-                      <label style={{ display: "block", fontSize: "10px", fontWeight: "800", color: "#aaa", marginBottom: "4px" }}>90TH% EXIT VELO (CONSISTENT HARD-HIT MPH)</label>
+                      <label style={{ display: "block", fontSize: "10px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>90TH% EXIT VELO (CONSISTENT HARD-HIT MPH)</label>
                       <input
                         type="number"
                         step="0.1"
                         placeholder="98.4"
                         value={profile.ninetyEV}
                         onChange={(e) => setProfile({ ...profile, ninetyEV: e.target.value })}
-                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "14px" }}
+                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "14px", fontWeight: "700" }}
                       />
                     </div>
 
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                       <div>
-                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#aaa", marginBottom: "4px" }}>BAT SPEED (MPH)</label>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>BAT SPEED (MPH)</label>
                         <input
                           type="number"
                           step="0.1"
                           placeholder="76.8"
                           value={profile.batSpeed}
                           onChange={(e) => setProfile({ ...profile, batSpeed: e.target.value })}
-                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px" }}
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px", fontWeight: "700" }}
                         />
                       </div>
                       <div>
-                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#aaa", marginBottom: "4px" }}>60-YARD DASH (SEC)</label>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>60-YARD DASH (SEC)</label>
                         <input
                           type="number"
                           step="0.01"
                           placeholder="6.65"
                           value={profile.sixtyTime}
                           onChange={(e) => setProfile({ ...profile, sixtyTime: e.target.value })}
-                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px" }}
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px", fontWeight: "700" }}
                         />
                       </div>
                     </div>
@@ -2333,14 +2332,14 @@ function AppContent() {
                     <button
                       type="button"
                       onClick={() => setActiveMatrixTab("BIO")}
-                      style={{ flex: 1, backgroundColor: "#141416", color: "#ccc", border: "1px solid #333", padding: "12px", borderRadius: "10px", fontWeight: "800", cursor: "pointer", textTransform: "uppercase" }}
+                      style={{ flex: 1, backgroundColor: "#141416", color: "#ffffff", border: "1px solid #444", padding: "12px", borderRadius: "10px", fontWeight: "800", cursor: "pointer", textTransform: "uppercase" }}
                     >
                       ← Back
                     </button>
                     <button
                       type="button"
                       onClick={() => setActiveMatrixTab("PITCHING")}
-                      style={{ flex: 2, backgroundColor: "#1c1c22", color: NEON_GREEN, border: `1px solid ${NEON_GREEN}`, padding: "12px", borderRadius: "10px", fontWeight: "900", cursor: "pointer", textTransform: "uppercase" }}
+                      style={{ flex: 2, backgroundColor: "#1c1c24", color: NEON_GREEN, border: `1px solid ${NEON_GREEN}`, padding: "12px", borderRadius: "10px", fontWeight: "900", cursor: "pointer", textTransform: "uppercase" }}
                     >
                       Next: Pitching & Stuff+ ➔
                     </button>
@@ -2351,21 +2350,21 @@ function AppContent() {
               {/* TAB 3: PITCHING & STUFF+ */}
               {activeMatrixTab === "PITCHING" && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                  <div style={{ backgroundColor: "#050507", border: "1px solid #1f1f26", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <div style={{ backgroundColor: "#060609", border: "1px solid #22222a", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
                     <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase" }}>
                       ⚾ Mound Telemetry & Pro Modeling
                     </span>
 
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                       <div>
-                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#aaa", marginBottom: "4px" }}>PEAK FASTBALL (MPH)</label>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>PEAK FASTBALL (MPH)</label>
                         <input
                           type="number"
                           step="0.1"
                           placeholder="94.5"
                           value={profile.peakFB || ""}
                           onChange={(e) => setProfile({ ...profile, peakFB: e.target.value })}
-                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px" }}
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px", fontWeight: "700" }}
                         />
                       </div>
                       <div>
@@ -2382,25 +2381,25 @@ function AppContent() {
 
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                       <div>
-                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#aaa", marginBottom: "4px" }}>INDUCED VERT BREAK (IN)</label>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>INDUCED VERT BREAK (IN)</label>
                         <input
                           type="number"
                           step="0.1"
                           placeholder="18.2"
                           value={profile.inducedVertBreak || ""}
                           onChange={(e) => setProfile({ ...profile, inducedVertBreak: e.target.value })}
-                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px" }}
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px", fontWeight: "700" }}
                         />
                       </div>
                       <div>
-                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#aaa", marginBottom: "4px" }}>RELEASE EXTENSION (FT)</label>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>RELEASE EXTENSION (FT)</label>
                         <input
                           type="number"
                           step="0.1"
                           placeholder="6.8"
                           value={profile.releaseExtension || ""}
                           onChange={(e) => setProfile({ ...profile, releaseExtension: e.target.value })}
-                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px" }}
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px", fontWeight: "700" }}
                         />
                       </div>
                     </div>
@@ -2410,7 +2409,7 @@ function AppContent() {
                     <button
                       type="button"
                       onClick={() => setActiveMatrixTab("HITTING")}
-                      style={{ flex: 1, backgroundColor: "#141416", color: "#ccc", border: "1px solid #333", padding: "12px", borderRadius: "10px", fontWeight: "800", cursor: "pointer", textTransform: "uppercase" }}
+                      style={{ flex: 1, backgroundColor: "#141416", color: "#ffffff", border: "1px solid #444", padding: "12px", borderRadius: "10px", fontWeight: "800", cursor: "pointer", textTransform: "uppercase" }}
                     >
                       ← Back
                     </button>
@@ -2426,16 +2425,16 @@ function AppContent() {
                 </div>
               )}
 
-              {/* SOCIAL LINKS (ALWAYS VISIBLE AT THE BOTTOM OF MODAL) */}
-              <div style={{ borderTop: "1px solid #1f1f1f", paddingTop: "14px", marginTop: "6px" }}>
-                <span style={{ fontSize: "10px", fontWeight: "900", color: "#888", textTransform: "uppercase", letterSpacing: "0.8px", display: "block", marginBottom: "8px" }}>
+              {/* SOCIAL LINKS */}
+              <div style={{ borderTop: "1px solid #22222a", paddingTop: "14px", marginTop: "6px" }}>
+                <span style={{ fontSize: "10px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.8px", display: "block", marginBottom: "8px" }}>
                   Public Scout Gateway Links
                 </span>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "8px" }}>
                   <select
                     value={profile.social1_Type || "X"}
                     onChange={(e) => setProfile({ ...profile, social1_Type: e.target.value })}
-                    style={{ backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "8px", borderRadius: "8px", fontSize: "11px" }}
+                    style={{ backgroundColor: "#000000", border: "1px solid #444", color: "#ffffff", padding: "8px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}
                   >
                     <option value="X">X (Twitter)</option>
                     <option value="IG">Instagram</option>
@@ -2446,7 +2445,7 @@ function AppContent() {
                     placeholder="https://x.com/athlete"
                     value={profile.social1_Url || ""}
                     onChange={(e) => setProfile({ ...profile, social1_Url: e.target.value })}
-                    style={{ backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "11px" }}
+                    style={{ backgroundColor: "#000000", border: "1px solid #444", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}
                   />
                 </div>
               </div>
