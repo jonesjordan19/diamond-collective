@@ -735,6 +735,7 @@ function AppContent() {
   const [loadingScoreboard, setLoadingScoreboard] = useState(false);
 
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [activeMatrixTab, setActiveMatrixTab] = useState<"BIO" | "HITTING" | "PITCHING">("BIO");
   const [dispatchedBrand, setDispatchedBrand] = useState<BrandItem | null>(null);
   const [isLockoutModal, setIsLockoutModal] = useState(false);
   const [profile, setProfile] = useState<AthleteProfile>(emptyProfile);
@@ -864,6 +865,7 @@ function AppContent() {
     }
   }, []);
 
+  // AUTO-POPULATE EMAIL FROM WALLET LOGIN SESSION
   useEffect(() => {
     if (account?.address) {
       const lowerWallet = account.address.toLowerCase();
@@ -874,8 +876,20 @@ function AppContent() {
       if (savedLocal) {
         try {
           const parsed = JSON.parse(savedLocal);
-          if (parsed.fullName) setProfile((prev) => ({ ...prev, ...parsed }));
+          if (parsed.fullName) {
+            setProfile((prev) => ({ 
+              ...prev, 
+              ...parsed, 
+              email: parsed.email || account.email || prev.email || "" 
+            }));
+          }
         } catch {}
+      } else {
+        // Pre-fill email from account session if available
+        setProfile((prev) => ({
+          ...prev,
+          email: account.email || prev.email || ""
+        }));
       }
 
       const savedIntros = localStorage.getItem(localIntroKey);
@@ -893,7 +907,11 @@ function AppContent() {
       const callbackName = `cb_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
       (window as any)[callbackName] = (data: any) => {
         if (data && data.profile && data.profile.fullName) {
-          setProfile((prev) => ({ ...prev, ...data.profile }));
+          setProfile((prev) => ({ 
+            ...prev, 
+            ...data.profile,
+            email: data.profile.email || account.email || prev.email || ""
+          }));
           localStorage.setItem(localKey, JSON.stringify(data.profile));
         }
 
@@ -921,7 +939,7 @@ function AppContent() {
       script.src = `${GOOGLE_SCRIPT_URL}?walletAddress=${encodeURIComponent(lowerWallet)}&callback=${callbackName}&_t=${Date.now()}`;
       document.body.appendChild(script);
     }
-  }, [account?.address]);
+  }, [account?.address, account?.email]);
 
   const handleSaveProfile = async () => {
     if (!account?.address) {
@@ -1499,7 +1517,7 @@ function AppContent() {
               </div>
             </div>
 
-            {/* LEADERBOARD LIST WITH SPACIOUS CARD LAYOUT */}
+            {/* LEADERBOARD LIST */}
             <div style={{ width: "100%" }}>
               {filteredScoreboard.length === 0 ? (
                 <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "16px", padding: "40px 20px", textAlign: "center", color: "#666666" }}>
@@ -1554,7 +1572,7 @@ function AppContent() {
                           </div>
                         </div>
 
-                        {/* SPACIOUS DATA BLOCKS FOR PITCHING & HITTING */}
+                        {/* DATA BLOCKS */}
                         <div style={{ display: "grid", gridTemplateColumns: isAthleteTWP ? "1fr 1fr" : "1fr", gap: "16px" }}>
                           
                           {/* PITCHING SECTOR */}
@@ -2022,17 +2040,19 @@ function AppContent() {
         </div>
       )}
 
-      {/* ATHLETE LOCKER MODAL */}
+      {/* ATHLETE LOCKER MODAL WITH TABBED SCREENS */}
       {showProfileModal && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.88)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000, padding: "16px" }}>
           <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "20px", width: "100%", maxWidth: "680px", maxHeight: "90vh", overflowY: "auto", padding: "26px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+            
+            {/* Modal Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", borderBottom: "1px solid #1f1f1f", paddingBottom: "12px" }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: "20px", fontWeight: "900", textTransform: "uppercase", color: "#ffffff" }}>
+                <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "900", textTransform: "uppercase", color: "#ffffff" }}>
                   Athlete Locker & Scouting Matrix
                 </h3>
-                <p style={{ fontSize: "12px", color: "#888888", margin: "2px 0 0 0" }}>
-                  Collegiate bio, physical dimensions, and pro pitch modeling analytics.
+                <p style={{ fontSize: "11px", color: "#888888", margin: "2px 0 0 0" }}>
+                  Auto-populated session bio & tracked metrics.
                 </p>
               </div>
               <button
@@ -2043,432 +2063,375 @@ function AppContent() {
               </button>
             </div>
 
+            {/* TAB SELECTOR FOR EASY SINGLE-SCREEN ENTRY */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "20px" }}>
+              <button
+                type="button"
+                onClick={() => setActiveMatrixTab("BIO")}
+                style={{
+                  backgroundColor: activeMatrixTab === "BIO" ? NEON_GREEN : "#141416",
+                  color: activeMatrixTab === "BIO" ? "#000000" : "#cccccc",
+                  border: activeMatrixTab === "BIO" ? `1px solid ${NEON_GREEN}` : "1px solid #222226",
+                  padding: "10px",
+                  borderRadius: "10px",
+                  fontWeight: "900",
+                  fontSize: "11px",
+                  textTransform: "uppercase",
+                  cursor: "pointer"
+                }}
+              >
+                1. Bio & Roster
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveMatrixTab("HITTING")}
+                style={{
+                  backgroundColor: activeMatrixTab === "HITTING" ? NEON_GREEN : "#141414",
+                  color: activeMatrixTab === "HITTING" ? "#000000" : "#cccccc",
+                  border: activeMatrixTab === "HITTING" ? `1px solid ${NEON_GREEN}` : "1px solid #222226",
+                  padding: "10px",
+                  borderRadius: "10px",
+                  fontWeight: "900",
+                  fontSize: "11px",
+                  textTransform: "uppercase",
+                  cursor: "pointer"
+                }}
+              >
+                2. Hitting
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveMatrixTab("PITCHING")}
+                style={{
+                  backgroundColor: activeMatrixTab === "PITCHING" ? NEON_GREEN : "#141414",
+                  color: activeMatrixTab === "PITCHER" || activeMatrixTab === "PITCHING" ? "#000000" : "#cccccc",
+                  border: activeMatrixTab === "PITCHING" ? `1px solid ${NEON_GREEN}` : "1px solid #222226",
+                  padding: "10px",
+                  borderRadius: "10px",
+                  fontWeight: "900",
+                  fontSize: "11px",
+                  textTransform: "uppercase",
+                  cursor: "pointer"
+                }}
+              >
+                3. Pitching & Stuff+
+              </button>
+            </div>
+
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              {/* 1. ROSTER & PHYSICAL DIMENSIONS */}
-              <div style={{ borderBottom: "1px solid #1f1f1f", paddingBottom: "14px" }}>
-                <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: "10px" }}>
-                  1. Roster & Physical Profile
-                </span>
-                
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "10px" }}>
-                  <div>
-                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Full Name *</label>
-                    <input 
-                      type="text" 
-                      value={profile.fullName} 
-                      onChange={(e) => setProfile({ ...profile, fullName: e.target.value })}
-                      placeholder="e.g. Jordan Jones" 
-                      style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "12px" }}
-                    />
+              
+              {/* TAB 1: BIO & ROSTER */}
+              {activeMatrixTab === "BIO" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Full Name *</label>
+                      <input 
+                        type="text" 
+                        value={profile.fullName} 
+                        onChange={(e) => setProfile({ ...profile, fullName: e.target.value })}
+                        placeholder="e.g. Jordan Jones" 
+                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "10px", borderRadius: "8px", fontSize: "12px" }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>College / Program *</label>
+                      <input 
+                        type="text" 
+                        value={profile.college} 
+                        onChange={(e) => setProfile({ ...profile, college: e.target.value })}
+                        placeholder="e.g. University of Utah" 
+                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "10px", borderRadius: "8px", fontSize: "12px" }}
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>Current College / Program *</label>
-                    <input 
-                      type="text" 
-                      value={profile.college} 
-                      onChange={(e) => setProfile({ ...profile, college: e.target.value })}
-                      placeholder="e.g. University of Utah" 
-                      style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "12px" }}
-                    />
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px" }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#aaa", marginBottom: "4px" }}>Height</label>
+                      <input 
+                        type="text" 
+                        value={profile.height || ""} 
+                        onChange={(e) => setProfile({ ...profile, height: e.target.value })}
+                        placeholder="6'3&quot;" 
+                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #2a2a2a", color: "#fff", padding: "10px 8px", borderRadius: "8px", fontSize: "12px" }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#aaa", marginBottom: "4px" }}>Weight</label>
+                      <input 
+                        type="number" 
+                        value={profile.weight || ""} 
+                        onChange={(e) => setProfile({ ...profile, weight: e.target.value })}
+                        placeholder="210" 
+                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #2a2a2a", color: "#fff", padding: "10px 8px", borderRadius: "8px", fontSize: "12px" }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#aaa", marginBottom: "4px" }}>Position</label>
+                      <input 
+                        type="text" 
+                        value={profile.position} 
+                        onChange={(e) => setProfile({ ...profile, position: e.target.value })}
+                        placeholder="RHP / OF" 
+                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #2a2a2a", color: "#fff", padding: "10px 8px", borderRadius: "8px", fontSize: "12px" }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: NEON_GREEN, marginBottom: "4px" }}>Role</label>
+                      <select
+                        value={profile.primaryRole}
+                        onChange={(e) => setProfile({ ...profile, primaryRole: e.target.value as any })}
+                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "10px 4px", borderRadius: "8px", fontSize: "11px", fontWeight: "800" }}
+                      >
+                        <option value="HITTER">Hitter</option>
+                        <option value="PITCHER">Pitcher</option>
+                        <option value="TWP">Two-Way</option>
+                      </select>
+                    </div>
                   </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#aaa", marginBottom: "4px" }}>State</label>
+                      <select
+                        value={profile.state || "UT"}
+                        onChange={(e) => setProfile({ ...profile, state: e.target.value })}
+                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #2a2a2a", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "12px" }}
+                      >
+                        <option value="UT">UT</option>
+                        <option value="AZ">AZ</option>
+                        <option value="CA">CA</option>
+                        <option value="TX">TX</option>
+                        <option value="FL">FL</option>
+                        <option value="NV">NV</option>
+                        <option value="CO">CO</option>
+                        <option value="ID">ID</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#aaa", marginBottom: "4px" }}>Status</label>
+                      <select
+                        value={profile.playerStatus}
+                        onChange={(e) => setProfile({ ...profile, playerStatus: e.target.value })}
+                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #2a2a2a", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "11px" }}
+                      >
+                        <option value="Transfer Portal">Transfer Portal</option>
+                        <option value="Returning College Player">Returning</option>
+                        <option value="Incoming Freshman">Incoming Freshman</option>
+                        <option value="Juco Uncommitted">Juco Uncommitted</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#aaa", marginBottom: "4px" }}>Class Year</label>
+                      <select
+                        value={profile.collegeYear}
+                        onChange={(e) => setProfile({ ...profile, collegeYear: e.target.value })}
+                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #2a2a2a", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "11px" }}
+                      >
+                        <option value="Freshman">Freshman</option>
+                        <option value="Sophomore">Sophomore</option>
+                        <option value="Junior">Junior</option>
+                        <option value="Senior">Senior</option>
+                        <option value="Graduate">Graduate</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>Email * (Auto-filled)</label>
+                      <input 
+                        type="email" 
+                        value={profile.email} 
+                        onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+                        placeholder="athlete@school.edu" 
+                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: `1px solid rgba(166,255,0,0.4)`, color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "12px" }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Cell Phone *</label>
+                      <input 
+                        type="tel" 
+                        value={profile.phone} 
+                        onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                        placeholder="(555) 000-0000" 
+                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #2a2a2a", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "12px" }}
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveMatrixTab("HITTING")}
+                    style={{ backgroundColor: "#1c1c22", color: NEON_GREEN, border: `1px solid ${NEON_GREEN}`, padding: "12px", borderRadius: "10px", fontWeight: "900", cursor: "pointer", textTransform: "uppercase", marginTop: "8px" }}
+                  >
+                    Next: Hitting Metrics ➔
+                  </button>
                 </div>
+              )}
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "10px", marginBottom: "10px" }}>
-                  <div>
-                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Height (e.g. 6'3")</label>
-                    <input 
-                      type="text" 
-                      value={profile.height || ""} 
-                      onChange={(e) => setProfile({ ...profile, height: e.target.value })}
-                      placeholder="6'3&quot;" 
-                      style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "12px" }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Weight (lbs)</label>
-                    <input 
-                      type="number" 
-                      value={profile.weight || ""} 
-                      onChange={(e) => setProfile({ ...profile, weight: e.target.value })}
-                      placeholder="210" 
-                      style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "12px" }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Position *</label>
-                    <input 
-                      type="text" 
-                      value={profile.position} 
-                      onChange={(e) => setProfile({ ...profile, position: e.target.value })}
-                      placeholder="e.g. RHP / OF" 
-                      style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "12px" }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Role *</label>
-                    <select
-                      value={profile.primaryRole}
-                      onChange={(e) => setProfile({ ...profile, primaryRole: e.target.value as any })}
-                      style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "12px" }}
-                    >
-                      <option value="HITTER">Hitter</option>
-                      <option value="PITCHER">Pitcher</option>
-                      <option value="TWP">Two-Way (TWP)</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "10px" }}>
-                  <div>
-                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>State *</label>
-                    <select
-                      value={profile.state || "UT"}
-                      onChange={(e) => setProfile({ ...profile, state: e.target.value })}
-                      style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "12px" }}
-                    >
-                      <option value="UT">UT</option>
-                      <option value="AZ">AZ</option>
-                      <option value="CA">CA</option>
-                      <option value="TX">TX</option>
-                      <option value="FL">FL</option>
-                      <option value="NV">NV</option>
-                      <option value="CO">CO</option>
-                      <option value="ID">ID</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Status *</label>
-                    <select
-                      value={profile.playerStatus}
-                      onChange={(e) => setProfile({ ...profile, playerStatus: e.target.value })}
-                      style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "12px" }}
-                    >
-                      <option value="Transfer Portal">Transfer Portal</option>
-                      <option value="Returning College Player">Returning</option>
-                      <option value="Incoming Freshman">Incoming Freshman</option>
-                      <option value="Juco Uncommitted">Juco Uncommitted</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Class Year</label>
-                    <select
-                      value={profile.collegeYear}
-                      onChange={(e) => setProfile({ ...profile, collegeYear: e.target.value })}
-                      style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "12px" }}
-                    >
-                      <option value="Freshman">Freshman</option>
-                      <option value="Sophomore">Sophomore</option>
-                      <option value="Junior">Junior</option>
-                      <option value="Senior">Senior</option>
-                      <option value="Graduate">Graduate</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                  <div>
-                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Email *</label>
-                    <input 
-                      type="email" 
-                      value={profile.email} 
-                      onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                      placeholder="athlete@school.edu" 
-                      style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "12px" }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Cell Phone *</label>
-                    <input 
-                      type="tel" 
-                      value={profile.phone} 
-                      onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                      placeholder="(555) 000-0000" 
-                      style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "12px" }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* 2. PERFORMANCE & PRO METRICS */}
-              <div style={{ borderBottom: "1px solid #1f1f1f", paddingBottom: "14px" }}>
-                <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: "10px" }}>
-                  2. Performance & TrackMan Analytics
-                </span>
-
-                {/* HITTER INPUTS */}
-                {(profile.primaryRole === "HITTER" || profile.primaryRole === "TWP") && (
-                  <div style={{ backgroundColor: "#050505", border: "1px solid #1a1a1a", borderRadius: "10px", padding: "12px", marginBottom: "12px" }}>
-                    <span style={{ fontSize: "10px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", display: "block", marginBottom: "8px" }}>
-                      💥 Hitter Benchmarks
+              {/* TAB 2: HITTING */}
+              {activeMatrixTab === "HITTING" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                  <div style={{ backgroundColor: "#050507", border: "1px solid #1f1f26", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase" }}>
+                      💥 Batter's Box Benchmarks
                     </span>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px" }}>
+
+                    <div>
+                      <label style={{ display: "block", fontSize: "10px", fontWeight: "800", color: "#aaa", marginBottom: "4px" }}>MAX EXIT VELO (MPH)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        placeholder="103.2"
+                        value={profile.maxExitVelo}
+                        onChange={(e) => setProfile({ ...profile, maxExitVelo: e.target.value })}
+                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "14px" }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: "block", fontSize: "10px", fontWeight: "800", color: "#aaa", marginBottom: "4px" }}>90TH% EXIT VELO (CONSISTENT HARD-HIT MPH)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        placeholder="98.4"
+                        value={profile.ninetyEV}
+                        onChange={(e) => setProfile({ ...profile, ninetyEV: e.target.value })}
+                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "14px" }}
+                      />
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                       <div>
-                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>MAX EXIT VELO</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          placeholder="103.2"
-                          value={profile.maxExitVelo}
-                          onChange={(e) => setProfile({ ...profile, maxExitVelo: e.target.value })}
-                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
-                        />
-                      </div>
-                      <div>
-                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>90TH% EV</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          placeholder="99.4"
-                          value={profile.ninetyEV}
-                          onChange={(e) => setProfile({ ...profile, ninetyEV: e.target.value })}
-                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
-                        />
-                      </div>
-                      <div>
-                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>BAT SPEED</label>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#aaa", marginBottom: "4px" }}>BAT SPEED (MPH)</label>
                         <input
                           type="number"
                           step="0.1"
                           placeholder="76.8"
                           value={profile.batSpeed}
                           onChange={(e) => setProfile({ ...profile, batSpeed: e.target.value })}
-                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px" }}
                         />
                       </div>
                       <div>
-                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>60-YD TIME</label>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#aaa", marginBottom: "4px" }}>60-YARD DASH (SEC)</label>
                         <input
                           type="number"
                           step="0.01"
                           placeholder="6.65"
                           value={profile.sixtyTime}
                           onChange={(e) => setProfile({ ...profile, sixtyTime: e.target.value })}
-                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px" }}
                         />
                       </div>
                     </div>
                   </div>
-                )}
 
-                {/* ADVANCED PITCHER INPUTS */}
-                {(profile.primaryRole === "PITCHER" || profile.primaryRole === "TWP") && (
-                  <div style={{ backgroundColor: "#050505", border: "1px solid #1a1a1a", borderRadius: "10px", padding: "14px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                    <div>
-                      <span style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", display: "block", marginBottom: "6px" }}>
-                        ⚾ 1. Velocity & Primary Shapes
-                      </span>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px" }}>
-                        <div>
-                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>PEAK FASTBALL</label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            placeholder="e.g. 94.5"
-                            value={profile.peakFB || ""}
-                            onChange={(e) => setProfile({ ...profile, peakFB: e.target.value })}
-                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
-                          />
-                        </div>
-                        <div>
-                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>SITTING FB</label>
-                          <input
-                            type="text"
-                            placeholder="91-93"
-                            value={profile.sittingFB || ""}
-                            onChange={(e) => setProfile({ ...profile, sittingFB: e.target.value })}
-                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
-                          />
-                        </div>
-                        <div>
-                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>OFF-SPEED TYPE</label>
-                          <select
-                            value={profile.offSpeedType || "Slider"}
-                            onChange={(e) => setProfile({ ...profile, offSpeedType: e.target.value })}
-                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
-                          >
-                            <option value="Slider">Slider</option>
-                            <option value="Sweeper">Sweeper</option>
-                            <option value="Curveball">Curveball</option>
-                            <option value="Changeup">Changeup</option>
-                            <option value="Cutter">Cutter</option>
-                            <option value="Splitter">Splitter</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>OFF-SPEED VELO</label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            placeholder="83.4"
-                            value={profile.offSpeedVelo || ""}
-                            onChange={(e) => setProfile({ ...profile, offSpeedVelo: e.target.value })}
-                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
-                          />
-                        </div>
+                  <div style={{ display: "flex", gap: "10px" }}>
+                    <button
+                      type="button"
+                      onClick={() => setActiveMatrixTab("BIO")}
+                      style={{ flex: 1, backgroundColor: "#141416", color: "#ccc", border: "1px solid #333", padding: "12px", borderRadius: "10px", fontWeight: "800", cursor: "pointer", textTransform: "uppercase" }}
+                    >
+                      ← Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveMatrixTab("PITCHING")}
+                      style={{ flex: 2, backgroundColor: "#1c1c22", color: NEON_GREEN, border: `1px solid ${NEON_GREEN}`, padding: "12px", borderRadius: "10px", fontWeight: "900", cursor: "pointer", textTransform: "uppercase" }}
+                    >
+                      Next: Pitching & Stuff+ ➔
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: PITCHING & STUFF+ */}
+              {activeMatrixTab === "PITCHING" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                  <div style={{ backgroundColor: "#050507", border: "1px solid #1f1f26", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase" }}>
+                      ⚾ Mound Telemetry & Pro Modeling
+                    </span>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                      <div>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#aaa", marginBottom: "4px" }}>PEAK FASTBALL (MPH)</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          placeholder="94.5"
+                          value={profile.peakFB || ""}
+                          onChange={(e) => setProfile({ ...profile, peakFB: e.target.value })}
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px" }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: NEON_GREEN, marginBottom: "4px" }}>STUFF+ GRADE</label>
+                        <input
+                          type="number"
+                          placeholder="118"
+                          value={profile.stuffPlus || ""}
+                          onChange={(e) => setProfile({ ...profile, stuffPlus: e.target.value })}
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "10px", borderRadius: "8px", fontSize: "13px", fontWeight: "900" }}
+                        />
                       </div>
                     </div>
 
-                    <div style={{ borderTop: "1px solid #161616", paddingTop: "10px" }}>
-                      <span style={{ fontSize: "10px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>
-                        📊 2. Pitch Modeling (100 = League Avg)
-                      </span>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
-                        <div>
-                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: NEON_GREEN, marginBottom: "2px" }}>STUFF+ (GRADE)</label>
-                          <input
-                            type="number"
-                            placeholder="e.g. 118"
-                            value={profile.stuffPlus || ""}
-                            onChange={(e) => setProfile({ ...profile, stuffPlus: e.target.value })}
-                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: `1px solid rgba(166, 255, 0, 0.4)`, color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
-                          />
-                        </div>
-                        <div>
-                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>LOCATION+ (COMMAND)</label>
-                          <input
-                            type="number"
-                            placeholder="e.g. 106"
-                            value={profile.locationPlus || ""}
-                            onChange={(e) => setProfile({ ...profile, locationPlus: e.target.value })}
-                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
-                          />
-                        </div>
-                        <div>
-                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>PITCHING+ (OVERALL)</label>
-                          <input
-                            type="number"
-                            placeholder="e.g. 112"
-                            value={profile.pitchingPlus || ""}
-                            onChange={(e) => setProfile({ ...profile, pitchingPlus: e.target.value })}
-                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
-                          />
-                        </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                      <div>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#aaa", marginBottom: "4px" }}>INDUCED VERT BREAK (IN)</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          placeholder="18.2"
+                          value={profile.inducedVertBreak || ""}
+                          onChange={(e) => setProfile({ ...profile, inducedVertBreak: e.target.value })}
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px" }}
+                        />
                       </div>
-                    </div>
-
-                    <div style={{ borderTop: "1px solid #161616", paddingTop: "10px" }}>
-                      <span style={{ fontSize: "10px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>
-                        🎯 3. Ball-Flight & Movement Shapes (TrackMan / Hawkeye)
-                      </span>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px" }}>
-                        <div>
-                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: NEON_GREEN, marginBottom: "2px" }}>IVB (INCHES)</label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            placeholder="e.g. 18.2"
-                            value={profile.inducedVertBreak || ""}
-                            onChange={(e) => setProfile({ ...profile, inducedVertBreak: e.target.value })}
-                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
-                          />
-                        </div>
-                        <div>
-                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>HORIZ BREAK (IN)</label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            placeholder="e.g. 14.5"
-                            value={profile.horizontalBreak || ""}
-                            onChange={(e) => setProfile({ ...profile, horizontalBreak: e.target.value })}
-                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
-                          />
-                        </div>
-                        <div>
-                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>FB SPIN (RPM)</label>
-                          <input
-                            type="number"
-                            placeholder="e.g. 2420"
-                            value={profile.fbSpinRate || ""}
-                            onChange={(e) => setProfile({ ...profile, fbSpinRate: e.target.value })}
-                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
-                          />
-                        </div>
-                        <div>
-                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>VAA (DEGREES)</label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            placeholder="e.g. -4.6"
-                            value={profile.vertApproachAngle || ""}
-                            onChange={(e) => setProfile({ ...profile, vertApproachAngle: e.target.value })}
-                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div style={{ borderTop: "1px solid #161616", paddingTop: "10px" }}>
-                      <span style={{ fontSize: "10px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>
-                        📐 4. Release Metrics & Strike Indicators
-                      </span>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: "8px" }}>
-                        <div>
-                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>EXTENSION (FT)</label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            placeholder="e.g. 6.8"
-                            value={profile.releaseExtension || ""}
-                            onChange={(e) => setProfile({ ...profile, releaseExtension: e.target.value })}
-                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
-                          />
-                        </div>
-                        <div>
-                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>REL HEIGHT (FT)</label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            placeholder="e.g. 5.9"
-                            value={profile.releaseHeight || ""}
-                            onChange={(e) => setProfile({ ...profile, releaseHeight: e.target.value })}
-                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
-                          />
-                        </div>
-                        <div>
-                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>K% (STRIKE OUT)</label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            placeholder="e.g. 31.5"
-                            value={profile.kPercentage || ""}
-                            onChange={(e) => setProfile({ ...profile, kPercentage: e.target.value })}
-                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
-                          />
-                        </div>
-                        <div>
-                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>BB% (WALK RATE)</label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            placeholder="e.g. 7.2"
-                            value={profile.bbPercentage || ""}
-                            onChange={(e) => setProfile({ ...profile, bbPercentage: e.target.value })}
-                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
-                          />
-                        </div>
-                        <div>
-                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: NEON_GREEN, marginBottom: "2px" }}>1ST PITCH STRIKE%</label>
-                          <input
-                            type="number"
-                            placeholder="e.g. 68"
-                            value={profile.firstPitchStrike || ""}
-                            onChange={(e) => setProfile({ ...profile, firstPitchStrike: e.target.value })}
-                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
-                          />
-                        </div>
+                      <div>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#aaa", marginBottom: "4px" }}>RELEASE EXTENSION (FT)</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          placeholder="6.8"
+                          value={profile.releaseExtension || ""}
+                          onChange={(e) => setProfile({ ...profile, releaseExtension: e.target.value })}
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px" }}
+                        />
                       </div>
                     </div>
                   </div>
-                )}
-              </div>
 
-              {/* 3. SOCIALS */}
-              <div>
-                <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: "10px" }}>
-                  3. Public Social Gateways (Scoreboard Links)
+                  <div style={{ display: "flex", gap: "10px" }}>
+                    <button
+                      type="button"
+                      onClick={() => setActiveMatrixTab("HITTING")}
+                      style={{ flex: 1, backgroundColor: "#141416", color: "#ccc", border: "1px solid #333", padding: "12px", borderRadius: "10px", fontWeight: "800", cursor: "pointer", textTransform: "uppercase" }}
+                    >
+                      ← Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveProfile}
+                      disabled={isSavingProfile}
+                      style={{ flex: 2, backgroundColor: NEON_GREEN, color: "#000000", border: "none", fontWeight: "900", padding: "12px", borderRadius: "10px", cursor: "pointer", fontSize: "12px", textTransform: "uppercase", letterSpacing: "1px" }}
+                    >
+                      {isSavingProfile ? "Saving to Database..." : "Save Metrics & Profile 🚀"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* SOCIAL LINKS (ALWAYS VISIBLE AT THE BOTTOM OF MODAL) */}
+              <div style={{ borderTop: "1px solid #1f1f1f", paddingTop: "14px", marginTop: "6px" }}>
+                <span style={{ fontSize: "10px", fontWeight: "900", color: "#888", textTransform: "uppercase", letterSpacing: "0.8px", display: "block", marginBottom: "8px" }}>
+                  Public Scout Gateway Links
                 </span>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "10px", marginBottom: "8px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "8px" }}>
                   <select
                     value={profile.social1_Type || "X"}
                     onChange={(e) => setProfile({ ...profile, social1_Type: e.target.value })}
@@ -2480,60 +2443,14 @@ function AppContent() {
                   </select>
                   <input
                     type="url"
-                    placeholder="Link 1: e.g. https://x.com/athlete"
+                    placeholder="https://x.com/athlete"
                     value={profile.social1_Url || ""}
                     onChange={(e) => setProfile({ ...profile, social1_Url: e.target.value })}
                     style={{ backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "11px" }}
                   />
                 </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "10px", marginBottom: "14px" }}>
-                  <select
-                    value={profile.social2_Type || "IG"}
-                    onChange={(e) => setProfile({ ...profile, social2_Type: e.target.value })}
-                    style={{ backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "8px", borderRadius: "8px", fontSize: "11px" }}
-                  >
-                    <option value="IG">Instagram</option>
-                    <option value="X">X (Twitter)</option>
-                    <option value="TIKTOK">TikTok</option>
-                  </select>
-                  <input
-                    type="url"
-                    placeholder="Link 2: e.g. https://instagram.com/athlete"
-                    value={profile.social2_Url || ""}
-                    onChange={(e) => setProfile({ ...profile, social2_Url: e.target.value })}
-                    style={{ backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "11px" }}
-                  />
-                </div>
-
-                <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "#cccccc", cursor: "pointer" }}>
-                  <input
-                    type="checkbox"
-                    checked={profile.isProfileVisible !== false}
-                    onChange={(e) => setProfile({ ...profile, isProfileVisible: e.target.checked })}
-                  />
-                  <span>Publish my profile & verified numbers to the National Scouting Scoreboard</span>
-                </label>
               </div>
 
-              {/* ACTION BUTTONS */}
-              <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-                <button
-                  type="button"
-                  onClick={() => setShowProfileModal(false)}
-                  style={{ flex: 1, backgroundColor: "#141414", border: "1px solid #2a2a2a", color: "#888888", fontWeight: "700", padding: "12px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", textTransform: "uppercase" }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveProfile}
-                  disabled={isSavingProfile}
-                  style={{ flex: 2, backgroundColor: NEON_GREEN, color: "#000000", border: "none", fontWeight: "900", padding: "12px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", textTransform: "uppercase", letterSpacing: "1px" }}
-                >
-                  {isSavingProfile ? "Saving Pro Metrics..." : "Save Metrics & Profile"}
-                </button>
-              </div>
             </div>
           </div>
         </div>
