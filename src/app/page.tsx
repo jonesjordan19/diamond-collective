@@ -374,7 +374,7 @@ const emptyProfile: AthleteProfile = {
 };
 
 // =========================================================================
-// INSTANT MOBILE 4:5 SCOUT GRAPHIC ENGINE WITH OFFICIAL LOGO
+// INSTANT MOBILE 4:5 SCOUT GRAPHIC ENGINE WITH SQUARE LOGO (95x95)
 // =========================================================================
 async function triggerMobileScoutShare(athlete: AthleteProfile) {
   const canvas = document.createElement("canvas");
@@ -393,28 +393,16 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   ctx.lineWidth = 14;
   ctx.strokeRect(34, 34, canvas.width - 68, canvas.height - 68);
 
-  // 2. Load & Draw Square 500x500 Logo
+  // 2. Load & Draw Logo from /public/logo.png (Square 95x95)
   const logo = new Image();
   logo.crossOrigin = "anonymous";
   logo.src = "/logo.png";
 
   try {
     await logo.decode();
-    // Square 1:1 proportion (95px by 95px)
     const logoSize = 95;
     ctx.drawImage(logo, 80, 65, logoSize, logoSize);
   } catch (err) {
-    ctx.fillStyle = "rgba(166, 255, 0, 0.08)";
-    ctx.fillRect(80, 80, 440, 52);
-    ctx.strokeStyle = "#a6ff00";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(80, 80, 440, 52);
-
-    ctx.fillStyle = "#a6ff00";
-    ctx.font = "900 20px -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.fillText("THE DIAMOND COLLECTIVE", 100, 113);
-  }
-    // Elegant fallback if logo is still propagating on CDN
     ctx.fillStyle = "rgba(166, 255, 0, 0.08)";
     ctx.fillRect(80, 80, 440, 52);
     ctx.strokeStyle = "#a6ff00";
@@ -430,7 +418,7 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.textAlign = "right";
-  ctx.fillText("VERIFIED SCOUT CARD", canvas.width - 80, 113);
+  ctx.fillText("VERIFIED SCOUT CARD", canvas.width - 80, 120);
   ctx.textAlign = "left";
 
   // 3. Athlete Bio
