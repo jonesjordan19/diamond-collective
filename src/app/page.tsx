@@ -132,7 +132,7 @@ const MARKET_SECTIONS: MarketCategory[] = [
         description: "Create TikTok content, tag HydroJug gear directly, and earn commission on every sale through TikTok Shop.",
         buttonText: "Open Ambassador Program ↗",
         type: "affiliate_link",
-        link: "https://www.thehydrojug.com/pages/ambassadors-affiliates",
+        link: "https://thehydrojug.com/pages/ambassadors-affiliates",
       },
     ],
   },
@@ -429,7 +429,7 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
     ctx.fillText("THE DIAMOND COLLECTIVE", 100, 113);
   }
 
-  // Header Badge (Crisp Pure White)
+  // Header Badge
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.textAlign = "right";
@@ -447,7 +447,7 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   ctx.fillText(`🏛️ ${athlete.college || "Undeclared College"} ${athlete.state ? `(${athlete.state})` : ""}`, 80, 285);
 
   const physicalTag = athlete.height && athlete.weight ? ` • ${athlete.height} / ${athlete.weight} lbs` : (athlete.height ? ` • ${athlete.height}` : "");
-  ctx.fillStyle = "#d4d4d8"; // High-contrast readable silver
+  ctx.fillStyle = "#d4d4d8";
   ctx.font = "600 26px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.fillText(`${athlete.position || "ATH"}${physicalTag} • ${athlete.playerStatus || "Active Roster"}`, 80, 330);
 
@@ -500,7 +500,6 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
     if (athlete.sixtyTime) metrics.push({ label: "60-YARD DASH", val: `${athlete.sixtyTime}s` });
   }
 
-  // Draw 2-Column Grid (Dynamic box sizing)
   const displayList = metrics.slice(0, 8);
   const startY = 385;
   const boxW = 440;
@@ -520,17 +519,14 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
     ctx.lineWidth = 2;
     ctx.strokeRect(x, y, boxW, boxH);
 
-    // Label: Pure white for maximum contrast
     ctx.fillStyle = "#ffffff";
     ctx.font = "bold 15px -apple-system, BlinkMacSystemFont, sans-serif";
     ctx.fillText(m.label, x + 20, y + (displayList.length > 4 ? 30 : 38));
 
-    // Value: High-visibility neon green
     ctx.fillStyle = "#a6ff00";
     ctx.font = `900 ${displayList.length > 4 ? "36px" : "44px"} -apple-system, BlinkMacSystemFont, sans-serif`;
     ctx.fillText(m.val, x + 20, y + (displayList.length > 4 ? 76 : 94));
 
-    // Subtitle: Bright readable silver
     if (m.sub) {
       ctx.fillStyle = "#d4d4d8";
       ctx.font = "bold 15px -apple-system, BlinkMacSystemFont, sans-serif";
@@ -823,15 +819,21 @@ function AppContent() {
     }
   }, [account?.address]);
 
-  // FULL EXPLICIT PAYLOAD PERSISTENCE HANDLER (CORS PREFLIGHT SAFE)
-  const handleSaveProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!account?.address) return;
+  // DIRECT DISPATCH ACTION (NO FORM SUBMISSION RESTRICTIONS)
+  const handleSaveProfile = async () => {
+    if (!account?.address) {
+      alert("Please sign in or connect your wallet first.");
+      return;
+    }
+    if (!profile.fullName || !profile.email) {
+      alert("Please fill in your Full Name and Email.");
+      return;
+    }
+
     setIsSavingProfile(true);
 
     const lowerWallet = account.address.toLowerCase();
     const localKey = `athlete_profile_${lowerWallet}`;
-    
     const today = new Date().toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" });
     
     let computedKminusBB = profile.kMinusBbPercentage;
@@ -921,11 +923,11 @@ function AppContent() {
 
       setIsSavingProfile(false);
       setShowProfileModal(false);
-      alert("Pro metrics saved to national scoreboard!");
-    } catch {
+      alert("✅ Data sent to Google Sheet!");
+    } catch (err: any) {
       setIsSavingProfile(false);
       setShowProfileModal(false);
-      alert("Metrics saved locally.");
+      alert("Error dispatching: " + err.message);
     }
   };
 
@@ -1400,7 +1402,7 @@ function AppContent() {
                           )}
                         </div>
 
-                        {/* Footer: Share 4:5 Card & Socials */}
+                        {/* Footer */}
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "4px", flexWrap: "wrap", gap: "8px" }}>
                           <div style={{ fontSize: "10px", color: "#666666", fontFamily: "monospace" }}>
                             {ath.recordedDatePitching && <span>Pitch: {ath.recordedDatePitching} </span>}
@@ -1805,7 +1807,7 @@ function AppContent() {
         </div>
       )}
 
-      {/* ATHLETE LOCKER MODAL (ALL INPUTS FULLY BOUND) */}
+      {/* ATHLETE LOCKER MODAL */}
       {showProfileModal && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.88)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000, padding: "16px" }}>
           <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "20px", width: "100%", maxWidth: "680px", maxHeight: "90vh", overflowY: "auto", padding: "26px" }}>
@@ -1826,7 +1828,7 @@ function AppContent() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveProfile} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               {/* 1. ROSTER & PHYSICAL DIMENSIONS */}
               <div style={{ borderBottom: "1px solid #1f1f1f", paddingBottom: "14px" }}>
                 <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: "10px" }}>
@@ -1838,7 +1840,6 @@ function AppContent() {
                     <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Full Name *</label>
                     <input 
                       type="text" 
-                      required
                       value={profile.fullName} 
                       onChange={(e) => setProfile({ ...profile, fullName: e.target.value })}
                       placeholder="e.g. Jordan Jones" 
@@ -1849,7 +1850,6 @@ function AppContent() {
                     <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>Current College / Program *</label>
                     <input 
                       type="text" 
-                      required
                       value={profile.college} 
                       onChange={(e) => setProfile({ ...profile, college: e.target.value })}
                       placeholder="e.g. University of Utah" 
@@ -1883,7 +1883,6 @@ function AppContent() {
                     <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Position *</label>
                     <input 
                       type="text" 
-                      required
                       value={profile.position} 
                       onChange={(e) => setProfile({ ...profile, position: e.target.value })}
                       placeholder="e.g. RHP / OF" 
@@ -1956,7 +1955,6 @@ function AppContent() {
                     <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Email *</label>
                     <input 
                       type="email" 
-                      required
                       value={profile.email} 
                       onChange={(e) => setProfile({ ...profile, email: e.target.value })}
                       placeholder="athlete@school.edu" 
@@ -1967,7 +1965,6 @@ function AppContent() {
                     <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Cell Phone *</label>
                     <input 
                       type="tel" 
-                      required
                       value={profile.phone} 
                       onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
                       placeholder="(555) 000-0000" 
@@ -2314,14 +2311,15 @@ function AppContent() {
                   Cancel
                 </button>
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={handleSaveProfile}
                   disabled={isSavingProfile}
                   style={{ flex: 2, backgroundColor: NEON_GREEN, color: "#000000", border: "none", fontWeight: "900", padding: "12px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", textTransform: "uppercase", letterSpacing: "1px" }}
                 >
                   {isSavingProfile ? "Saving Pro Metrics..." : "Save Metrics & Profile"}
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
