@@ -306,7 +306,6 @@ export interface AthleteProfile {
   playerStatus: string;
   verificationLink: string;
   
-  // Physical Measurements
   height?: string;
   weight?: string;
 
@@ -317,14 +316,12 @@ export interface AthleteProfile {
   social2_Type?: string;
   social2_Url?: string;
 
-  // Hitting Benchmarks
   maxExitVelo?: string;
   ninetyEV?: string;
   batSpeed?: string;
   sixtyTime?: string;
   recordedDateHitting?: string;
 
-  // Classic Pitching
   peakFB?: string;
   sittingFB?: string;
   offSpeedVelo?: string;
@@ -334,24 +331,20 @@ export interface AthleteProfile {
   firstPitchStrike?: string;
   recordedDatePitching?: string;
 
-  // Advanced Pro Pitch Modeling (Pitching+, Stuff+)
   stuffPlus?: string;
   locationPlus?: string;
   pitchingPlus?: string;
 
-  // Ball-Flight & Movement Shapes (TrackMan / Hawkeye)
-  inducedVertBreak?: string; // IVB in inches
-  horizontalBreak?: string;  // HB in inches
-  vertApproachAngle?: string;// VAA in degrees
+  inducedVertBreak?: string;
+  horizontalBreak?: string;
+  vertApproachAngle?: string;
 
-  // Biomechanics & Release Consistency
-  releaseExtension?: string; // Release Extension in ft
-  releaseHeight?: string;    // Release Height in ft
+  releaseExtension?: string;
+  releaseHeight?: string;
 
-  // Command & Game Performance Ratios
-  kPercentage?: string;        // K%
-  bbPercentage?: string;       // BB%
-  kMinusBbPercentage?: string; // K-BB%
+  kPercentage?: string;
+  bbPercentage?: string;
+  kMinusBbPercentage?: string;
 }
 
 const emptyProfile: AthleteProfile = {
@@ -399,9 +392,6 @@ const emptyProfile: AthleteProfile = {
   kMinusBbPercentage: "",
 };
 
-// =========================================================================
-// INSTANT MOBILE 4:5 SCOUT GRAPHIC ENGINE WITH PRO PITCHING MATRIX
-// =========================================================================
 async function triggerMobileScoutShare(athlete: AthleteProfile) {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
@@ -410,16 +400,13 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   canvas.width = 1080;
   canvas.height = 1350;
 
-  // 1. Carbon Dark Base
   ctx.fillStyle = "#080808";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Border Frame
   ctx.strokeStyle = "#1a1a1a";
   ctx.lineWidth = 14;
   ctx.strokeRect(34, 34, canvas.width - 68, canvas.height - 68);
 
-  // 2. Load & Draw Square 95x95 Logo
   const logo = new Image();
   logo.crossOrigin = "anonymous";
   logo.src = "/logo.png";
@@ -440,14 +427,12 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
     ctx.fillText("THE DIAMOND COLLECTIVE", 100, 113);
   }
 
-  // Verification Header Tag
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.textAlign = "right";
   ctx.fillText("VERIFIED SCOUT CARD", canvas.width - 80, 115);
   ctx.textAlign = "left";
 
-  // 3. Athlete Bio & Physical Dimensions
   ctx.fillStyle = "#ffffff";
   ctx.font = "900 66px -apple-system, BlinkMacSystemFont, sans-serif";
   const name = (athlete.fullName || "MEMBER ATHLETE").toUpperCase();
@@ -462,7 +447,6 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   ctx.font = "600 26px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.fillText(`${athlete.position || "ATH"}${physicalTag} • ${athlete.playerStatus || "Active Roster"}`, 80, 330);
 
-  // Divider
   ctx.strokeStyle = "#222222";
   ctx.lineWidth = 3;
   ctx.beginPath();
@@ -470,7 +454,6 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   ctx.lineTo(canvas.width - 80, 370);
   ctx.stroke();
 
-  // 4. Metric Grid Prioritization (Pro Pitch Modeling & Ball Shape)
   const isPitcher = athlete.primaryRole === "PITCHER" || athlete.primaryRole === "TWP";
   const isHitter = athlete.primaryRole === "HITTER" || athlete.primaryRole === "TWP";
 
@@ -496,7 +479,6 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
     if (athlete.sixtyTime) metrics.push({ label: "60-YARD DASH", val: `${athlete.sixtyTime}s` });
   }
 
-  // Draw 2x2 Metric Grid Boxes (Top 4 highlights)
   const startY = 410;
   const boxW = 430;
   const boxH = 180;
@@ -529,7 +511,6 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
     }
   });
 
-  // 5. Verification Registry Stamp
   ctx.fillStyle = "#111111";
   ctx.fillRect(80, 890, canvas.width - 160, 260);
   ctx.strokeStyle = "#1f1f1f";
@@ -550,7 +531,6 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
     ctx.fillText(`Scout Gateway: ${athlete.social1_Url || athlete.social2_Url}`, 120, 1095);
   }
 
-  // 6. Bottom Domain Stamp
   ctx.fillStyle = "#ffffff";
   ctx.font = "900 24px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.textAlign = "center";
@@ -560,7 +540,6 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   ctx.font = "600 16px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.fillText("THE DIAMOND COLLECTIVE • ALL RIGHTS RESERVED", canvas.width / 2, 1295);
 
-  // 7. Mobile First: Open Phone Share Drawer
   canvas.toBlob(async (blob) => {
     if (!blob) return;
 
@@ -581,7 +560,6 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
       }
     }
 
-    // Direct download fallback
     const link = document.createElement("a");
     link.download = fileName;
     link.href = URL.createObjectURL(blob);
@@ -805,7 +783,6 @@ function AppContent() {
     
     const today = new Date().toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" });
     
-    // Auto-calculate K-BB% if both are provided
     let computedKminusBB = profile.kMinusBbPercentage;
     if (profile.kPercentage && profile.bbPercentage && !computedKminusBB) {
       computedKminusBB = (parseFloat(profile.kPercentage) - parseFloat(profile.bbPercentage)).toFixed(1);
@@ -1143,7 +1120,7 @@ function AppContent() {
                 ))}
               </div>
 
-              {/* ADVANCED FILTER BAR WITH PRO METRIC SORT */}
+              {/* ADVANCED FILTER BAR */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "8px", backgroundColor: "#050505", border: "1px solid #161616", borderRadius: "14px", padding: "12px" }}>
                 <div>
                   <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#666", textTransform: "uppercase", marginBottom: "3px" }}>Position</label>
@@ -1287,7 +1264,6 @@ function AppContent() {
                                 {ath.fbSpinRate && <span style={{ color: "#888", fontWeight: "400", fontSize: "11px" }}> • {ath.fbSpinRate} RPM</span>}
                               </div>
 
-                              {/* Flight & Release Analytics Pill Grid */}
                               <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", fontSize: "10px", color: "#cccccc" }}>
                                 {ath.inducedVertBreak && <span style={{ backgroundColor: "#121212", border: "1px solid #222", padding: "3px 6px", borderRadius: "4px" }}>IVB: <strong style={{ color: NEON_GREEN }}>{ath.inducedVertBreak}"</strong></span>}
                                 {ath.horizontalBreak && <span style={{ backgroundColor: "#121212", border: "1px solid #222", padding: "3px 6px", borderRadius: "4px" }}>HB: <strong>{ath.horizontalBreak}"</strong></span>}
@@ -1321,7 +1297,7 @@ function AppContent() {
                           )}
                         </div>
 
-                        {/* Footer: Date Stamp, Native Mobile 4:5 Card Share & Socials */}
+                        {/* Footer: Date Stamp, Mobile Card Share & Socials */}
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "4px", flexWrap: "wrap", gap: "8px" }}>
                           <div style={{ fontSize: "10px", color: "#666666", fontFamily: "monospace" }}>
                             {ath.recordedDatePitching && <span>Pitch: {ath.recordedDatePitching} </span>}
@@ -1779,7 +1755,6 @@ function AppContent() {
                   </div>
                 </div>
 
-                {/* Physical Measurements Grid */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "10px", marginBottom: "10px" }}>
                   <div>
                     <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Height (e.g. 6'3")</label>
@@ -1787,7 +1762,7 @@ function AppContent() {
                       type="text" 
                       value={profile.height || ""} 
                       onChange={(e) => setProfile({ ...profile, height: e.target.value })}
-                      placeholder="6'3\"" 
+                      placeholder="6'3&quot;" 
                       style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "12px" }}
                     />
                   </div>
@@ -1899,7 +1874,7 @@ function AppContent() {
                 </div>
               </div>
 
-              {/* SECTION 2: PRO SCOUTING & PITCH MODELING METRICS */}
+              {/* SECTION 2: PERFORMANCE METRICS */}
               <div style={{ borderBottom: "1px solid #1f1f1f", paddingBottom: "14px" }}>
                 <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: "10px" }}>
                   2. Performance & TrackMan Analytics
@@ -1960,11 +1935,9 @@ function AppContent() {
                   </div>
                 )}
 
-                {/* ADVANCED PRO PITCHER INPUTS */}
+                {/* ADVANCED PITCHER INPUTS */}
                 {(profile.primaryRole === "PITCHER" || profile.primaryRole === "TWP") && (
                   <div style={{ backgroundColor: "#050505", border: "1px solid #1a1a1a", borderRadius: "10px", padding: "14px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                    
-                    {/* A. Velocity & Pitch Shapes */}
                     <div>
                       <span style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", display: "block", marginBottom: "6px" }}>
                         ⚾ 1. Velocity & Primary Shapes
@@ -2020,7 +1993,6 @@ function AppContent() {
                       </div>
                     </div>
 
-                    {/* B. Pitch Modeling (Stuff+, Location+, Pitching+) */}
                     <div style={{ borderTop: "1px solid #161616", paddingTop: "10px" }}>
                       <span style={{ fontSize: "10px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>
                         📊 2. Pitch Modeling (100 = League Avg)
@@ -2059,7 +2031,6 @@ function AppContent() {
                       </div>
                     </div>
 
-                    {/* C. Ball-Flight & Movement Shapes */}
                     <div style={{ borderTop: "1px solid #161616", paddingTop: "10px" }}>
                       <span style={{ fontSize: "10px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>
                         🎯 3. Ball-Flight & Movement Shapes (TrackMan / Hawkeye)
@@ -2111,7 +2082,6 @@ function AppContent() {
                       </div>
                     </div>
 
-                    {/* D. Release Biomechanics & Box Score Performance */}
                     <div style={{ borderTop: "1px solid #161616", paddingTop: "10px" }}>
                       <span style={{ fontSize: "10px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>
                         📐 4. Release Metrics & Strike Indicators
@@ -2173,7 +2143,6 @@ function AppContent() {
                         </div>
                       </div>
                     </div>
-
                   </div>
                 )}
               </div>
