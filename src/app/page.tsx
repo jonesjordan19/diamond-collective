@@ -400,6 +400,7 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   canvas.width = 1080;
   canvas.height = 1350;
 
+  // 1. Background
   ctx.fillStyle = "#080808";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -407,6 +408,7 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   ctx.lineWidth = 14;
   ctx.strokeRect(34, 34, canvas.width - 68, canvas.height - 68);
 
+  // 2. Square Logo
   const logo = new Image();
   logo.crossOrigin = "anonymous";
   logo.src = "/logo.png";
@@ -427,12 +429,14 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
     ctx.fillText("THE DIAMOND COLLECTIVE", 100, 113);
   }
 
+  // Header Tag
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.textAlign = "right";
   ctx.fillText("VERIFIED SCOUT CARD", canvas.width - 80, 115);
   ctx.textAlign = "left";
 
+  // 3. Bio & Frame
   ctx.fillStyle = "#ffffff";
   ctx.font = "900 66px -apple-system, BlinkMacSystemFont, sans-serif";
   const name = (athlete.fullName || "MEMBER ATHLETE").toUpperCase();
@@ -450,26 +454,43 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   ctx.strokeStyle = "#222222";
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(80, 370);
-  ctx.lineTo(canvas.width - 80, 370);
+  ctx.moveTo(80, 365);
+  ctx.lineTo(canvas.width - 80, 365);
   ctx.stroke();
 
+  // 4. Comprehensive Metrics Extraction
   const isPitcher = athlete.primaryRole === "PITCHER" || athlete.primaryRole === "TWP";
   const isHitter = athlete.primaryRole === "HITTER" || athlete.primaryRole === "TWP";
 
   const metrics: { label: string; val: string; sub?: string }[] = [];
 
   if (isPitcher) {
-    if (athlete.peakFB) metrics.push({ label: "PEAK FASTBALL", val: `${athlete.peakFB} MPH`, sub: athlete.sittingFB ? `Sitting ${athlete.sittingFB}` : undefined });
-    if (athlete.stuffPlus) metrics.push({ label: "STUFF+ GRADE", val: athlete.stuffPlus, sub: "100 = League Avg" });
-    if (athlete.inducedVertBreak) metrics.push({ label: "INDUCED VERT BREAK", val: `${athlete.inducedVertBreak}"`, sub: "Carry & Rise" });
-    if (athlete.fbSpinRate) metrics.push({ label: "FB SPIN RATE", val: `${athlete.fbSpinRate} RPM` });
-    if (athlete.releaseExtension) metrics.push({ label: "RELEASE EXTENSION", val: `${athlete.releaseExtension} FT`, sub: "Perceived Velo" });
-    if (athlete.kMinusBbPercentage) metrics.push({ label: "K - BB COMMAND %", val: `${athlete.kMinusBbPercentage}%` });
-    if (athlete.offSpeedVelo) metrics.push({ label: `${(athlete.offSpeedType || "SLIDER").toUpperCase()} VELO`, val: `${athlete.offSpeedVelo} MPH` });
-    if (athlete.vertApproachAngle) metrics.push({ label: "VERT APPROACH ANGLE", val: `${athlete.vertApproachAngle}°` });
-    if (athlete.pitchingPlus) metrics.push({ label: "PITCHING+ ARSENAL", val: athlete.pitchingPlus });
-    if (athlete.firstPitchStrike) metrics.push({ label: "1ST PITCH STRIKE", val: `${athlete.firstPitchStrike}%` });
+    if (athlete.peakFB) {
+      metrics.push({ label: "PEAK FASTBALL", val: `${athlete.peakFB} MPH`, sub: athlete.sittingFB ? `Sitting ${athlete.sittingFB}` : undefined });
+    }
+    if (athlete.stuffPlus) {
+      metrics.push({ label: "STUFF+ GRADE", val: athlete.stuffPlus, sub: "100 = League Avg" });
+    }
+    if (athlete.inducedVertBreak) {
+      metrics.push({ label: "INDUCED VERT BREAK", val: `${athlete.inducedVertBreak}"`, sub: "Carry & Ride" });
+    }
+    if (athlete.horizontalBreak) {
+      metrics.push({ label: "HORIZONTAL BREAK", val: `${athlete.horizontalBreak}"`, sub: "Arm-Side Run" });
+    }
+    if (athlete.fbSpinRate) {
+      metrics.push({ label: "FB SPIN RATE", val: `${athlete.fbSpinRate} RPM` });
+    }
+    if (athlete.offSpeedVelo) {
+      metrics.push({ label: `${(athlete.offSpeedType || "SLIDER").toUpperCase()} VELO`, val: `${athlete.offSpeedVelo} MPH`, sub: athlete.offSpeedSpinRate ? `${athlete.offSpeedSpinRate} RPM` : undefined });
+    }
+    if (athlete.kMinusBbPercentage) {
+      metrics.push({ label: "K - BB COMMAND %", val: `${athlete.kMinusBbPercentage}%`, sub: athlete.kPercentage ? `${athlete.kPercentage}% K-Rate` : undefined });
+    } else if (athlete.firstPitchStrike) {
+      metrics.push({ label: "1ST PITCH STRIKE", val: `${athlete.firstPitchStrike}%` });
+    }
+    if (athlete.pitchingPlus) {
+      metrics.push({ label: "PITCHING+ ARSENAL", val: athlete.pitchingPlus, sub: "Stuff + Command" });
+    }
   }
 
   if (isHitter) {
@@ -479,16 +500,20 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
     if (athlete.sixtyTime) metrics.push({ label: "60-YARD DASH", val: `${athlete.sixtyTime}s` });
   }
 
-  const startY = 410;
-  const boxW = 430;
-  const boxH = 180;
-  const gap = 30;
+  // Draw 2x4 Metric Grid (Up to 8 cards)
+  const startY = 380;
+  const boxW = 440;
+  const boxH = 105;
+  const gapX = 40;
+  const gapY = 14;
 
-  metrics.slice(0, 4).forEach((m, idx) => {
+  const displayList = metrics.slice(0, 8);
+
+  displayList.forEach((m, idx) => {
     const col = idx % 2;
     const row = Math.floor(idx / 2);
-    const x = 80 + col * (boxW + gap + 30);
-    const y = startY + row * (boxH + gap);
+    const x = 80 + col * (boxW + gapX);
+    const y = startY + row * (boxH + gapY);
 
     ctx.fillStyle = "#111111";
     ctx.fillRect(x, y, boxW, boxH);
@@ -497,40 +522,63 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
     ctx.strokeRect(x, y, boxW, boxH);
 
     ctx.fillStyle = "#888888";
-    ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.fillText(m.label, x + 24, y + 44);
+    ctx.font = "bold 15px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillText(m.label, x + 20, y + 30);
 
     ctx.fillStyle = "#a6ff00";
-    ctx.font = "900 48px -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.fillText(m.val, x + 24, y + 106);
+    ctx.font = "900 34px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillText(m.val, x + 20, y + 74);
 
     if (m.sub) {
       ctx.fillStyle = "#666666";
-      ctx.font = "bold 18px -apple-system, BlinkMacSystemFont, sans-serif";
-      ctx.fillText(m.sub, x + 24, y + 148);
+      ctx.font = "600 14px -apple-system, BlinkMacSystemFont, sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText(m.sub, x + boxW - 20, y + 74);
+      ctx.textAlign = "left";
     }
   });
 
+  // 5. Biomechanical Release Strip
+  const stripY = startY + Math.ceil(displayList.length / 2) * (boxH + gapY) + 6;
+  if (isPitcher && (athlete.releaseExtension || athlete.releaseHeight || athlete.vertApproachAngle)) {
+    ctx.fillStyle = "rgba(166, 255, 0, 0.04)";
+    ctx.fillRect(80, stripY, canvas.width - 160, 48);
+    ctx.strokeStyle = "#1f1f1f";
+    ctx.strokeRect(80, stripY, canvas.width - 160, 48);
+
+    ctx.fillStyle = "#aaaaaa";
+    ctx.font = "bold 15px monospace";
+    let biomechText = "";
+    if (athlete.releaseExtension) biomechText += `EXTENSION: ${athlete.releaseExtension} FT   `;
+    if (athlete.releaseHeight) biomechText += `REL HEIGHT: ${athlete.releaseHeight} FT   `;
+    if (athlete.vertApproachAngle) biomechText += `VAA: ${athlete.vertApproachAngle}°`;
+
+    ctx.fillText(biomechText.trim(), 105, stripY + 30);
+  }
+
+  // 6. Registry Stamp
+  const registryY = 920;
   ctx.fillStyle = "#111111";
-  ctx.fillRect(80, 890, canvas.width - 160, 260);
+  ctx.fillRect(80, registryY, canvas.width - 160, 230);
   ctx.strokeStyle = "#1f1f1f";
-  ctx.strokeRect(80, 890, canvas.width - 160, 260);
+  ctx.strokeRect(80, registryY, canvas.width - 160, 230);
 
   ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 26px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText("HONOR-CODE VERIFIED DATA REGISTRY", 120, 950);
+  ctx.font = "bold 24px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillText("HONOR-CODE VERIFIED DATA REGISTRY", 120, registryY + 55);
 
   ctx.fillStyle = "#888888";
-  ctx.font = "400 22px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText("TrackMan, Hawkeye, and verified metrics published on National Scoreboard.", 120, 995);
-  ctx.fillText("Direct scout verification & NIL access powered by Slugger Coin ($SLUG).", 120, 1030);
+  ctx.font = "400 20px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillText("TrackMan, Hawkeye, and verified metrics published on National Scoreboard.", 120, registryY + 95);
+  ctx.fillText("Direct scout verification & NIL access powered by Slugger Coin ($SLUG).", 120, registryY + 128);
 
   if (athlete.social1_Url || athlete.social2_Url) {
     ctx.fillStyle = "#a6ff00";
     ctx.font = "bold 22px -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.fillText(`Scout Gateway: ${athlete.social1_Url || athlete.social2_Url}`, 120, 1095);
+    ctx.fillText(`Scout Gateway: ${athlete.social1_Url || athlete.social2_Url}`, 120, registryY + 185);
   }
 
+  // 7. Footer
   ctx.fillStyle = "#ffffff";
   ctx.font = "900 24px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.textAlign = "center";
