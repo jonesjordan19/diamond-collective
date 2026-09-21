@@ -464,11 +464,6 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
 
   // 4. Metric Render Engine
   if (isTWP) {
-    // ==========================================
-    // DEDICATED TWO-WAY (TWP) BALANCED LAYOUT
-    // ==========================================
-
-    // Sector A: Mound Telemetry
     ctx.fillStyle = "#a6ff00";
     ctx.font = "900 16px -apple-system, BlinkMacSystemFont, sans-serif";
     ctx.fillText("⚾ MOUND TELEMETRY", 80, 400);
@@ -483,7 +478,6 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
       pitchMetrics.push({ label: "FB SPIN RATE", val: `${athlete.fbSpinRate} RPM` });
     }
 
-    // Default fallbacks if empty
     while (pitchMetrics.length < 4) {
       if (!pitchMetrics.some(m => m.label === "PEAK FASTBALL")) pitchMetrics.push({ label: "PEAK FASTBALL", val: "---", sub: "Mound" });
       else if (!pitchMetrics.some(m => m.label === "STUFF+ GRADE")) pitchMetrics.push({ label: "STUFF+ GRADE", val: "---", sub: "100 = Avg" });
@@ -526,7 +520,6 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
       }
     });
 
-    // Sector B: Batter's Box Telemetry
     const startYH_Label = startYP + 2 * (boxH + gapY) + 18;
     ctx.fillStyle = "#a6ff00";
     ctx.font = "900 16px -apple-system, BlinkMacSystemFont, sans-serif";
@@ -575,7 +568,6 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
       }
     });
 
-    // Biomechanical Release Banner for TWP
     const stripY = startYH + 2 * (boxH + gapY) + 12;
     if (athlete.releaseExtension || athlete.releaseHeight || athlete.vertApproachAngle) {
       ctx.fillStyle = "rgba(166, 255, 0, 0.06)";
@@ -593,9 +585,6 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
     }
 
   } else {
-    // ==========================================
-    // FOCUSED SINGLE ROLE (HITTER OR PITCHER)
-    // ==========================================
     const metrics: { label: string; val: string; sub?: string }[] = [];
 
     if (isPitcher) {
@@ -658,7 +647,6 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
       }
     });
 
-    // Biomechanical Release Strip
     const stripY = startY + Math.ceil(displayList.length / 2) * (boxH + gapY) + 4;
     if (isPitcher && (athlete.releaseExtension || athlete.releaseHeight || athlete.vertApproachAngle)) {
       ctx.fillStyle = "rgba(166, 255, 0, 0.06)";
@@ -747,6 +735,7 @@ function AppContent() {
   const [positionFilter, setPositionFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [stateFilter, setStateFilter] = useState<string>("ALL");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortBy, setSortBy] = useState<"DEFAULT" | "MAX_EV" | "PEAK_FB" | "STUFF_PLUS" | "IVB">("DEFAULT");
 
   const [leaderboardRows, setLeaderboardRows] = useState<AthleteProfile[]>([]);
@@ -941,7 +930,6 @@ function AppContent() {
     }
   }, [account?.address]);
 
-  // DIRECT DISPATCH ACTION (NO FORM SUBMISSION RESTRICTIONS)
   const handleSaveProfile = async () => {
     if (!account?.address) {
       alert("Please sign in or connect your wallet first.");
@@ -1094,11 +1082,28 @@ function AppContent() {
     } catch {}
   };
 
+  const searchSuggestions = useMemo(() => {
+    if (!searchQuery || searchQuery.trim() === "") return [];
+    const q = searchQuery.toLowerCase().trim();
+    return leaderboardRows.filter((ath) => {
+      const name = (ath.fullName || "").toLowerCase();
+      const school = (ath.college || "").toLowerCase();
+      return name.includes(q) || school.includes(q);
+    });
+  }, [searchQuery, leaderboardRows]);
+
   const filteredScoreboard = useMemo(() => {
     return leaderboardRows
       .filter((ath) => {
         if (ath.isProfileVisible === false || String(ath.isProfileVisible).toLowerCase() === "false") {
           return false;
+        }
+
+        if (searchQuery && searchQuery.trim() !== "") {
+          const q = searchQuery.toLowerCase().trim();
+          const name = (ath.fullName || "").toLowerCase();
+          const school = (ath.college || "").toLowerCase();
+          if (!name.includes(q) && !school.includes(q)) return false;
         }
         
         if (roleFilter !== "ALL") {
@@ -1139,7 +1144,7 @@ function AppContent() {
         }
         return 0;
       });
-  }, [leaderboardRows, roleFilter, positionFilter, statusFilter, stateFilter, sortBy]);
+  }, [leaderboardRows, searchQuery, roleFilter, positionFilter, statusFilter, stateFilter, sortBy]);
 
   if (!mounted) return null;
 
@@ -1323,6 +1328,87 @@ function AppContent() {
                 >
                   {account ? "Update My Metrics ➔" : "Sign In to Post Data ➔"}
                 </button>
+              </div>
+
+              {/* PLAYER SEARCH INPUT BAR */}
+              <div style={{ position: "relative", marginBottom: "16px" }}>
+                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="🔍 Search player name or school..."
+                    style={{
+                      width: "100%",
+                      backgroundColor: "#141416",
+                      border: `1px solid ${searchQuery ? NEON_GREEN : "#2a2a2e"}`,
+                      color: "#ffffff",
+                      padding: "12px 16px",
+                      borderRadius: "12px",
+                      fontSize: "14px",
+                      fontWeight: "700",
+                      outline: "none"
+                    }}
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      style={{
+                        backgroundColor: "#222",
+                        border: "1px solid #444",
+                        color: "#fff",
+                        padding: "12px 16px",
+                        borderRadius: "12px",
+                        cursor: "pointer",
+                        fontWeight: "800",
+                        fontSize: "12px"
+                      }}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                {/* SEARCH SUGGESTIONS DROPDOWN */}
+                {searchQuery.trim() !== "" && searchSuggestions.length > 0 && (
+                  <div style={{
+                    position: "absolute",
+                    top: "calc(100% + 6px)",
+                    left: 0,
+                    right: 0,
+                    backgroundColor: "#121215",
+                    border: `1px solid ${NEON_GREEN}`,
+                    borderRadius: "12px",
+                    boxShadow: "0 10px 30px rgba(0,0,0,0.8)",
+                    zIndex: 50,
+                    overflow: "hidden"
+                  }}>
+                    {searchSuggestions.map((ath, sIdx) => (
+                      <div
+                        key={sIdx}
+                        onClick={() => {
+                          setSearchQuery(ath.fullName);
+                        }}
+                        style={{
+                          padding: "12px 16px",
+                          borderBottom: sIdx < searchSuggestions.length - 1 ? "1px solid #1f1f23" : "none",
+                          cursor: "pointer",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center"
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#1d1d22")}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                      >
+                        <div>
+                          <div style={{ fontWeight: "900", color: "#ffffff", fontSize: "14px" }}>{ath.fullName}</div>
+                          <div style={{ fontSize: "11px", color: NEON_GREEN, fontWeight: "700" }}>{ath.college} ({ath.position})</div>
+                        </div>
+                        <span style={{ fontSize: "11px", color: "#888", textTransform: "uppercase" }}>Tap to view ↗</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* ROLE TOGGLE PILLS */}
