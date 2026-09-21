@@ -392,9 +392,6 @@ const emptyProfile: AthleteProfile = {
   kMinusBbPercentage: "",
 };
 
-// =========================================================================
-// HIGH-CONTRAST 4:5 SCOUT CARD GENERATOR (READABLE LABELS + EXPANDED MATRIX)
-// =========================================================================
 async function triggerMobileScoutShare(athlete: AthleteProfile) {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
@@ -432,14 +429,14 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
     ctx.fillText("THE DIAMOND COLLECTIVE", 100, 113);
   }
 
-  // Header Badge (Crisp White)
+  // Header Badge (Crisp Pure White)
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.textAlign = "right";
   ctx.fillText("VERIFIED SCOUT CARD", canvas.width - 80, 115);
   ctx.textAlign = "left";
 
-  // 3. Athlete Bio & Physical Dimensions
+  // 3. Bio & Dimensions
   ctx.fillStyle = "#ffffff";
   ctx.font = "900 66px -apple-system, BlinkMacSystemFont, sans-serif";
   const name = (athlete.fullName || "MEMBER ATHLETE").toUpperCase();
@@ -450,7 +447,7 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   ctx.fillText(`🏛️ ${athlete.college || "Undeclared College"} ${athlete.state ? `(${athlete.state})` : ""}`, 80, 285);
 
   const physicalTag = athlete.height && athlete.weight ? ` • ${athlete.height} / ${athlete.weight} lbs` : (athlete.height ? ` • ${athlete.height}` : "");
-  ctx.fillStyle = "#d4d4d8"; // High-contrast silver instead of dark gray
+  ctx.fillStyle = "#d4d4d8"; // High-contrast readable silver
   ctx.font = "600 26px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.fillText(`${athlete.position || "ATH"}${physicalTag} • ${athlete.playerStatus || "Active Roster"}`, 80, 330);
 
@@ -461,7 +458,7 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   ctx.lineTo(canvas.width - 80, 365);
   ctx.stroke();
 
-  // 4. Extract All Populated Metrics
+  // 4. Extract Populated Metrics
   const isPitcher = athlete.primaryRole === "PITCHER" || athlete.primaryRole === "TWP";
   const isHitter = athlete.primaryRole === "HITTER" || athlete.primaryRole === "TWP";
 
@@ -507,7 +504,6 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   const displayList = metrics.slice(0, 8);
   const startY = 385;
   const boxW = 440;
-  // If 4 or fewer items, keep them taller; if 6-8, size compactly
   const boxH = displayList.length > 4 ? 105 : 140;
   const gapX = 40;
   const gapY = 16;
@@ -518,26 +514,25 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
     const x = 80 + col * (boxW + gapX);
     const y = startY + row * (boxH + gapY);
 
-    // Box container
     ctx.fillStyle = "#121214";
     ctx.fillRect(x, y, boxW, boxH);
     ctx.strokeStyle = "#27272a";
     ctx.lineWidth = 2;
     ctx.strokeRect(x, y, boxW, boxH);
 
-    // Label: Crisp pure white for 100% legibility
+    // Label: Pure white for maximum contrast
     ctx.fillStyle = "#ffffff";
     ctx.font = "bold 15px -apple-system, BlinkMacSystemFont, sans-serif";
     ctx.fillText(m.label, x + 20, y + (displayList.length > 4 ? 30 : 38));
 
-    // Metric Value: High-visibility neon green
+    // Value: High-visibility neon green
     ctx.fillStyle = "#a6ff00";
     ctx.font = `900 ${displayList.length > 4 ? "36px" : "44px"} -apple-system, BlinkMacSystemFont, sans-serif`;
     ctx.fillText(m.val, x + 20, y + (displayList.length > 4 ? 76 : 94));
 
-    // Sub-note (e.g. "Sitting 83"): High-contrast bright silver
+    // Subtitle: Bright readable silver
     if (m.sub) {
-      ctx.fillStyle = "#d4d4d8"; // Bright readable silver
+      ctx.fillStyle = "#d4d4d8";
       ctx.font = "bold 15px -apple-system, BlinkMacSystemFont, sans-serif";
       ctx.textAlign = "right";
       ctx.fillText(m.sub, x + boxW - 20, y + (displayList.length > 4 ? 76 : 94));
@@ -545,7 +540,7 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
     }
   });
 
-  // 5. Biomechanical Release Strip (Extension, Release Height, VAA)
+  // 5. Biomechanical Release Strip
   const stripY = startY + Math.ceil(displayList.length / 2) * (boxH + gapY) + 4;
   if (isPitcher && (athlete.releaseExtension || athlete.releaseHeight || athlete.vertApproachAngle)) {
     ctx.fillStyle = "rgba(166, 255, 0, 0.06)";
@@ -553,7 +548,7 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
     ctx.strokeStyle = "#3f3f46";
     ctx.strokeRect(80, stripY, canvas.width - 160, 48);
 
-    ctx.fillStyle = "#ffffff"; // Bright white
+    ctx.fillStyle = "#ffffff";
     ctx.font = "bold 15px monospace";
     let biomechText = "";
     if (athlete.releaseExtension) biomechText += `EXTENSION: ${athlete.releaseExtension} FT   `;
@@ -574,7 +569,7 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   ctx.font = "bold 24px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.fillText("HONOR-CODE VERIFIED DATA REGISTRY", 120, registryY + 52);
 
-  ctx.fillStyle = "#d4d4d8"; // Bright readable silver
+  ctx.fillStyle = "#d4d4d8";
   ctx.font = "400 20px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.fillText("TrackMan, Hawkeye, and verified metrics published on National Scoreboard.", 120, registryY + 92);
   ctx.fillText("Direct scout verification & NIL access powered by Slugger Coin ($SLUG).", 120, registryY + 125);
@@ -828,6 +823,7 @@ function AppContent() {
     }
   }, [account?.address]);
 
+  // FULL EXPLICIT PAYLOAD PERSISTENCE HANDLER
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!account?.address) return;
@@ -853,6 +849,60 @@ function AppContent() {
     setProfile(updatedProfile);
     localStorage.setItem(localKey, JSON.stringify(updatedProfile));
 
+    const payload = {
+      action: "saveProfile",
+      walletAddress: lowerWallet,
+      athleteEmail: updatedProfile.email,
+      email: updatedProfile.email,
+      fullName: updatedProfile.fullName || "",
+      college: updatedProfile.college || "",
+      currentCollege: updatedProfile.college || "",
+      position: updatedProfile.position || "",
+      playerStatus: updatedProfile.playerStatus || "",
+      portalStatus: updatedProfile.playerStatus || "",
+      collegeYear: updatedProfile.collegeYear || "",
+      phone: updatedProfile.phone || "",
+      state: updatedProfile.state || "UT",
+      primaryRole: updatedProfile.primaryRole || "HITTER",
+      isProfileVisible: updatedProfile.isProfileVisible !== false,
+      verificationLink: updatedProfile.verificationLink || "",
+      
+      height: updatedProfile.height || "",
+      weight: updatedProfile.weight || "",
+
+      maxExitVelo: updatedProfile.maxExitVelo || "",
+      ninetyEV: updatedProfile.ninetyEV || "",
+      batSpeed: updatedProfile.batSpeed || "",
+      sixtyTime: updatedProfile.sixtyTime || "",
+      recordedDateHitting: updatedProfile.recordedDateHitting || "",
+
+      peakFB: updatedProfile.peakFB || "",
+      sittingFB: updatedProfile.sittingFB || "",
+      offSpeedType: updatedProfile.offSpeedType || "Slider",
+      offSpeedVelo: updatedProfile.offSpeedVelo || "",
+      fbSpinRate: updatedProfile.fbSpinRate || "",
+      offSpeedSpinRate: updatedProfile.offSpeedSpinRate || "",
+      firstPitchStrike: updatedProfile.firstPitchStrike || "",
+      recordedDatePitching: updatedProfile.recordedDatePitching || "",
+
+      stuffPlus: updatedProfile.stuffPlus || "",
+      locationPlus: updatedProfile.locationPlus || "",
+      pitchingPlus: updatedProfile.pitchingPlus || "",
+      inducedVertBreak: updatedProfile.inducedVertBreak || "",
+      horizontalBreak: updatedProfile.horizontalBreak || "",
+      vertApproachAngle: updatedProfile.vertApproachAngle || "",
+      releaseExtension: updatedProfile.releaseExtension || "",
+      releaseHeight: updatedProfile.releaseHeight || "",
+      kPercentage: updatedProfile.kPercentage || "",
+      bbPercentage: updatedProfile.bbPercentage || "",
+      kMinusBbPercentage: updatedProfile.kMinusBbPercentage || "",
+
+      social1_Type: updatedProfile.social1_Type || "X",
+      social1_Url: updatedProfile.social1_Url || "",
+      social2_Type: updatedProfile.social2_Type || "IG",
+      social2_Url: updatedProfile.social2_Url || "",
+    };
+
     setLeaderboardRows((prev) => {
       const exists = prev.some((p) => p.email.toLowerCase() === updatedProfile.email.toLowerCase() || p.fullName.toLowerCase() === updatedProfile.fullName.toLowerCase());
       if (exists) {
@@ -865,11 +915,8 @@ function AppContent() {
       await fetch(GOOGLE_SCRIPT_URL, {
         method: "POST",
         mode: "no-cors",
-        body: JSON.stringify({
-          action: "saveProfile",
-          walletAddress: lowerWallet,
-          ...updatedProfile,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
       setIsSavingProfile(false);
@@ -1069,7 +1116,7 @@ function AppContent() {
           </div>
         </div>
 
-        {/* 50/50 PRIMARY NAV SPLIT */}
+        {/* 50/50 NAV SPLIT */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "28px" }}>
           <button
             onClick={() => setActiveMainTab("SCOREBOARD")}
@@ -1114,7 +1161,7 @@ function AppContent() {
           </button>
         </div>
 
-        {/* PILLAR 1: THE NATIONAL SCOUTING SCOREBOARD */}
+        {/* PILLAR 1: SCOREBOARD */}
         {activeMainTab === "SCOREBOARD" && (
           <section style={{ marginBottom: "60px" }}>
             <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "20px", padding: "24px 18px", marginBottom: "20px" }}>
@@ -1247,7 +1294,7 @@ function AppContent() {
               </div>
             </div>
 
-            {/* RESPONSIVE SCOREBOARD CONTAINER */}
+            {/* LEADERBOARD LIST */}
             <div style={{ width: "100%" }}>
               {filteredScoreboard.length === 0 ? (
                 <div style={{ backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: "16px", padding: "40px 20px", textAlign: "center", color: "#666666" }}>
@@ -1352,7 +1399,7 @@ function AppContent() {
                           )}
                         </div>
 
-                        {/* Footer: Date Stamp, Mobile Card Share & Socials */}
+                        {/* Footer: Share 4:5 Card & Socials */}
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "4px", flexWrap: "wrap", gap: "8px" }}>
                           <div style={{ fontSize: "10px", color: "#666666", fontFamily: "monospace" }}>
                             {ath.recordedDatePitching && <span>Pitch: {ath.recordedDatePitching} </span>}
@@ -1413,7 +1460,7 @@ function AppContent() {
           </section>
         )}
 
-        {/* PILLAR 2: THE BRAND EXCHANGE & MONETIZATION */}
+        {/* PILLAR 2: EXCHANGE */}
         {activeMainTab === "EXCHANGE" && (
           <div>
             {!account ? (
@@ -1757,7 +1804,7 @@ function AppContent() {
         </div>
       )}
 
-      {/* ATHLETE PROFILE & PRO SCOUTING MATRIX MODAL */}
+      {/* ATHLETE LOCKER MODAL (ALL INPUTS FULLY BOUND) */}
       {showProfileModal && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.88)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000, padding: "16px" }}>
           <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "20px", width: "100%", maxWidth: "680px", maxHeight: "90vh", overflowY: "auto", padding: "26px" }}>
@@ -1779,7 +1826,7 @@ function AppContent() {
             </div>
 
             <form onSubmit={handleSaveProfile} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              {/* SECTION 1: ROSTER & PHYSICAL DIMENSIONS */}
+              {/* 1. ROSTER & PHYSICAL DIMENSIONS */}
               <div style={{ borderBottom: "1px solid #1f1f1f", paddingBottom: "14px" }}>
                 <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: "10px" }}>
                   1. Roster & Physical Profile
@@ -1929,7 +1976,7 @@ function AppContent() {
                 </div>
               </div>
 
-              {/* SECTION 2: PERFORMANCE METRICS */}
+              {/* 2. PERFORMANCE & PRO METRICS */}
               <div style={{ borderBottom: "1px solid #1f1f1f", paddingBottom: "14px" }}>
                 <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: "10px" }}>
                   2. Performance & TrackMan Analytics
@@ -2004,7 +2051,7 @@ function AppContent() {
                             type="number"
                             step="0.1"
                             placeholder="e.g. 94.5"
-                            value={profile.peakFB}
+                            value={profile.peakFB || ""}
                             onChange={(e) => setProfile({ ...profile, peakFB: e.target.value })}
                             style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
                           />
@@ -2014,7 +2061,7 @@ function AppContent() {
                           <input
                             type="text"
                             placeholder="91-93"
-                            value={profile.sittingFB}
+                            value={profile.sittingFB || ""}
                             onChange={(e) => setProfile({ ...profile, sittingFB: e.target.value })}
                             style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
                           />
@@ -2022,7 +2069,7 @@ function AppContent() {
                         <div>
                           <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>OFF-SPEED TYPE</label>
                           <select
-                            value={profile.offSpeedType}
+                            value={profile.offSpeedType || "Slider"}
                             onChange={(e) => setProfile({ ...profile, offSpeedType: e.target.value })}
                             style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
                           >
@@ -2040,7 +2087,7 @@ function AppContent() {
                             type="number"
                             step="0.1"
                             placeholder="83.4"
-                            value={profile.offSpeedVelo}
+                            value={profile.offSpeedVelo || ""}
                             onChange={(e) => setProfile({ ...profile, offSpeedVelo: e.target.value })}
                             style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
                           />
@@ -2202,7 +2249,7 @@ function AppContent() {
                 )}
               </div>
 
-              {/* SECTION 3: SOCIAL GATEWAYS */}
+              {/* 3. SOCIALS */}
               <div>
                 <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: "10px" }}>
                   3. Public Social Gateways (Scoreboard Links)
@@ -2210,7 +2257,7 @@ function AppContent() {
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "10px", marginBottom: "8px" }}>
                   <select
-                    value={profile.social1_Type}
+                    value={profile.social1_Type || "X"}
                     onChange={(e) => setProfile({ ...profile, social1_Type: e.target.value })}
                     style={{ backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "8px", borderRadius: "8px", fontSize: "11px" }}
                   >
@@ -2221,7 +2268,7 @@ function AppContent() {
                   <input
                     type="url"
                     placeholder="Link 1: e.g. https://x.com/athlete"
-                    value={profile.social1_Url}
+                    value={profile.social1_Url || ""}
                     onChange={(e) => setProfile({ ...profile, social1_Url: e.target.value })}
                     style={{ backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "11px" }}
                   />
@@ -2229,7 +2276,7 @@ function AppContent() {
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "10px", marginBottom: "14px" }}>
                   <select
-                    value={profile.social2_Type}
+                    value={profile.social2_Type || "IG"}
                     onChange={(e) => setProfile({ ...profile, social2_Type: e.target.value })}
                     style={{ backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "8px", borderRadius: "8px", fontSize: "11px" }}
                   >
@@ -2240,7 +2287,7 @@ function AppContent() {
                   <input
                     type="url"
                     placeholder="Link 2: e.g. https://instagram.com/athlete"
-                    value={profile.social2_Url}
+                    value={profile.social2_Url || ""}
                     onChange={(e) => setProfile({ ...profile, social2_Url: e.target.value })}
                     style={{ backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "11px" }}
                   />
