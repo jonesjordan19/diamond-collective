@@ -305,13 +305,11 @@ export interface AthleteProfile {
   collegeYear: string;
   playerStatus: string;
   verificationLink: string;
-  instagramUrl: string;
-  instagramFollowers: string;
-  tiktokUrl: string;
-  tiktokFollowers: string;
-  xUrl: string;
-  xFollowers: string;
   
+  // Physical Measurements
+  height?: string;
+  weight?: string;
+
   primaryRole: "HITTER" | "PITCHER" | "TWP";
   isProfileVisible: boolean;
   social1_Type?: string;
@@ -319,12 +317,14 @@ export interface AthleteProfile {
   social2_Type?: string;
   social2_Url?: string;
 
+  // Hitting Benchmarks
   maxExitVelo?: string;
   ninetyEV?: string;
   batSpeed?: string;
   sixtyTime?: string;
   recordedDateHitting?: string;
 
+  // Classic Pitching
   peakFB?: string;
   sittingFB?: string;
   offSpeedVelo?: string;
@@ -333,6 +333,25 @@ export interface AthleteProfile {
   offSpeedSpinRate?: string;
   firstPitchStrike?: string;
   recordedDatePitching?: string;
+
+  // Advanced Pro Pitch Modeling (Pitching+, Stuff+)
+  stuffPlus?: string;
+  locationPlus?: string;
+  pitchingPlus?: string;
+
+  // Ball-Flight & Movement Shapes (TrackMan / Hawkeye)
+  inducedVertBreak?: string; // IVB in inches
+  horizontalBreak?: string;  // HB in inches
+  vertApproachAngle?: string;// VAA in degrees
+
+  // Biomechanics & Release Consistency
+  releaseExtension?: string; // Release Extension in ft
+  releaseHeight?: string;    // Release Height in ft
+
+  // Command & Game Performance Ratios
+  kPercentage?: string;        // K%
+  bbPercentage?: string;       // BB%
+  kMinusBbPercentage?: string; // K-BB%
 }
 
 const emptyProfile: AthleteProfile = {
@@ -346,12 +365,8 @@ const emptyProfile: AthleteProfile = {
   collegeYear: "Freshman",
   playerStatus: "Incoming Freshman",
   verificationLink: "",
-  instagramUrl: "",
-  instagramFollowers: "",
-  tiktokUrl: "",
-  tiktokFollowers: "",
-  xUrl: "",
-  xFollowers: "",
+  height: "",
+  weight: "",
   primaryRole: "HITTER",
   isProfileVisible: true,
   social1_Type: "X",
@@ -371,10 +386,21 @@ const emptyProfile: AthleteProfile = {
   offSpeedSpinRate: "",
   firstPitchStrike: "",
   recordedDatePitching: "",
+  stuffPlus: "",
+  locationPlus: "",
+  pitchingPlus: "",
+  inducedVertBreak: "",
+  horizontalBreak: "",
+  vertApproachAngle: "",
+  releaseExtension: "",
+  releaseHeight: "",
+  kPercentage: "",
+  bbPercentage: "",
+  kMinusBbPercentage: "",
 };
 
 // =========================================================================
-// INSTANT MOBILE 4:5 SCOUT GRAPHIC ENGINE WITH SQUARE LOGO (95x95)
+// INSTANT MOBILE 4:5 SCOUT GRAPHIC ENGINE WITH PRO PITCHING MATRIX
 // =========================================================================
 async function triggerMobileScoutShare(athlete: AthleteProfile) {
   const canvas = document.createElement("canvas");
@@ -393,7 +419,7 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   ctx.lineWidth = 14;
   ctx.strokeRect(34, 34, canvas.width - 68, canvas.height - 68);
 
-  // 2. Load & Draw Logo from /public/logo.png (Square 95x95)
+  // 2. Load & Draw Square 95x95 Logo
   const logo = new Image();
   logo.crossOrigin = "anonymous";
   logo.src = "/logo.png";
@@ -418,10 +444,10 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.textAlign = "right";
-  ctx.fillText("VERIFIED SCOUT CARD", canvas.width - 80, 120);
+  ctx.fillText("VERIFIED SCOUT CARD", canvas.width - 80, 115);
   ctx.textAlign = "left";
 
-  // 3. Athlete Bio
+  // 3. Athlete Bio & Physical Dimensions
   ctx.fillStyle = "#ffffff";
   ctx.font = "900 66px -apple-system, BlinkMacSystemFont, sans-serif";
   const name = (athlete.fullName || "MEMBER ATHLETE").toUpperCase();
@@ -431,9 +457,10 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   ctx.font = "bold 34px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.fillText(`🏛️ ${athlete.college || "Undeclared College"} ${athlete.state ? `(${athlete.state})` : ""}`, 80, 285);
 
+  const physicalTag = athlete.height && athlete.weight ? ` • ${athlete.height} / ${athlete.weight} lbs` : (athlete.height ? ` • ${athlete.height}` : "");
   ctx.fillStyle = "#aaaaaa";
-  ctx.font = "600 28px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText(`${athlete.position || "ATH"} • ${athlete.playerStatus || "Active Roster"}`, 80, 330);
+  ctx.font = "600 26px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillText(`${athlete.position || "ATH"}${physicalTag} • ${athlete.playerStatus || "Active Roster"}`, 80, 330);
 
   // Divider
   ctx.strokeStyle = "#222222";
@@ -443,7 +470,7 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   ctx.lineTo(canvas.width - 80, 370);
   ctx.stroke();
 
-  // 4. Metric Grid Extraction
+  // 4. Metric Grid Prioritization (Pro Pitch Modeling & Ball Shape)
   const isPitcher = athlete.primaryRole === "PITCHER" || athlete.primaryRole === "TWP";
   const isHitter = athlete.primaryRole === "HITTER" || athlete.primaryRole === "TWP";
 
@@ -451,8 +478,14 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
 
   if (isPitcher) {
     if (athlete.peakFB) metrics.push({ label: "PEAK FASTBALL", val: `${athlete.peakFB} MPH`, sub: athlete.sittingFB ? `Sitting ${athlete.sittingFB}` : undefined });
+    if (athlete.stuffPlus) metrics.push({ label: "STUFF+ GRADE", val: athlete.stuffPlus, sub: "100 = League Avg" });
+    if (athlete.inducedVertBreak) metrics.push({ label: "INDUCED VERT BREAK", val: `${athlete.inducedVertBreak}"`, sub: "Carry & Rise" });
     if (athlete.fbSpinRate) metrics.push({ label: "FB SPIN RATE", val: `${athlete.fbSpinRate} RPM` });
+    if (athlete.releaseExtension) metrics.push({ label: "RELEASE EXTENSION", val: `${athlete.releaseExtension} FT`, sub: "Perceived Velo" });
+    if (athlete.kMinusBbPercentage) metrics.push({ label: "K - BB COMMAND %", val: `${athlete.kMinusBbPercentage}%` });
     if (athlete.offSpeedVelo) metrics.push({ label: `${(athlete.offSpeedType || "SLIDER").toUpperCase()} VELO`, val: `${athlete.offSpeedVelo} MPH` });
+    if (athlete.vertApproachAngle) metrics.push({ label: "VERT APPROACH ANGLE", val: `${athlete.vertApproachAngle}°` });
+    if (athlete.pitchingPlus) metrics.push({ label: "PITCHING+ ARSENAL", val: athlete.pitchingPlus });
     if (athlete.firstPitchStrike) metrics.push({ label: "1ST PITCH STRIKE", val: `${athlete.firstPitchStrike}%` });
   }
 
@@ -463,7 +496,7 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
     if (athlete.sixtyTime) metrics.push({ label: "60-YARD DASH", val: `${athlete.sixtyTime}s` });
   }
 
-  // Draw 2x2 Metric Grid Boxes
+  // Draw 2x2 Metric Grid Boxes (Top 4 highlights)
   const startY = 410;
   const boxW = 430;
   const boxH = 180;
@@ -508,13 +541,13 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
 
   ctx.fillStyle = "#888888";
   ctx.font = "400 22px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText("Live metrics recorded on the National Scouting Scoreboard.", 120, 995);
+  ctx.fillText("TrackMan, Hawkeye, and verified metrics published on National Scoreboard.", 120, 995);
   ctx.fillText("Direct scout verification & NIL access powered by Slugger Coin ($SLUG).", 120, 1030);
 
   if (athlete.social1_Url || athlete.social2_Url) {
     ctx.fillStyle = "#a6ff00";
     ctx.font = "bold 22px -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.fillText(`Scout Link: ${athlete.social1_Url || athlete.social2_Url}`, 120, 1095);
+    ctx.fillText(`Scout Gateway: ${athlete.social1_Url || athlete.social2_Url}`, 120, 1095);
   }
 
   // 6. Bottom Domain Stamp
@@ -527,7 +560,7 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   ctx.font = "600 16px -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.fillText("THE DIAMOND COLLECTIVE • ALL RIGHTS RESERVED", canvas.width / 2, 1295);
 
-  // 7. Trigger Native Mobile Share Tray
+  // 7. Mobile First: Open Phone Share Drawer
   canvas.toBlob(async (blob) => {
     if (!blob) return;
 
@@ -540,7 +573,7 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
         await navigator.share({
           files: [file],
           title: `${athlete.fullName} Scout Card`,
-          text: `Check out my verified metrics on The Diamond Collective National Scoreboard!`,
+          text: `Check out my verified pitching & scouting metrics on The Diamond Collective Scoreboard!`,
         });
         return;
       } catch {
@@ -548,7 +581,7 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
       }
     }
 
-    // Direct download fallback for desktop
+    // Direct download fallback
     const link = document.createElement("a");
     link.download = fileName;
     link.href = URL.createObjectURL(blob);
@@ -568,7 +601,7 @@ function AppContent() {
   const [positionFilter, setPositionFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [stateFilter, setStateFilter] = useState<string>("ALL");
-  const [sortBy, setSortBy] = useState<"DEFAULT" | "MAX_EV" | "PEAK_FB" | "SIXTY">("DEFAULT");
+  const [sortBy, setSortBy] = useState<"DEFAULT" | "MAX_EV" | "PEAK_FB" | "STUFF_PLUS" | "IVB">("DEFAULT");
 
   const [leaderboardRows, setLeaderboardRows] = useState<AthleteProfile[]>([]);
   const [loadingScoreboard, setLoadingScoreboard] = useState(false);
@@ -655,6 +688,8 @@ function AppContent() {
                 primaryRole: validRole as "HITTER" | "PITCHER" | "TWP",
                 playerStatus: item.portalStatus || item.playerStatus || "Active",
                 isProfileVisible: String(item.isProfileVisible).toUpperCase() !== "FALSE",
+                height: item.height ? String(item.height) : "",
+                weight: item.weight ? String(item.weight) : "",
                 maxExitVelo: item.maxExitVelo ? String(item.maxExitVelo) : "",
                 ninetyEV: item.ninetyEV ? String(item.ninetyEV) : "",
                 batSpeed: item.batSpeed ? String(item.batSpeed) : "",
@@ -668,6 +703,17 @@ function AppContent() {
                 firstPitchStrike: item.firstPitchStrike ? String(item.firstPitchStrike) : "",
                 recordedDateHitting: item.recordedDateHitting || "",
                 recordedDatePitching: item.recordedDatePitching || "",
+                stuffPlus: item.stuffPlus ? String(item.stuffPlus) : "",
+                locationPlus: item.locationPlus ? String(item.locationPlus) : "",
+                pitchingPlus: item.pitchingPlus ? String(item.pitchingPlus) : "",
+                inducedVertBreak: item.inducedVertBreak ? String(item.inducedVertBreak) : "",
+                horizontalBreak: item.horizontalBreak ? String(item.horizontalBreak) : "",
+                vertApproachAngle: item.vertApproachAngle ? String(item.vertApproachAngle) : "",
+                releaseExtension: item.releaseExtension ? String(item.releaseExtension) : "",
+                releaseHeight: item.releaseHeight ? String(item.releaseHeight) : "",
+                kPercentage: item.kPercentage ? String(item.kPercentage) : "",
+                bbPercentage: item.bbPercentage ? String(item.bbPercentage) : "",
+                kMinusBbPercentage: item.kMinusBbPercentage ? String(item.kMinusBbPercentage) : "",
                 social1_Type: item.social1_Type || "X",
                 social1_Url: item.social1_Url || "",
                 social2_Type: item.social2_Type || "IG",
@@ -758,10 +804,18 @@ function AppContent() {
     const localKey = `athlete_profile_${lowerWallet}`;
     
     const today = new Date().toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" });
+    
+    // Auto-calculate K-BB% if both are provided
+    let computedKminusBB = profile.kMinusBbPercentage;
+    if (profile.kPercentage && profile.bbPercentage && !computedKminusBB) {
+      computedKminusBB = (parseFloat(profile.kPercentage) - parseFloat(profile.bbPercentage)).toFixed(1);
+    }
+
     const updatedProfile: AthleteProfile = {
       ...profile,
+      kMinusBbPercentage: computedKminusBB,
       recordedDateHitting: profile.maxExitVelo ? (profile.recordedDateHitting || today) : "",
-      recordedDatePitching: profile.peakFB ? (profile.recordedDatePitching || today) : "",
+      recordedDatePitching: (profile.peakFB || profile.stuffPlus) ? (profile.recordedDatePitching || today) : "",
     };
 
     setProfile(updatedProfile);
@@ -788,7 +842,7 @@ function AppContent() {
 
       setIsSavingProfile(false);
       setShowProfileModal(false);
-      alert("Metrics saved to national scoreboard!");
+      alert("Pro metrics saved to national scoreboard!");
     } catch {
       setIsSavingProfile(false);
       setShowProfileModal(false);
@@ -871,10 +925,11 @@ function AppContent() {
         if (sortBy === "PEAK_FB") {
           return (parseFloat(b.peakFB || "0") || 0) - (parseFloat(a.peakFB || "0") || 0);
         }
-        if (sortBy === "SIXTY") {
-          const aTime = parseFloat(a.sixtyTime || "99") || 99;
-          const bTime = parseFloat(b.sixtyTime || "99") || 99;
-          return aTime - bTime;
+        if (sortBy === "STUFF_PLUS") {
+          return (parseFloat(b.stuffPlus || "0") || 0) - (parseFloat(a.stuffPlus || "0") || 0);
+        }
+        if (sortBy === "IVB") {
+          return (parseFloat(b.inducedVertBreak || "0") || 0) - (parseFloat(a.inducedVertBreak || "0") || 0);
         }
         return 0;
       });
@@ -1040,7 +1095,7 @@ function AppContent() {
                     National Scouting Scoreboard
                   </h2>
                   <p style={{ fontSize: "13px", color: "#a1a1aa", maxWidth: "680px", margin: 0, lineHeight: "1.5" }}>
-                    Direct scout discovery for active college ballplayers and transfer portal candidates. Filter verified bat speeds, velocities, and contact channels.
+                    Direct scout discovery for active college ballplayers and transfer portal candidates. Filter verified bat speeds, pitch modeling (Stuff+), IVB, and release extension.
                   </p>
                 </div>
 
@@ -1088,7 +1143,7 @@ function AppContent() {
                 ))}
               </div>
 
-              {/* ADVANCED FILTER BAR */}
+              {/* ADVANCED FILTER BAR WITH PRO METRIC SORT */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "8px", backgroundColor: "#050505", border: "1px solid #161616", borderRadius: "14px", padding: "12px" }}>
                 <div>
                   <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#666", textTransform: "uppercase", marginBottom: "3px" }}>Position</label>
@@ -1098,14 +1153,14 @@ function AppContent() {
                     style={{ width: "100%", backgroundColor: "#111", border: "1px solid #262626", color: "#fff", padding: "6px 8px", borderRadius: "8px", fontSize: "11px" }}
                   >
                     <option value="ALL">All Positions</option>
+                    <option value="RHP">RHP</option>
+                    <option value="LHP">LHP</option>
                     <option value="C">Catcher (C)</option>
                     <option value="MIF">Middle Inf (MIF)</option>
                     <option value="SS">Shortstop (SS)</option>
                     <option value="3B">Third Base (3B)</option>
                     <option value="1B">First Base (1B)</option>
                     <option value="OF">Outfield (OF)</option>
-                    <option value="RHP">RHP</option>
-                    <option value="LHP">LHP</option>
                   </select>
                 </div>
 
@@ -1151,9 +1206,10 @@ function AppContent() {
                     style={{ width: "100%", backgroundColor: "#111", border: `1px solid rgba(166, 255, 0, 0.4)`, color: NEON_GREEN, fontWeight: "700", padding: "6px 8px", borderRadius: "8px", fontSize: "11px" }}
                   >
                     <option value="DEFAULT">Latest Update</option>
-                    <option value="MAX_EV">Max Exit Velo ↓</option>
                     <option value="PEAK_FB">Peak Fastball ↓</option>
-                    <option value="SIXTY">Fastest 60-Yd ↑</option>
+                    <option value="STUFF_PLUS">Stuff+ Grade ↓</option>
+                    <option value="IVB">Induced Vert Break (IVB) ↓</option>
+                    <option value="MAX_EV">Max Exit Velo ↓</option>
                   </select>
                 </div>
               </div>
@@ -1194,7 +1250,9 @@ function AppContent() {
                               🏛️ {ath.college || "Undeclared College"} {ath.state ? `(${ath.state})` : ""}
                             </div>
                             <div style={{ color: "#888888", fontSize: "11px", marginTop: "2px" }}>
-                              <strong style={{ color: "#cccccc" }}>{ath.position}</strong> • {ath.playerStatus}
+                              <strong style={{ color: "#cccccc" }}>{ath.position}</strong>
+                              {ath.height && ath.weight && <span> • {ath.height}, {ath.weight} lbs</span>}
+                              <span> • {ath.playerStatus}</span>
                             </div>
                           </div>
 
@@ -1212,26 +1270,35 @@ function AppContent() {
                         </div>
 
                         {/* Performance Data Matrix */}
-                        <div style={{ backgroundColor: "#050505", border: "1px solid #161616", borderRadius: "10px", padding: "10px 12px", display: "grid", gridTemplateColumns: isTWP ? "1fr 1fr" : "1fr", gap: "10px", fontFamily: "monospace" }}>
+                        <div style={{ backgroundColor: "#050505", border: "1px solid #161616", borderRadius: "10px", padding: "12px", display: "grid", gridTemplateColumns: isTWP ? "1fr 1fr" : "1fr", gap: "12px", fontFamily: "monospace" }}>
                           {isPitcher && (
-                            <div>
-                              <div style={{ fontSize: "9px", color: "#666666", textTransform: "uppercase", marginBottom: "3px", fontWeight: "700" }}>Pitching Metrics</div>
-                              {ath.peakFB ? (
-                                <div style={{ color: "#ffffff", fontWeight: "800", fontSize: "13px" }}>
-                                  <span style={{ color: NEON_GREEN }}>FB:</span> {ath.peakFB} mph {ath.sittingFB ? `(${ath.sittingFB})` : ""}
-                                </div>
-                              ) : (
-                                <div style={{ color: "#444444", fontSize: "11px" }}>FB: Unrecorded</div>
-                              )}
-                              {ath.fbSpinRate && <div style={{ color: "#aaaaaa", fontSize: "11px" }}>FB Spin: {ath.fbSpinRate} RPM</div>}
+                            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                <span style={{ fontSize: "9px", color: "#888", textTransform: "uppercase", fontWeight: "800" }}>Pitching & Modeling</span>
+                                {ath.stuffPlus && (
+                                  <span style={{ backgroundColor: "rgba(166, 255, 0, 0.1)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "2px 6px", borderRadius: "4px", fontSize: "10px", fontWeight: "900" }}>
+                                    Stuff+ {ath.stuffPlus}
+                                  </span>
+                                )}
+                              </div>
+
+                              <div style={{ color: "#ffffff", fontWeight: "800", fontSize: "13px" }}>
+                                <span style={{ color: NEON_GREEN }}>FB:</span> {ath.peakFB ? `${ath.peakFB} mph` : "Unrecorded"} {ath.sittingFB ? `(${ath.sittingFB})` : ""}
+                                {ath.fbSpinRate && <span style={{ color: "#888", fontWeight: "400", fontSize: "11px" }}> • {ath.fbSpinRate} RPM</span>}
+                              </div>
+
+                              {/* Flight & Release Analytics Pill Grid */}
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", fontSize: "10px", color: "#cccccc" }}>
+                                {ath.inducedVertBreak && <span style={{ backgroundColor: "#121212", border: "1px solid #222", padding: "3px 6px", borderRadius: "4px" }}>IVB: <strong style={{ color: NEON_GREEN }}>{ath.inducedVertBreak}"</strong></span>}
+                                {ath.horizontalBreak && <span style={{ backgroundColor: "#121212", border: "1px solid #222", padding: "3px 6px", borderRadius: "4px" }}>HB: <strong>{ath.horizontalBreak}"</strong></span>}
+                                {ath.releaseExtension && <span style={{ backgroundColor: "#121212", border: "1px solid #222", padding: "3px 6px", borderRadius: "4px" }}>Ext: <strong>{ath.releaseExtension}ft</strong></span>}
+                                {ath.vertApproachAngle && <span style={{ backgroundColor: "#121212", border: "1px solid #222", padding: "3px 6px", borderRadius: "4px" }}>VAA: <strong>{ath.vertApproachAngle}°</strong></span>}
+                                {ath.kMinusBbPercentage && <span style={{ backgroundColor: "#121212", border: "1px solid #222", padding: "3px 6px", borderRadius: "4px" }}>K-BB: <strong style={{ color: NEON_GREEN }}>{ath.kMinusBbPercentage}%</strong></span>}
+                              </div>
+
                               {ath.offSpeedVelo && (
-                                <div style={{ color: "#888888", fontSize: "11px", marginTop: "2px" }}>
+                                <div style={{ color: "#888888", fontSize: "11px" }}>
                                   {ath.offSpeedType || "SL"}: {ath.offSpeedVelo} mph {ath.offSpeedSpinRate ? `(${ath.offSpeedSpinRate} RPM)` : ""}
-                                </div>
-                              )}
-                              {ath.firstPitchStrike && (
-                                <div style={{ color: NEON_GREEN, fontSize: "10px", fontWeight: "700", marginTop: "2px" }}>
-                                  First-Pitch Strike: {ath.firstPitchStrike}%
                                 </div>
                               )}
                             </div>
@@ -1263,7 +1330,6 @@ function AppContent() {
                           </div>
 
                           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                            {/* INSTANT MOBILE SHARE BUTTON */}
                             <button
                               onClick={() => triggerMobileScoutShare(ath)}
                               style={{
@@ -1660,17 +1726,17 @@ function AppContent() {
         </div>
       )}
 
-      {/* ATHLETE PROFILE & SCOUTING MATRIX MODAL */}
+      {/* ATHLETE PROFILE & PRO SCOUTING MATRIX MODAL */}
       {showProfileModal && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.88)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000, padding: "16px" }}>
-          <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "20px", width: "100%", maxWidth: "640px", maxHeight: "90vh", overflowY: "auto", padding: "26px" }}>
+          <div style={{ backgroundColor: "#0a0a0a", border: `1px solid ${NEON_GREEN}`, borderRadius: "20px", width: "100%", maxWidth: "680px", maxHeight: "90vh", overflowY: "auto", padding: "26px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
               <div>
                 <h3 style={{ margin: 0, fontSize: "20px", fontWeight: "900", textTransform: "uppercase", color: "#ffffff" }}>
                   Athlete Locker & Scouting Matrix
                 </h3>
                 <p style={{ fontSize: "12px", color: "#888888", margin: "2px 0 0 0" }}>
-                  Active college ballplayer bio and honor-code verified metrics.
+                  Collegiate bio, physical dimensions, and pro pitch modeling analytics.
                 </p>
               </div>
               <button
@@ -1682,10 +1748,10 @@ function AppContent() {
             </div>
 
             <form onSubmit={handleSaveProfile} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              {/* SECTION: BASIC ROSTER INFO */}
+              {/* SECTION 1: ROSTER & PHYSICAL DIMENSIONS */}
               <div style={{ borderBottom: "1px solid #1f1f1f", paddingBottom: "14px" }}>
                 <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: "10px" }}>
-                  1. Roster Verification
+                  1. Roster & Physical Profile
                 </span>
                 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "10px" }}>
@@ -1713,7 +1779,54 @@ function AppContent() {
                   </div>
                 </div>
 
+                {/* Physical Measurements Grid */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "10px", marginBottom: "10px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Height (e.g. 6'3")</label>
+                    <input 
+                      type="text" 
+                      value={profile.height || ""} 
+                      onChange={(e) => setProfile({ ...profile, height: e.target.value })}
+                      placeholder="6'3\"" 
+                      style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "12px" }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Weight (lbs)</label>
+                    <input 
+                      type="number" 
+                      value={profile.weight || ""} 
+                      onChange={(e) => setProfile({ ...profile, weight: e.target.value })}
+                      placeholder="210" 
+                      style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "12px" }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Position *</label>
+                    <input 
+                      type="text" 
+                      required
+                      value={profile.position} 
+                      onChange={(e) => setProfile({ ...profile, position: e.target.value })}
+                      placeholder="e.g. RHP / OF" 
+                      style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "12px" }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Role *</label>
+                    <select
+                      value={profile.primaryRole}
+                      onChange={(e) => setProfile({ ...profile, primaryRole: e.target.value as any })}
+                      style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "12px" }}
+                    >
+                      <option value="HITTER">Hitter</option>
+                      <option value="PITCHER">Pitcher</option>
+                      <option value="TWP">Two-Way (TWP)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "10px" }}>
                   <div>
                     <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>State *</label>
                     <select
@@ -1732,29 +1845,6 @@ function AppContent() {
                     </select>
                   </div>
                   <div>
-                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Position *</label>
-                    <input 
-                      type="text" 
-                      required
-                      value={profile.position} 
-                      onChange={(e) => setProfile({ ...profile, position: e.target.value })}
-                      placeholder="e.g. LHP / OF" 
-                      style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "12px" }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Role *</label>
-                    <select
-                      value={profile.primaryRole}
-                      onChange={(e) => setProfile({ ...profile, primaryRole: e.target.value as any })}
-                      style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "12px" }}
-                    >
-                      <option value="HITTER">Hitter</option>
-                      <option value="PITCHER">Pitcher</option>
-                      <option value="TWP">Two-Way (TWP)</option>
-                    </select>
-                  </div>
-                  <div>
                     <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Status *</label>
                     <select
                       value={profile.playerStatus}
@@ -1765,6 +1855,20 @@ function AppContent() {
                       <option value="Returning College Player">Returning</option>
                       <option value="Incoming Freshman">Incoming Freshman</option>
                       <option value="Juco Uncommitted">Juco Uncommitted</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "4px" }}>Class Year</label>
+                    <select
+                      value={profile.collegeYear}
+                      onChange={(e) => setProfile({ ...profile, collegeYear: e.target.value })}
+                      style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #2a2a2a", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "12px" }}
+                    >
+                      <option value="Freshman">Freshman</option>
+                      <option value="Sophomore">Sophomore</option>
+                      <option value="Junior">Junior</option>
+                      <option value="Senior">Senior</option>
+                      <option value="Graduate">Graduate</option>
                     </select>
                   </div>
                 </div>
@@ -1795,10 +1899,10 @@ function AppContent() {
                 </div>
               </div>
 
-              {/* SECTION: SCOUTING METRICS */}
+              {/* SECTION 2: PRO SCOUTING & PITCH MODELING METRICS */}
               <div style={{ borderBottom: "1px solid #1f1f1f", paddingBottom: "14px" }}>
                 <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: "10px" }}>
-                  2. Honor-Code Scouting Metrics
+                  2. Performance & TrackMan Analytics
                 </span>
 
                 {/* HITTER INPUTS */}
@@ -1813,7 +1917,7 @@ function AppContent() {
                         <input
                           type="number"
                           step="0.1"
-                          placeholder="e.g. 103.2"
+                          placeholder="103.2"
                           value={profile.maxExitVelo}
                           onChange={(e) => setProfile({ ...profile, maxExitVelo: e.target.value })}
                           style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
@@ -1824,7 +1928,7 @@ function AppContent() {
                         <input
                           type="number"
                           step="0.1"
-                          placeholder="e.g. 99.4"
+                          placeholder="99.4"
                           value={profile.ninetyEV}
                           onChange={(e) => setProfile({ ...profile, ninetyEV: e.target.value })}
                           style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
@@ -1835,7 +1939,7 @@ function AppContent() {
                         <input
                           type="number"
                           step="0.1"
-                          placeholder="e.g. 76.8"
+                          placeholder="76.8"
                           value={profile.batSpeed}
                           onChange={(e) => setProfile({ ...profile, batSpeed: e.target.value })}
                           style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
@@ -1846,7 +1950,7 @@ function AppContent() {
                         <input
                           type="number"
                           step="0.01"
-                          placeholder="e.g. 6.65"
+                          placeholder="6.65"
                           value={profile.sixtyTime}
                           onChange={(e) => setProfile({ ...profile, sixtyTime: e.target.value })}
                           style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
@@ -1856,99 +1960,225 @@ function AppContent() {
                   </div>
                 )}
 
-                {/* PITCHER INPUTS */}
+                {/* ADVANCED PRO PITCHER INPUTS */}
                 {(profile.primaryRole === "PITCHER" || profile.primaryRole === "TWP") && (
-                  <div style={{ backgroundColor: "#050505", border: "1px solid #1a1a1a", borderRadius: "10px", padding: "12px" }}>
-                    <span style={{ fontSize: "10px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", display: "block", marginBottom: "8px" }}>
-                      🎯 Pitching & Spin Benchmarks
-                    </span>
+                  <div style={{ backgroundColor: "#050505", border: "1px solid #1a1a1a", borderRadius: "10px", padding: "14px", display: "flex", flexDirection: "column", gap: "12px" }}>
                     
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px", marginBottom: "10px" }}>
-                      <div>
-                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>PEAK FASTBALL</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          placeholder="e.g. 94.5"
-                          value={profile.peakFB}
-                          onChange={(e) => setProfile({ ...profile, peakFB: e.target.value })}
-                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
-                        />
-                      </div>
-                      <div>
-                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>SITTING FB</label>
-                        <input
-                          type="text"
-                          placeholder="91-93"
-                          value={profile.sittingFB}
-                          onChange={(e) => setProfile({ ...profile, sittingFB: e.target.value })}
-                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
-                        />
-                      </div>
-                      <div>
-                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>OFF-SPEED TYPE</label>
-                        <select
-                          value={profile.offSpeedType}
-                          onChange={(e) => setProfile({ ...profile, offSpeedType: e.target.value })}
-                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
-                        >
-                          <option value="Slider">Slider</option>
-                          <option value="Curveball">Curveball</option>
-                          <option value="Changeup">Changeup</option>
-                          <option value="Cutter">Cutter</option>
-                          <option value="Splitter">Splitter</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>OFF-SPEED VELO</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          placeholder="e.g. 83.4"
-                          value={profile.offSpeedVelo}
-                          onChange={(e) => setProfile({ ...profile, offSpeedVelo: e.target.value })}
-                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
-                        />
+                    {/* A. Velocity & Pitch Shapes */}
+                    <div>
+                      <span style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", display: "block", marginBottom: "6px" }}>
+                        ⚾ 1. Velocity & Primary Shapes
+                      </span>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px" }}>
+                        <div>
+                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>PEAK FASTBALL</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            placeholder="e.g. 94.5"
+                            value={profile.peakFB}
+                            onChange={(e) => setProfile({ ...profile, peakFB: e.target.value })}
+                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>SITTING FB</label>
+                          <input
+                            type="text"
+                            placeholder="91-93"
+                            value={profile.sittingFB}
+                            onChange={(e) => setProfile({ ...profile, sittingFB: e.target.value })}
+                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>OFF-SPEED TYPE</label>
+                          <select
+                            value={profile.offSpeedType}
+                            onChange={(e) => setProfile({ ...profile, offSpeedType: e.target.value })}
+                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                          >
+                            <option value="Slider">Slider</option>
+                            <option value="Sweeper">Sweeper</option>
+                            <option value="Curveball">Curveball</option>
+                            <option value="Changeup">Changeup</option>
+                            <option value="Cutter">Cutter</option>
+                            <option value="Splitter">Splitter</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>OFF-SPEED VELO</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            placeholder="83.4"
+                            value={profile.offSpeedVelo}
+                            onChange={(e) => setProfile({ ...profile, offSpeedVelo: e.target.value })}
+                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                          />
+                        </div>
                       </div>
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
-                      <div>
-                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: NEON_GREEN, marginBottom: "2px" }}>FB SPIN RATE (RPM)</label>
-                        <input
-                          type="number"
-                          placeholder="e.g. 2350"
-                          value={profile.fbSpinRate || ""}
-                          onChange={(e) => setProfile({ ...profile, fbSpinRate: e.target.value })}
-                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
-                        />
-                      </div>
-                      <div>
-                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: NEON_GREEN, marginBottom: "2px" }}>SECONDARY SPIN (RPM)</label>
-                        <input
-                          type="number"
-                          placeholder="e.g. 2500"
-                          value={profile.offSpeedSpinRate || ""}
-                          onChange={(e) => setProfile({ ...profile, offSpeedSpinRate: e.target.value })}
-                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
-                        />
-                      </div>
-                      <div>
-                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: NEON_GREEN, marginBottom: "2px" }}>FIRST PITCH STRIKE %</label>
-                        <input
-                          type="number"
-                          placeholder="e.g. 68"
-                          value={profile.firstPitchStrike || ""}
-                          onChange={(e) => setProfile({ ...profile, firstPitchStrike: e.target.value })}
-                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
-                        />
+                    {/* B. Pitch Modeling (Stuff+, Location+, Pitching+) */}
+                    <div style={{ borderTop: "1px solid #161616", paddingTop: "10px" }}>
+                      <span style={{ fontSize: "10px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>
+                        📊 2. Pitch Modeling (100 = League Avg)
+                      </span>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
+                        <div>
+                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: NEON_GREEN, marginBottom: "2px" }}>STUFF+ (GRADE)</label>
+                          <input
+                            type="number"
+                            placeholder="e.g. 118"
+                            value={profile.stuffPlus || ""}
+                            onChange={(e) => setProfile({ ...profile, stuffPlus: e.target.value })}
+                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: `1px solid rgba(166, 255, 0, 0.4)`, color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>LOCATION+ (COMMAND)</label>
+                          <input
+                            type="number"
+                            placeholder="e.g. 106"
+                            value={profile.locationPlus || ""}
+                            onChange={(e) => setProfile({ ...profile, locationPlus: e.target.value })}
+                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>PITCHING+ (OVERALL)</label>
+                          <input
+                            type="number"
+                            placeholder="e.g. 112"
+                            value={profile.pitchingPlus || ""}
+                            onChange={(e) => setProfile({ ...profile, pitchingPlus: e.target.value })}
+                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                          />
+                        </div>
                       </div>
                     </div>
+
+                    {/* C. Ball-Flight & Movement Shapes */}
+                    <div style={{ borderTop: "1px solid #161616", paddingTop: "10px" }}>
+                      <span style={{ fontSize: "10px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>
+                        🎯 3. Ball-Flight & Movement Shapes (TrackMan / Hawkeye)
+                      </span>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px" }}>
+                        <div>
+                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: NEON_GREEN, marginBottom: "2px" }}>IVB (INCHES)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            placeholder="e.g. 18.2"
+                            value={profile.inducedVertBreak || ""}
+                            onChange={(e) => setProfile({ ...profile, inducedVertBreak: e.target.value })}
+                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>HORIZ BREAK (IN)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            placeholder="e.g. 14.5"
+                            value={profile.horizontalBreak || ""}
+                            onChange={(e) => setProfile({ ...profile, horizontalBreak: e.target.value })}
+                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>FB SPIN (RPM)</label>
+                          <input
+                            type="number"
+                            placeholder="e.g. 2420"
+                            value={profile.fbSpinRate || ""}
+                            onChange={(e) => setProfile({ ...profile, fbSpinRate: e.target.value })}
+                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>VAA (DEGREES)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            placeholder="e.g. -4.6"
+                            value={profile.vertApproachAngle || ""}
+                            onChange={(e) => setProfile({ ...profile, vertApproachAngle: e.target.value })}
+                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* D. Release Biomechanics & Box Score Performance */}
+                    <div style={{ borderTop: "1px solid #161616", paddingTop: "10px" }}>
+                      <span style={{ fontSize: "10px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>
+                        📐 4. Release Metrics & Strike Indicators
+                      </span>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: "8px" }}>
+                        <div>
+                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>EXTENSION (FT)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            placeholder="e.g. 6.8"
+                            value={profile.releaseExtension || ""}
+                            onChange={(e) => setProfile({ ...profile, releaseExtension: e.target.value })}
+                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>REL HEIGHT (FT)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            placeholder="e.g. 5.9"
+                            value={profile.releaseHeight || ""}
+                            onChange={(e) => setProfile({ ...profile, releaseHeight: e.target.value })}
+                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>K% (STRIKE OUT)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            placeholder="e.g. 31.5"
+                            value={profile.kPercentage || ""}
+                            onChange={(e) => setProfile({ ...profile, kPercentage: e.target.value })}
+                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#888888", marginBottom: "2px" }}>BB% (WALK RATE)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            placeholder="e.g. 7.2"
+                            value={profile.bbPercentage || ""}
+                            onChange={(e) => setProfile({ ...profile, bbPercentage: e.target.value })}
+                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: NEON_GREEN, marginBottom: "2px" }}>1ST PITCH STRIKE%</label>
+                          <input
+                            type="number"
+                            placeholder="e.g. 68"
+                            value={profile.firstPitchStrike || ""}
+                            onChange={(e) => setProfile({ ...profile, firstPitchStrike: e.target.value })}
+                            style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #333333", color: "#ffffff", padding: "6px 8px", borderRadius: "6px", fontSize: "11px" }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
                   </div>
                 )}
               </div>
 
-              {/* SECTION: SOCIAL GATEWAYS */}
+              {/* SECTION 3: SOCIAL GATEWAYS */}
               <div>
                 <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: "10px" }}>
                   3. Public Social Gateways (Scoreboard Links)
@@ -2016,7 +2246,7 @@ function AppContent() {
                   disabled={isSavingProfile}
                   style={{ flex: 2, backgroundColor: NEON_GREEN, color: "#000000", border: "none", fontWeight: "900", padding: "12px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", textTransform: "uppercase", letterSpacing: "1px" }}
                 >
-                  {isSavingProfile ? "Saving to Registry..." : "Save Metrics & Profile"}
+                  {isSavingProfile ? "Saving Pro Metrics..." : "Save Metrics & Profile"}
                 </button>
               </div>
             </form>
