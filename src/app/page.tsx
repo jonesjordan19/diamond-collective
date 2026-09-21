@@ -975,25 +975,32 @@ function AppContent() {
   const filteredScoreboard = useMemo(() => {
     return leaderboardRows
       .filter((ath) => {
-        if (ath.isProfileVisible === false) return false;
+        // Only hide if explicitly set to false
+        if (ath.isProfileVisible === false || String(ath.isProfileVisible).toLowerCase() === "false") {
+          return false;
+        }
         
+        // Role Filter
         if (roleFilter !== "ALL") {
           if (roleFilter === "TWP" && ath.primaryRole !== "TWP") return false;
           if (roleFilter === "HITTER" && ath.primaryRole !== "HITTER" && ath.primaryRole !== "TWP") return false;
           if (roleFilter === "PITCHER" && ath.primaryRole !== "PITCHER" && ath.primaryRole !== "TWP") return false;
         }
         
+        // Position Filter
         if (positionFilter !== "ALL" && ath.position) {
           const p = ath.position.toUpperCase();
           if (!p.includes(positionFilter.toUpperCase())) return false;
         }
 
+        // Status Filter (Only filter if athlete actually has a status entered)
         if (statusFilter !== "ALL" && ath.playerStatus) {
           if (!ath.playerStatus.toLowerCase().includes(statusFilter.toLowerCase())) {
             return false;
           }
         }
 
+        // State Filter (Only filter if athlete actually has a state entered)
         if (stateFilter !== "ALL" && ath.state && ath.state.trim() !== "") {
           if (ath.state.toUpperCase() !== stateFilter.toUpperCase()) return false;
         }
@@ -1016,7 +1023,7 @@ function AppContent() {
         return 0;
       });
   }, [leaderboardRows, roleFilter, positionFilter, statusFilter, stateFilter, sortBy]);
-
+  
   if (!mounted) return null;
 
   return (
