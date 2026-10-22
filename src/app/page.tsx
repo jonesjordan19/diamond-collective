@@ -20,6 +20,8 @@ const NEON_GREEN = "#a6ff00";
 
 const FOUNDERS_POOL_TOTAL = 100000;
 const SIXTY_DAYS_MS = 60 * 24 * 60 * 60 * 1000;
+// Halloween Draw: Oct 31, 2026 at 8:00 PM Mountain Time (UTC-6 MDT)
+const HALLOWEEN_DRAW_TIMESTAMP = new Date("2026-10-31T20:00:00-06:00").getTime();
 
 const client = createThirdwebClient({
   clientId: "770a552ed494b40543a6696298d41606",
@@ -274,15 +276,15 @@ const MARKET_SECTIONS: MarketCategory[] = [
 const FAQS = [
   {
     q: "Is this compliant with NCAA and Institutional NIL rules?",
-    a: "Yes. All Slugger Coins ($SLUG) distributed during the Founders phase have zero market cash value and are non-compensatory. Tokens are issued exclusively as an access key to unlock brand directories, educational resources, and partner introductions.",
+    a: "Yes. All Slugger Coins ($SLUG) distributed during the Founders phase have zero market cash value and are non-compensatory. Each verified member claims a flat 100 $SLUG allocation used strictly as an access key to unlock brand directories, discounts, and partner introductions.",
   },
   {
     q: "How does the Halloween TAG Sports Radar Giveaway work?",
-    a: "Verified members who complete their locker profile and click 'Enter Radar Sweepstakes' are entered into our live drawing on Halloween night (Oct 31st at 8:00 PM MST) for a free TAG One Sports Radar.",
+    a: "Verified members holding 100 $SLUG who complete their Locker Matrix profile can click 'Enter Radar Giveaway' on the home banner. One random winner will be drawn live on Halloween night (Oct 31st at 8:00 PM MST) to receive a free TAG One Sports Radar.",
   },
   {
     q: "What is 'The Diamond Collective' TAG Sports discount?",
-    a: "Verified collegiate members unlock an exclusive 20% off discount code (DIAMONDCOLLECTIVE) inside the Brand Dugout for all radar hardware at tagsports.ai, plus direct intro access to TAG Sports.",
+    a: "Once you complete your Locker Matrix and claim your 100 $SLUG membership key, you unlock an exclusive 20% off discount code (DIAMONDCOLLECTIVE) inside the Brand Dugout for all radar hardware at tagsports.ai, plus 1-click direct intro access to TAG Sports.",
   },
   {
     q: "How does 'The Big Black Grip' member drop work?",
@@ -294,7 +296,7 @@ const FAQS = [
   },
   {
     q: "Who is eligible to join The Diamond Collective?",
-    a: "Membership is exclusive to active collegiate baseball players (NCAA D1, D2, D3, NAIA, and NJCAA) as well as committed incoming freshmen. Each athlete's roster status is verified prior to token distribution.",
+    a: "Membership is exclusive to active collegiate baseball players (NCAA D1, D2, D3, NAIA, and NJCAA) as well as committed incoming freshmen. Each athlete holds a maximum of 100 $SLUG.",
   },
 ];
 
@@ -735,18 +737,20 @@ function AppContent() {
   const [pendingIntroBrand, setPendingIntroBrand] = useState<BrandItem | null>(null);
   const [dispatchedBrand, setDispatchedBrand] = useState<BrandItem | null>(null);
   const [isLockoutModal, setIsLockoutModal] = useState(false);
+  const [showClaimPromptModal, setShowClaimPromptModal] = useState(false);
   const [profile, setProfile] = useState<AthleteProfile>(emptyProfile);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [introTimestamps, setIntroTimestamps] = useState<{ [brandName: string]: number }>({});
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  // HALLOWEEN RADAR GIVEAWAY & DISCOUNT GATE STATE
+  // HALLOWEEN RADAR GIVEAWAY, COUNTDOWN & 100 $SLUG GATE STATE
   const [hasEnteredGiveaway, setHasEnteredGiveaway] = useState(false);
   const [isRegisteringGiveaway, setIsRegisteringGiveaway] = useState(false);
   const [giveawayWinner, setGiveawayWinner] = useState<AthleteProfile | null>(null);
   const [showWinnerAnimation, setShowWinnerAnimation] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [codeRevealed, setCodeRevealed] = useState(false);
+  const [countdownText, setCountdownText] = useState<string>("09d : 05h : 55m : 00s");
 
   useEffect(() => {
     setMounted(true);
@@ -754,6 +758,24 @@ function AppContent() {
     if (entered) {
       setHasEnteredGiveaway(true);
     }
+
+    const updateCountdown = () => {
+      const diff = HALLOWEEN_DRAW_TIMESTAMP - Date.now();
+      if (diff <= 0) {
+        setCountdownText("🎃 LIVE DRAW IN PROGRESS");
+        return;
+      }
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const m = Math.floor((diff / 1000 / 60) % 60);
+      const s = Math.floor((diff / 1000) % 60);
+      const pad = (n: number) => String(n).padStart(2, "0");
+      setCountdownText(`${pad(d)}d : ${pad(h)}h : ${pad(m)}m : ${pad(s)}s`);
+    };
+
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
+    return () => clearInterval(timer);
   }, []);
 
   const handleOpenLogin = () => {
@@ -782,7 +804,8 @@ function AppContent() {
   const rawRemaining = ((FOUNDERS_POOL_TOTAL - totalMinted) / FOUNDERS_POOL_TOTAL) * 100;
   const remainingPercentage = Math.max(0, Math.min(100, Math.round(rawRemaining)));
 
-  const balance = balanceData ? Number(balanceData.displayValue) : 0;
+  // Flat 100 $SLUG Membership Key Check
+  const balance = balanceData ? Math.min(100, Number(balanceData.displayValue)) : 0;
   const isUnlocked = balance >= 100 || justClaimed;
   const hasProfile = Boolean(profile.fullName && profile.email);
 
@@ -799,6 +822,10 @@ function AppContent() {
     }
     if (!hasProfile) {
       setShowProfileModal(true);
+      return;
+    }
+    if (!isUnlocked) {
+      setShowClaimPromptModal(true);
       return;
     }
 
@@ -821,8 +848,9 @@ function AppContent() {
           playerStatus: profile.playerStatus,
           portalStatus: profile.playerStatus,
           primaryRole: profile.primaryRole,
-          isProfileVisible: true,
-          verificationLink: "HALLOWEEN_RADAR_ENTRY",
+          isProfileVisible: profile.isProfileVisible !== false,
+          verificationLink: profile.verificationLink || "",
+          giveawayEntry: "HALLOWEEN_TAG_RADAR_2026",
         }),
       });
     } catch {}
@@ -901,6 +929,7 @@ function AppContent() {
                 primaryRole: validRole as "HITTER" | "PITCHER" | "TWP",
                 playerStatus: item.portalStatus || item.playerStatus || "Active",
                 isProfileVisible: String(item.isProfileVisible).toUpperCase() !== "FALSE",
+                verificationLink: item.verificationLink && item.verificationLink !== "HALLOWEEN_RADAR_ENTRY" ? String(item.verificationLink) : "",
                 height: item.height ? String(item.height) : "",
                 weight: item.weight ? String(item.weight) : "",
                 maxExitVelo: item.maxExitVelo ? String(item.maxExitVelo) : "",
@@ -1132,7 +1161,7 @@ function AppContent() {
     }
   };
 
-  // STEP 1: OPEN PRE-SEND PROFILE VERIFICATION MODAL
+  // STEP 1: VERIFY PROFILE + 100 $SLUG KEY BEFORE INTRO
   const handleInitiateIntro = (brand: BrandItem) => {
     if (isIntroActive(brand.name)) {
       setDispatchedBrand(brand);
@@ -1147,6 +1176,11 @@ function AppContent() {
 
     if (!profile.fullName || !profile.email) {
       setShowProfileModal(true);
+      return;
+    }
+
+    if (!isUnlocked) {
+      setShowClaimPromptModal(true);
       return;
     }
 
@@ -1258,7 +1292,7 @@ function AppContent() {
     <div style={{ minHeight: "100vh", backgroundColor: "#050507", backgroundImage: "radial-gradient(circle at 50% 0%, rgba(166, 255, 0, 0.07) 0%, transparent 55%)", color: "#ffffff", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
       {/* Compliance Header */}
       <div style={{ backgroundColor: "rgba(10, 10, 12, 0.9)", backdropFilter: "blur(10px)", borderBottom: "1px solid #1a1a22", padding: "10px 16px", textAlign: "center", fontSize: "11px", color: "#a1a1aa", letterSpacing: "0.5px", lineHeight: "1.4" }}>
-        <strong style={{ color: "#ffffff" }}>NCAA NIL Compliance Note:</strong> All SLUGGER COINS distributed during the Founders phase have no current market value and are non-compensatory. Tokens are issued solely for community participation and access purposes.
+        <strong style={{ color: "#ffffff" }}>NCAA NIL Compliance Note:</strong> All SLUGGER COINS distributed during the Founders phase have no current market value and are non-compensatory. Tokens are issued solely as a flat 100 $SLUG membership key for community participation and access purposes.
       </div>
 
       <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "28px 16px" }}>
@@ -1284,16 +1318,16 @@ function AppContent() {
           <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
             {account && (
               <div style={{
-                backgroundColor: "rgba(166, 255, 0, 0.08)",
-                border: `1px solid ${NEON_GREEN}`,
+                backgroundColor: isUnlocked ? "rgba(166, 255, 0, 0.1)" : "#141418",
+                border: `1.5px solid ${isUnlocked ? NEON_GREEN : "#3f3f4e"}`,
                 borderRadius: "10px",
                 padding: "8px 12px",
                 display: "flex",
                 alignItems: "center",
                 gap: "6px"
               }}>
-                <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN }}>
-                  🪙 {balance !== undefined ? balance.toLocaleString() : "0"} $SLUG
+                <span style={{ fontSize: "11px", fontWeight: "900", color: isUnlocked ? NEON_GREEN : "#d4d4d8" }}>
+                  {isUnlocked ? "🔑 100 / 100 $SLUG KEY ACTIVE" : "🔒 0 / 100 $SLUG"}
                 </span>
               </div>
             )}
@@ -1332,7 +1366,7 @@ function AppContent() {
           </div>
         </header>
 
-        {/* HALLOWEEN NIGHT GIVEAWAY HUB */}
+        {/* HALLOWEEN NIGHT GIVEAWAY HUB WITH LIVE COUNTDOWN */}
         <section style={{ margin: "24px 0" }}>
           <div style={{ 
             background: "linear-gradient(135deg, rgba(24, 15, 38, 0.95) 0%, rgba(12, 12, 18, 0.98) 60%, rgba(25, 38, 12, 0.9) 100%)", 
@@ -1345,19 +1379,25 @@ function AppContent() {
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "20px" }}>
               <div style={{ flex: "1 1 520px" }}>
-                <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", backgroundColor: "rgba(255, 122, 0, 0.18)", border: "1px solid #ff7a00", color: "#ff9933", fontSize: "10px", fontWeight: "900", padding: "5px 12px", borderRadius: "999px", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "10px" }}>
-                  <span>🎃 Halloween Night Live Draw • Oct 31st @ 8:00 PM MST</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "10px" }}>
+                  <span style={{ backgroundColor: "rgba(255, 122, 0, 0.18)", border: "1px solid #ff7a00", color: "#ff9933", fontSize: "10px", fontWeight: "900", padding: "5px 12px", borderRadius: "999px", textTransform: "uppercase", letterSpacing: "1px" }}>
+                    🎃 Halloween Night Live Draw • Oct 31 @ 8:00 PM MST
+                  </span>
+                  <span style={{ backgroundColor: "#09090d", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontSize: "11px", fontWeight: "950", padding: "5px 12px", borderRadius: "999px", fontFamily: "monospace", letterSpacing: "1px" }}>
+                    ⏱️ {countdownText}
+                  </span>
                 </div>
+
                 <h2 style={{ fontSize: "26px", fontWeight: "950", color: "#ffffff", textTransform: "uppercase", margin: "0 0 8px 0", letterSpacing: "0.5px" }}>
                   TAG Sports Radar Giveaway + 20% Member Perk
                 </h2>
                 <p style={{ fontSize: "13px", color: "#e4e4e7", maxWidth: "660px", margin: "0 0 14px 0", lineHeight: "1.5" }}>
-                  We teamed up with <strong style={{ color: NEON_GREEN }}>TAG Sports (tagsports.ai)</strong> to give away a brand-new smart baseball radar on Halloween night. Join the collective, lock in your player profile, and enter below. Plus, all verified members unlock a <strong style={{ color: "#ffffff" }}>20% OFF discount code</strong> and direct intro access inside the Brand Dugout.
+                  We teamed up with <strong style={{ color: NEON_GREEN }}>TAG Sports (tagsports.ai)</strong> to give away a brand-new smart baseball radar on Halloween night. Claim your <strong style={{ color: "#ffffff" }}>100 $SLUG membership key</strong>, lock in your player profile, and enter below. All 100 $SLUG holders also unlock a <strong style={{ color: NEON_GREEN }}>20% OFF discount code</strong> and direct intro access inside the Brand Dugout.
                 </p>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", fontSize: "11px", fontFamily: "monospace", color: NEON_GREEN, fontWeight: "800" }}>
-                  <span style={{ backgroundColor: "rgba(0,0,0,0.5)", border: "1px solid #2a2a35", padding: "5px 10px", borderRadius: "8px" }}>⚡ Dual-Direction Velocity</span>
+                  <span style={{ backgroundColor: "rgba(0,0,0,0.5)", border: "1px solid #2a2a35", padding: "5px 10px", borderRadius: "8px" }}>🔑 100 $SLUG Member Exclusive</span>
                   <span style={{ backgroundColor: "rgba(0,0,0,0.5)", border: "1px solid #2a2a35", padding: "5px 10px", borderRadius: "8px" }}>📹 Auto Video Overlays</span>
-                  <span style={{ backgroundColor: "rgba(0,0,0,0.5)", border: "1px solid #2a2a35", padding: "5px 10px", borderRadius: "8px" }}>🔓 20% Off Member Code</span>
+                  <span style={{ backgroundColor: "rgba(0,0,0,0.5)", border: "1px solid #2a2a35", padding: "5px 10px", borderRadius: "8px" }}>🔓 20% Off Code: DIAMONDCOLLECTIVE</span>
                 </div>
               </div>
 
@@ -1445,7 +1485,7 @@ function AppContent() {
           </div>
           <div style={{ backgroundColor: "#0c0c10", border: "1px solid #1e1e26", borderRadius: "14px", padding: "14px", textAlign: "center" }}>
             <span style={{ display: "block", fontSize: "19px", fontWeight: "950", color: NEON_GREEN }}>100 $SLUG</span>
-            <span style={{ fontSize: "10px", color: "#d4d4d8", textTransform: "uppercase", fontWeight: "800", letterSpacing: "0.5px" }}>Free Allocation</span>
+            <span style={{ fontSize: "10px", color: "#d4d4d8", textTransform: "uppercase", fontWeight: "800", letterSpacing: "0.5px" }}>Flat Member Key</span>
           </div>
           <div style={{ backgroundColor: "#0c0c10", border: "1px solid #1e1e26", borderRadius: "14px", padding: "14px", textAlign: "center" }}>
             <span style={{ display: "block", fontSize: "19px", fontWeight: "950", color: "#ffffff" }}>
@@ -1513,7 +1553,7 @@ function AppContent() {
                     National Scouting Scoreboard
                   </h2>
                   <p style={{ fontSize: "13px", color: "#d4d4d8", maxWidth: "680px", margin: 0, lineHeight: "1.5" }}>
-                    Direct scout discovery for active college ballplayers and transfer portal candidates. Filter verified bat speeds, pitch modeling (Stuff+), IVB, and release extension.
+                    Direct scout discovery for active college ballplayers and transfer portal candidates. Filter verified bat speeds, pitch modeling (Stuff+), IVB, and video clips.
                   </p>
                 </div>
 
@@ -1724,6 +1764,13 @@ function AppContent() {
                     const isPitcherRole = ath.primaryRole === "PITCHER" || isAthleteTWP;
                     const isHitterRole = ath.primaryRole === "HITTER" || isAthleteTWP;
 
+                    // Pro-Benchmark Elite Checks
+                    const isEliteFB = parseFloat(ath.peakFB || "0") >= 92;
+                    const isEliteStuff = parseFloat(ath.stuffPlus || "0") >= 110;
+                    const isEliteIVB = parseFloat(ath.inducedVertBreak || "0") >= 18;
+                    const isEliteEV = parseFloat(ath.maxExitVelo || "0") >= 100;
+                    const isElite60 = parseFloat(ath.sixtyTime || "99") <= 6.65;
+
                     return (
                       <div
                         key={idx}
@@ -1776,19 +1823,20 @@ function AppContent() {
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                 <span style={{ fontSize: "11px", color: NEON_GREEN, textTransform: "uppercase", fontWeight: "900", letterSpacing: "1px" }}>⚾ Mound Telemetry</span>
                                 {ath.stuffPlus && (
-                                  <span style={{ backgroundColor: "rgba(166, 255, 0, 0.15)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "3px 9px", borderRadius: "6px", fontSize: "12px", fontWeight: "900" }}>
-                                    Stuff+ {ath.stuffPlus}
+                                  <span style={{ backgroundColor: isEliteStuff ? "rgba(255, 184, 0, 0.18)" : "rgba(166, 255, 0, 0.15)", border: `1px solid ${isEliteStuff ? "#ffb800" : NEON_GREEN}`, color: isEliteStuff ? "#ffb800" : NEON_GREEN, padding: "3px 9px", borderRadius: "6px", fontSize: "12px", fontWeight: "900" }}>
+                                    {isEliteStuff ? "🔥 " : ""}Stuff+ {ath.stuffPlus}
                                   </span>
                                 )}
                               </div>
 
-                              <div style={{ color: "#ffffff", fontWeight: "900", fontSize: "16px", fontFamily: "monospace" }}>
-                                <span style={{ color: NEON_GREEN }}>FB:</span> {ath.peakFB ? `${ath.peakFB} mph` : "Unrecorded"} {ath.sittingFB ? `(${ath.sittingFB})` : ""}
-                                {ath.fbSpinRate && <span style={{ color: "#ffffff", fontWeight: "800", fontSize: "13px" }}> • {ath.fbSpinRate} RPM</span>}
+                              <div style={{ color: "#ffffff", fontWeight: "900", fontSize: "16px", fontFamily: "monospace", display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                                <span><span style={{ color: NEON_GREEN }}>FB:</span> {ath.peakFB ? `${ath.peakFB} mph` : "Unrecorded"} {ath.sittingFB ? `(${ath.sittingFB})` : ""}</span>
+                                {isEliteFB && <span style={{ backgroundColor: "rgba(255, 184, 0, 0.18)", border: "1px solid #ffb800", color: "#ffb800", fontSize: "10px", padding: "2px 6px", borderRadius: "4px" }}>🔥 ELITE VELO</span>}
+                                {ath.fbSpinRate && <span style={{ color: "#ffffff", fontWeight: "800", fontSize: "13px" }}>• {ath.fbSpinRate} RPM</span>}
                               </div>
 
                               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", fontSize: "12px", color: "#ffffff", fontFamily: "monospace", fontWeight: "800" }}>
-                                {ath.inducedVertBreak && <span style={{ backgroundColor: "#14141c", border: "1px solid #383846", padding: "6px 10px", borderRadius: "6px" }}><span style={{ color: NEON_GREEN }}>IVB:</span> {ath.inducedVertBreak}"</span>}
+                                {ath.inducedVertBreak && <span style={{ backgroundColor: "#14141c", border: `1px solid ${isEliteIVB ? "#ffb800" : "#383846"}`, padding: "6px 10px", borderRadius: "6px" }}><span style={{ color: isEliteIVB ? "#ffb800" : NEON_GREEN }}>{isEliteIVB ? "🔥 " : ""}IVB:</span> {ath.inducedVertBreak}"</span>}
                                 {ath.horizontalBreak && <span style={{ backgroundColor: "#14141c", border: "1px solid #383846", padding: "6px 10px", borderRadius: "6px" }}><span style={{ color: NEON_GREEN }}>HB:</span> {ath.horizontalBreak}"</span>}
                                 {ath.releaseExtension && <span style={{ backgroundColor: "#14141c", border: "1px solid #383846", padding: "6px 10px", borderRadius: "6px" }}><span style={{ color: NEON_GREEN }}>Ext:</span> {ath.releaseExtension}ft</span>}
                                 {ath.vertApproachAngle && <span style={{ backgroundColor: "#14141c", border: "1px solid #383846", padding: "6px 10px", borderRadius: "6px" }}><span style={{ color: NEON_GREEN }}>VAA:</span> {ath.vertApproachAngle}°</span>}
@@ -1808,6 +1856,11 @@ function AppContent() {
                             <div style={{ backgroundColor: "#07070a", border: "1px solid #252530", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                 <span style={{ fontSize: "11px", color: NEON_GREEN, textTransform: "uppercase", fontWeight: "900", letterSpacing: "1px" }}>💥 Batter's Box Telemetry</span>
+                                {isEliteEV && (
+                                  <span style={{ backgroundColor: "rgba(255, 184, 0, 0.18)", border: "1px solid #ffb800", color: "#ffb800", padding: "2px 8px", borderRadius: "6px", fontSize: "10px", fontWeight: "900" }}>
+                                    🔥 100+ MPH CLUB
+                                  </span>
+                                )}
                               </div>
 
                               <div style={{ color: "#ffffff", fontWeight: "900", fontSize: "16px", fontFamily: "monospace" }}>
@@ -1823,7 +1876,7 @@ function AppContent() {
                               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", fontSize: "12px", color: "#ffffff", fontFamily: "monospace", fontWeight: "800" }}>
                                 {ath.ninetyEV && <span style={{ backgroundColor: "#14141c", border: "1px solid #383846", padding: "6px 10px", borderRadius: "6px" }}><span style={{ color: NEON_GREEN }}>90th%:</span> {ath.ninetyEV} mph</span>}
                                 {ath.batSpeed && <span style={{ backgroundColor: "#14141c", border: "1px solid #383846", padding: "6px 10px", borderRadius: "6px" }}><span style={{ color: NEON_GREEN }}>Bat Speed:</span> {ath.batSpeed} mph</span>}
-                                {ath.sixtyTime && <span style={{ backgroundColor: "#14141c", border: "1px solid #383846", padding: "6px 10px", borderRadius: "6px" }}><span style={{ color: NEON_GREEN }}>60-Yard:</span> {ath.sixtyTime}s</span>}
+                                {ath.sixtyTime && <span style={{ backgroundColor: "#14141c", border: `1px solid ${isElite60 ? "#ffb800" : "#383846"}`, padding: "6px 10px", borderRadius: "6px" }}><span style={{ color: isElite60 ? "#ffb800" : NEON_GREEN }}>{isElite60 ? "🔥 " : ""}60-Yard:</span> {ath.sixtyTime}s</span>}
                               </div>
                             </div>
                           )}
@@ -1838,7 +1891,7 @@ function AppContent() {
                             {!ath.recordedDatePitching && !ath.recordedDateHitting && <span>Member Verified</span>}
                           </div>
 
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                             <button
                               onClick={() => triggerMobileScoutShare(ath)}
                               style={{
@@ -1859,6 +1912,17 @@ function AppContent() {
                               <span>Share 4:5 Card</span>
                               <span>📸</span>
                             </button>
+
+                            {ath.verificationLink && ath.verificationLink.startsWith("http") && (
+                              <a
+                                href={ath.verificationLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ backgroundColor: "rgba(255, 122, 0, 0.15)", border: "1px solid #ff7a00", color: "#ff9933", padding: "9px 14px", borderRadius: "10px", textDecoration: "none", fontSize: "12px", fontWeight: "900" }}
+                              >
+                                🎥 Watch Clip ↗
+                              </a>
+                            )}
 
                             {ath.social1_Url && (
                               <a
@@ -1900,7 +1964,7 @@ function AppContent() {
                   Active College Ballplayer?
                 </h3>
                 <p style={{ fontSize: "13px", color: "#d4d4d8", margin: "0 0 16px 0", lineHeight: "1.4" }}>
-                  Sign in with your Google, Apple, or phone ID to unlock the 20% off TAG Sports code, direct brand intros, and 100 $SLUG.
+                  Sign in with your Google, Apple, or phone ID to claim your 100 $SLUG membership key, unlock the 20% off TAG Sports code, and request direct brand intros.
                 </p>
                 <button
                   onClick={handleOpenLogin}
@@ -1912,10 +1976,10 @@ function AppContent() {
             ) : !hasProfile ? (
               <div style={{ backgroundColor: "#0c0c10", border: `1px solid ${NEON_GREEN}`, borderRadius: "20px", padding: "24px 20px", textAlign: "center", maxWidth: "680px", margin: "0 auto 36px auto" }}>
                 <h3 style={{ fontSize: "18px", fontWeight: "900", margin: "0 0 6px 0", color: "#ffffff", textTransform: "uppercase" }}>
-                  Complete Roster Verification
+                  Step 1: Complete Roster Verification
                 </h3>
                 <p style={{ fontSize: "13px", color: "#d4d4d8", margin: "0 0 16px 0" }}>
-                  Submit your college bio to unlock the 20% off TAG Sports code and 1-click Direct Intros.
+                  Submit your college bio in the Locker Matrix so you can claim your 100 $SLUG membership key.
                 </p>
                 <button
                   onClick={() => setShowProfileModal(true)}
@@ -1925,12 +1989,15 @@ function AppContent() {
                 </button>
               </div>
             ) : !isUnlocked ? (
-              <div style={{ backgroundColor: "#0c0c10", border: `1px solid ${NEON_GREEN}`, borderRadius: "20px", padding: "24px 20px", textAlign: "center", maxWidth: "680px", margin: "0 auto 36px auto" }}>
-                <h3 style={{ fontSize: "18px", fontWeight: "900", margin: "0 0 6px 0", color: "#ffffff", textTransform: "uppercase" }}>
-                  Claim Your 100 Slugger Coins
+              <div style={{ backgroundColor: "#0c0c10", border: `2px solid ${NEON_GREEN}`, borderRadius: "20px", padding: "24px 20px", textAlign: "center", maxWidth: "680px", margin: "0 auto 36px auto", boxShadow: "0 0 30px rgba(166, 255, 0, 0.15)" }}>
+                <span style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1px" }}>
+                  Step 2: Activate Your Membership Key
+                </span>
+                <h3 style={{ fontSize: "20px", fontWeight: "950", margin: "4px 0 6px 0", color: "#ffffff", textTransform: "uppercase" }}>
+                  Claim Your Flat 100 $SLUG Allocation
                 </h3>
                 <p style={{ fontSize: "13px", color: "#d4d4d8", margin: "0 0 16px 0" }}>
-                  {profile.fullName} • {profile.college} ({profile.position})
+                  {profile.fullName} • {profile.college} ({profile.position}) — Claim 100 $SLUG to unlock the 20% TAG Sports code, Halloween giveaway, and Direct Brand Intros.
                 </p>
                 <TransactionButton
                   transaction={() =>
@@ -1946,9 +2013,9 @@ function AppContent() {
                     refetchSupply();
                   }}
                   onError={(err) => alert(`Claim error: ${err.message}`)}
-                  style={{ backgroundColor: NEON_GREEN, color: "#000000", fontWeight: "900", textTransform: "uppercase", letterSpacing: "1px", padding: "12px 24px", borderRadius: "10px", border: "none", cursor: "pointer", fontSize: "13px" }}
+                  style={{ backgroundColor: NEON_GREEN, color: "#000000", fontWeight: "950", textTransform: "uppercase", letterSpacing: "1px", padding: "14px 28px", borderRadius: "10px", border: "none", cursor: "pointer", fontSize: "13px" }}
                 >
-                  Claim 100 Free Slugger Coins
+                  🔑 Claim 100 Free Slugger Coins
                 </TransactionButton>
               </div>
             ) : null}
@@ -2052,7 +2119,7 @@ function AppContent() {
                               </span>
                               {isDirectIntro && (
                                 <span style={{ backgroundColor: "rgba(166, 255, 0, 0.12)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontSize: "8px", fontWeight: "900", padding: "2px 6px", borderRadius: "4px", textTransform: "uppercase" }}>
-                                  Decision Maker Direct
+                                  100 $SLUG Key Gated
                                 </span>
                               )}
                             </div>
@@ -2065,7 +2132,7 @@ function AppContent() {
                           </div>
 
                           <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "18px" }}>
-                            {/* OPTIONAL MEMBER COUPON REVEAL GATE (TAG SPORTS) */}
+                            {/* 100 $SLUG GATED COUPON REVEAL (TAG SPORTS) */}
                             {hasCoupon && (
                               <div>
                                 {!account ? (
@@ -2104,12 +2171,30 @@ function AppContent() {
                                   >
                                     🔒 Complete Locker for 20% Off Code
                                   </button>
+                                ) : !isUnlocked ? (
+                                  <button
+                                    onClick={() => setShowClaimPromptModal(true)}
+                                    style={{
+                                      width: "100%",
+                                      backgroundColor: "#16161f",
+                                      color: NEON_GREEN,
+                                      border: `1px dashed ${NEON_GREEN}`,
+                                      fontWeight: "900",
+                                      padding: "10px",
+                                      borderRadius: "8px",
+                                      fontSize: "11px",
+                                      textTransform: "uppercase",
+                                      cursor: "pointer"
+                                    }}
+                                  >
+                                    🔑 Claim 100 $SLUG to Unlock 20% Off
+                                  </button>
                                 ) : !codeRevealed ? (
                                   <button
                                     onClick={() => setCodeRevealed(true)}
                                     style={{
                                       width: "100%",
-                                      backgroundColor: "rgba(166, 255, 0, 0.1)",
+                                      backgroundColor: "rgba(166, 255, 0, 0.12)",
                                       color: NEON_GREEN,
                                       border: `1px dashed ${NEON_GREEN}`,
                                       fontWeight: "900",
@@ -2265,6 +2350,53 @@ function AppContent() {
         </section>
       </div>
 
+      {/* 100 $SLUG MEMBERSHIP KEY CLAIM MODAL */}
+      {showClaimPromptModal && account && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.9)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1200, padding: "16px" }}>
+          <div style={{ backgroundColor: "#0c0c10", border: `2px solid ${NEON_GREEN}`, borderRadius: "22px", width: "100%", maxWidth: "480px", padding: "28px 24px", textAlign: "center", boxShadow: "0 0 45px rgba(166, 255, 0, 0.2)" }}>
+            <div style={{ fontSize: "36px", marginBottom: "8px" }}>🔑</div>
+            <span style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>
+              Member Access Required
+            </span>
+            <h3 style={{ margin: "6px 0 10px 0", fontSize: "22px", fontWeight: "950", textTransform: "uppercase", color: "#ffffff" }}>
+              Claim Your 100 $SLUG Key
+            </h3>
+            <p style={{ fontSize: "13px", color: "#d4d4d8", lineHeight: "1.5", margin: "0 0 20px 0" }}>
+              Every verified member holds a flat <strong style={{ color: "#ffffff" }}>100 $SLUG allocation</strong> (100% free, gas-sponsored). Claim yours below to unlock the Halloween TAG Radar giveaway, 20% off discount code, and Direct Brand Intros.
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <TransactionButton
+                transaction={() =>
+                  claimTo({
+                    contract: sluggerContract,
+                    to: account.address,
+                    quantity: "100",
+                  })
+                }
+                onTransactionConfirmed={() => {
+                  setJustClaimed(true);
+                  refetchBalance();
+                  refetchSupply();
+                  setShowClaimPromptModal(false);
+                }}
+                onError={(err) => alert(`Claim error: ${err.message}`)}
+                style={{ width: "100%", backgroundColor: NEON_GREEN, color: "#000000", fontWeight: "950", textTransform: "uppercase", letterSpacing: "1px", padding: "14px", borderRadius: "10px", border: "none", cursor: "pointer", fontSize: "13px" }}
+              >
+                🔑 Claim 100 Free $SLUG Now
+              </TransactionButton>
+
+              <button
+                onClick={() => setShowClaimPromptModal(false)}
+                style={{ width: "100%", backgroundColor: "transparent", border: "1px solid #33333d", color: "#a1a1aa", fontWeight: "800", padding: "10px", borderRadius: "10px", cursor: "pointer", fontSize: "11px", textTransform: "uppercase" }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* PRE-SEND PROFILE VERIFICATION MODAL (ALL DIRECT INTROS) */}
       {pendingIntroBrand && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.9)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1150, padding: "16px" }}>
@@ -2290,7 +2422,6 @@ function AppContent() {
               Please verify your current Locker Matrix data below. Once dispatched to <strong style={{ color: "#ffffff" }}>{pendingIntroBrand.brandRepName || pendingIntroBrand.name}</strong>, this partner enters a 60-day review window.
             </p>
 
-            {/* SNAPSHOT OF CURRENT PROFILE */}
             <div style={{ backgroundColor: "#07070a", border: "1px solid #262632", borderRadius: "14px", padding: "16px", marginBottom: "18px", display: "flex", flexDirection: "column", gap: "10px", fontSize: "12px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #1a1a24", paddingBottom: "8px" }}>
                 <span style={{ color: "#a1a1aa", fontWeight: "700" }}>Athlete & Program:</span>
@@ -2324,9 +2455,9 @@ function AppContent() {
               )}
 
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "#a1a1aa", fontWeight: "700" }}>Social Gateway:</span>
+                <span style={{ color: "#a1a1aa", fontWeight: "700" }}>Video / Social Proof:</span>
                 <span style={{ color: "#ffffff", fontWeight: "800" }}>
-                  {profile.social1_Url || profile.social2_Url || "None linked"}
+                  {profile.verificationLink || profile.social1_Url || profile.social2_Url || "None linked"}
                 </span>
               </div>
             </div>
@@ -2444,7 +2575,7 @@ function AppContent() {
                   Athlete Locker & Scouting Matrix
                 </h3>
                 <p style={{ fontSize: "11px", color: "#d4d4d8", margin: "2px 0 0 0" }}>
-                  Step through tabs to log bio, hitting, and pitching numbers.
+                  Step through tabs to log bio, hitting, pitching, and video proof.
                 </p>
               </div>
               <button
@@ -2931,8 +3062,19 @@ function AppContent() {
                 </div>
               )}
 
-              {/* SOCIAL LINKS */}
+              {/* VIDEO PROOF & SOCIAL LINKS */}
               <div style={{ borderTop: "1px solid #22222a", paddingTop: "14px", marginTop: "4px" }}>
+                <span style={{ fontSize: "10px", fontWeight: "900", color: "#ff9933", textTransform: "uppercase", letterSpacing: "0.8px", display: "block", marginBottom: "6px" }}>
+                  🎥 Video / TrackMan / TAG Sports Proof Link (Optional)
+                </span>
+                <input
+                  type="url"
+                  placeholder="https://x.com/... or YouTube / TAG Sports clip link"
+                  value={profile.verificationLink || ""}
+                  onChange={(e) => setProfile({ ...profile, verificationLink: e.target.value })}
+                  style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #444", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "11px", fontWeight: "700", marginBottom: "12px" }}
+                />
+
                 <span style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "0.8px", display: "block", marginBottom: "8px" }}>
                   Public Scout Gateway Links
                 </span>
