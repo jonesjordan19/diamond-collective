@@ -1153,6 +1153,11 @@ function AppContent() {
 
       setIsSavingProfile(false);
       setShowProfileModal(false);
+
+      if (typeof window !== "undefined" && (window as any).fbq) {
+        (window as any).fbq('track', 'CompleteRegistration');
+      }
+
       alert("Pro metrics saved to national scoreboard database!");
     } catch (err: any) {
       setIsSavingProfile(false);
@@ -1161,7 +1166,6 @@ function AppContent() {
     }
   };
 
-  // STEP 1: VERIFY PROFILE + 100 $SLUG KEY BEFORE INTRO
   const handleInitiateIntro = (brand: BrandItem) => {
     if (isIntroActive(brand.name)) {
       setDispatchedBrand(brand);
@@ -1187,7 +1191,6 @@ function AppContent() {
     setPendingIntroBrand(brand);
   };
 
-  // STEP 2: CONFIRMED DISPATCH TO PARTNER REP
   const handleConfirmAndSendIntro = async () => {
     if (!pendingIntroBrand) return;
     const brand = pendingIntroBrand;
@@ -1764,7 +1767,6 @@ function AppContent() {
                     const isPitcherRole = ath.primaryRole === "PITCHER" || isAthleteTWP;
                     const isHitterRole = ath.primaryRole === "HITTER" || isAthleteTWP;
 
-                    // Pro-Benchmark Elite Checks
                     const isEliteFB = parseFloat(ath.peakFB || "0") >= 92;
                     const isEliteStuff = parseFloat(ath.stuffPlus || "0") >= 110;
                     const isEliteIVB = parseFloat(ath.inducedVertBreak || "0") >= 18;
