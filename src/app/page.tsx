@@ -48,11 +48,13 @@ interface BrandItem {
   tagline: string;
   description: string;
   buttonText: string;
-  type: "email_intro" | "affiliate_link" | "special_collab";
+  type: "email_intro" | "affiliate_link";
   link?: string;
   brandRepEmail?: string;
   brandRepName?: string;
   isPrimary?: boolean;
+  couponCode?: string;
+  couponLabel?: string;
 }
 
 interface MarketCategory {
@@ -248,9 +250,14 @@ const MARKET_SECTIONS: MarketCategory[] = [
         name: "TAG Sports",
         tagline: "Smart Sports Radar & AiCE Coaching",
         description: "Redefining velocity tracking with aerospace precision. No-subscription radar capturing dual-direction speeds with video highlights overlaid directly onto auto-generated clips.",
-        buttonText: "🔒 Unlocks With Membership",
-        type: "special_collab",
+        buttonText: "Request Direct Intro ⚡",
+        type: "email_intro",
+        brandRepEmail: "clucas@tagsports.ai",
+        brandRepName: "C. Lucas (TAG Sports)",
         link: "https://tagsports.ai",
+        couponCode: "DIAMONDCOLLECTIVE",
+        couponLabel: "20% Off Member Code",
+        isPrimary: true,
       },
       {
         name: "Pocket Radar",
@@ -275,7 +282,7 @@ const FAQS = [
   },
   {
     q: "What is 'The Diamond Collective' TAG Sports discount?",
-    a: "Verified collegiate members unlock an exclusive 20% off discount code (DIAMONDCOLLECTIVE) inside the Brand Dugout for all radar hardware at tagsports.ai.",
+    a: "Verified collegiate members unlock an exclusive 20% off discount code (DIAMONDCOLLECTIVE) inside the Brand Dugout for all radar hardware at tagsports.ai, plus direct intro access to TAG Sports.",
   },
   {
     q: "How does 'The Big Black Grip' member drop work?",
@@ -725,6 +732,7 @@ function AppContent() {
 
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [activeMatrixTab, setActiveMatrixTab] = useState<"BIO" | "HITTING" | "PITCHING">("BIO");
+  const [pendingIntroBrand, setPendingIntroBrand] = useState<BrandItem | null>(null);
   const [dispatchedBrand, setDispatchedBrand] = useState<BrandItem | null>(null);
   const [isLockoutModal, setIsLockoutModal] = useState(false);
   const [profile, setProfile] = useState<AthleteProfile>(emptyProfile);
@@ -778,7 +786,6 @@ function AppContent() {
   const isUnlocked = balance >= 100 || justClaimed;
   const hasProfile = Boolean(profile.fullName && profile.email);
 
-  // Check if current logged-in user is Jordan (Admin) to show the Winner Draw button
   const isAdmin = useMemo(() => {
     const emailMatch = profile.email?.toLowerCase() === "emailjordanjones@gmail.com";
     const walletMatch = account?.address?.toLowerCase() === "0x46cbd713d7440692156e1219153622c45b04d3a";
@@ -1125,10 +1132,16 @@ function AppContent() {
     }
   };
 
-  const handleRequestIntro = async (brand: BrandItem) => {
+  // STEP 1: OPEN PRE-SEND PROFILE VERIFICATION MODAL
+  const handleInitiateIntro = (brand: BrandItem) => {
     if (isIntroActive(brand.name)) {
       setDispatchedBrand(brand);
       setIsLockoutModal(true);
+      return;
+    }
+
+    if (!account) {
+      handleOpenLogin();
       return;
     }
 
@@ -1136,6 +1149,15 @@ function AppContent() {
       setShowProfileModal(true);
       return;
     }
+
+    setPendingIntroBrand(brand);
+  };
+
+  // STEP 2: CONFIRMED DISPATCH TO PARTNER REP
+  const handleConfirmAndSendIntro = async () => {
+    if (!pendingIntroBrand) return;
+    const brand = pendingIntroBrand;
+    setPendingIntroBrand(null);
 
     const now = Date.now();
     const lowerWallet = account?.address?.toLowerCase() || "";
@@ -1330,7 +1352,7 @@ function AppContent() {
                   TAG Sports Radar Giveaway + 20% Member Perk
                 </h2>
                 <p style={{ fontSize: "13px", color: "#e4e4e7", maxWidth: "660px", margin: "0 0 14px 0", lineHeight: "1.5" }}>
-                  We teamed up with <strong style={{ color: NEON_GREEN }}>TAG Sports (tagsports.ai)</strong> to give away a brand-new smart baseball radar on Halloween night. Join the collective, lock in your player profile, and enter below. Plus, all verified members unlock a <strong style={{ color: "#ffffff" }}>20% OFF discount code</strong> inside the Brand Dugout.
+                  We teamed up with <strong style={{ color: NEON_GREEN }}>TAG Sports (tagsports.ai)</strong> to give away a brand-new smart baseball radar on Halloween night. Join the collective, lock in your player profile, and enter below. Plus, all verified members unlock a <strong style={{ color: "#ffffff" }}>20% OFF discount code</strong> and direct intro access inside the Brand Dugout.
                 </p>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", fontSize: "11px", fontFamily: "monospace", color: NEON_GREEN, fontWeight: "800" }}>
                   <span style={{ backgroundColor: "rgba(0,0,0,0.5)", border: "1px solid #2a2a35", padding: "5px 10px", borderRadius: "8px" }}>⚡ Dual-Direction Velocity</span>
@@ -1377,7 +1399,7 @@ function AppContent() {
                     letterSpacing: "0.5px"
                   }}
                 >
-                  Unlock 20% TAG Sports Code ↗
+                  TAG Sports Intro & 20% Code ↗
                 </button>
 
                 {giveawayWinner && (
@@ -2006,7 +2028,7 @@ function AppContent() {
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "14px" }}>
                     {section.brands.map((brand, bIdx) => {
                       const isDirectIntro = brand.type === "email_intro";
-                      const isSpecialCollab = brand.type === "special_collab";
+                      const hasCoupon = Boolean(brand.couponCode);
                       const activeIntro = isIntroActive(brand.name);
 
                       return (
@@ -2014,7 +2036,7 @@ function AppContent() {
                           key={bIdx}
                           style={{ 
                             backgroundColor: "#0c0c10", 
-                            border: (isDirectIntro || isSpecialCollab) ? `1.5px solid rgba(166, 255, 0, 0.5)` : "1px solid #1e1e26", 
+                            border: (isDirectIntro || hasCoupon) ? `1.5px solid rgba(166, 255, 0, 0.5)` : "1px solid #1e1e26", 
                             borderRadius: "14px", 
                             padding: "20px", 
                             display: "flex", 
@@ -2024,13 +2046,13 @@ function AppContent() {
                           }}
                         >
                           <div>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-                              <span style={{ fontSize: "10px", fontWeight: "900", color: (isDirectIntro || isSpecialCollab) ? NEON_GREEN : "#d4d4d8", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                                {isSpecialCollab ? "🔥 MEMBER EXCLUSIVE PERK" : isDirectIntro ? "⚡ DIRECT PARTNER INTRO" : "PORTAL COLLAB"}
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", marginBottom: "10px", flexWrap: "wrap" }}>
+                              <span style={{ fontSize: "10px", fontWeight: "900", color: isDirectIntro ? NEON_GREEN : "#d4d4d8", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                                {hasCoupon ? "⚡ DIRECT INTRO + 20% PERK" : isDirectIntro ? "⚡ DIRECT PARTNER INTRO" : "PORTAL COLLAB"}
                               </span>
-                              {(isDirectIntro || isSpecialCollab) && (
+                              {isDirectIntro && (
                                 <span style={{ backgroundColor: "rgba(166, 255, 0, 0.12)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontSize: "8px", fontWeight: "900", padding: "2px 6px", borderRadius: "4px", textTransform: "uppercase" }}>
-                                  {isSpecialCollab ? "20% OFF RADAR" : "Decision Maker Direct"}
+                                  Decision Maker Direct
                                 </span>
                               )}
                             </div>
@@ -2042,65 +2064,65 @@ function AppContent() {
                             </p>
                           </div>
 
-                          {/* TAG SPORTS 20% OFF REVEAL GATE */}
-                          {isSpecialCollab ? (
-                            <div style={{ marginTop: "18px" }}>
-                              {!account ? (
-                                <button
-                                  onClick={handleOpenLogin}
-                                  style={{
-                                    width: "100%",
-                                    backgroundColor: NEON_GREEN,
-                                    color: "#000000",
-                                    fontWeight: "950",
-                                    padding: "12px",
-                                    borderRadius: "8px",
-                                    fontSize: "11px",
-                                    textTransform: "uppercase",
-                                    border: "none",
-                                    cursor: "pointer"
-                                  }}
-                                >
-                                  🔒 Join Collective to Unlock 20% Off
-                                </button>
-                              ) : !hasProfile ? (
-                                <button
-                                  onClick={() => setShowProfileModal(true)}
-                                  style={{
-                                    width: "100%",
-                                    backgroundColor: NEON_GREEN,
-                                    color: "#000000",
-                                    fontWeight: "950",
-                                    padding: "12px",
-                                    borderRadius: "8px",
-                                    fontSize: "11px",
-                                    textTransform: "uppercase",
-                                    border: "none",
-                                    cursor: "pointer"
-                                  }}
-                                >
-                                  🔒 Complete Locker to Reveal 20% Code
-                                </button>
-                              ) : !codeRevealed ? (
-                                <button
-                                  onClick={() => setCodeRevealed(true)}
-                                  style={{
-                                    width: "100%",
-                                    backgroundColor: NEON_GREEN,
-                                    color: "#000000",
-                                    fontWeight: "950",
-                                    padding: "12px",
-                                    borderRadius: "8px",
-                                    fontSize: "11px",
-                                    textTransform: "uppercase",
-                                    border: "none",
-                                    cursor: "pointer"
-                                  }}
-                                >
-                                  🔓 Tap to Reveal 20% Off Member Code
-                                </button>
-                              ) : (
-                                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "18px" }}>
+                            {/* OPTIONAL MEMBER COUPON REVEAL GATE (TAG SPORTS) */}
+                            {hasCoupon && (
+                              <div>
+                                {!account ? (
+                                  <button
+                                    onClick={handleOpenLogin}
+                                    style={{
+                                      width: "100%",
+                                      backgroundColor: "#16161f",
+                                      color: NEON_GREEN,
+                                      border: `1px dashed ${NEON_GREEN}`,
+                                      fontWeight: "900",
+                                      padding: "10px",
+                                      borderRadius: "8px",
+                                      fontSize: "11px",
+                                      textTransform: "uppercase",
+                                      cursor: "pointer"
+                                    }}
+                                  >
+                                    🔒 Sign In to Unlock 20% Off Code
+                                  </button>
+                                ) : !hasProfile ? (
+                                  <button
+                                    onClick={() => setShowProfileModal(true)}
+                                    style={{
+                                      width: "100%",
+                                      backgroundColor: "#16161f",
+                                      color: NEON_GREEN,
+                                      border: `1px dashed ${NEON_GREEN}`,
+                                      fontWeight: "900",
+                                      padding: "10px",
+                                      borderRadius: "8px",
+                                      fontSize: "11px",
+                                      textTransform: "uppercase",
+                                      cursor: "pointer"
+                                    }}
+                                  >
+                                    🔒 Complete Locker for 20% Off Code
+                                  </button>
+                                ) : !codeRevealed ? (
+                                  <button
+                                    onClick={() => setCodeRevealed(true)}
+                                    style={{
+                                      width: "100%",
+                                      backgroundColor: "rgba(166, 255, 0, 0.1)",
+                                      color: NEON_GREEN,
+                                      border: `1px dashed ${NEON_GREEN}`,
+                                      fontWeight: "900",
+                                      padding: "10px",
+                                      borderRadius: "8px",
+                                      fontSize: "11px",
+                                      textTransform: "uppercase",
+                                      cursor: "pointer"
+                                    }}
+                                  >
+                                    🔓 Reveal 20% Off Member Code
+                                  </button>
+                                ) : (
                                   <div style={{ 
                                     backgroundColor: "rgba(166, 255, 0, 0.1)", 
                                     border: `1.5px dashed ${NEON_GREEN}`, 
@@ -2111,9 +2133,11 @@ function AppContent() {
                                     alignItems: "center" 
                                   }}>
                                     <div>
-                                      <span style={{ display: "block", fontSize: "9px", color: NEON_GREEN, fontWeight: "800", textTransform: "uppercase" }}>20% Off Coupon Code:</span>
+                                      <span style={{ display: "block", fontSize: "9px", color: NEON_GREEN, fontWeight: "800", textTransform: "uppercase" }}>
+                                        {brand.couponLabel || "20% Off Code"} (<a href={brand.link} target="_blank" rel="noopener noreferrer" style={{ color: "#fff", textDecoration: "underline" }}>Shop ↗</a>)
+                                      </span>
                                       <span style={{ fontSize: "14px", fontWeight: "950", color: "#ffffff", fontFamily: "monospace", letterSpacing: "1px" }}>
-                                        DIAMONDCOLLECTIVE
+                                        {brand.couponCode}
                                       </span>
                                     </div>
                                     <button
@@ -2133,99 +2157,67 @@ function AppContent() {
                                       {copiedCode ? "Copied!" : "Copy 📋"}
                                     </button>
                                   </div>
-                                  <a
-                                    href={brand.link}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{
-                                      display: "block",
-                                      textAlign: "center",
-                                      backgroundColor: "#181820",
-                                      color: NEON_GREEN,
-                                      border: `1px solid ${NEON_GREEN}`,
-                                      fontWeight: "900",
-                                      padding: "10px",
-                                      borderRadius: "8px",
-                                      fontSize: "11px",
-                                      textTransform: "uppercase",
-                                      textDecoration: "none"
-                                    }}
-                                  >
-                                    Redeem at tagsports.ai ↗
-                                  </a>
-                                </div>
-                              )}
-                            </div>
-                          ) : isDirectIntro ? (
-                            <button
-                              onClick={() => {
-                                if (activeIntro) {
-                                  setDispatchedBrand(brand);
-                                  setIsLockoutModal(true);
-                                  return;
-                                }
-                                if (!account) {
-                                  handleOpenLogin();
-                                } else if (!hasProfile) {
-                                  setShowProfileModal(true);
-                                } else {
-                                  handleRequestIntro(brand);
-                                }
-                              }}
-                              style={{ 
-                                width: "100%",
-                                backgroundColor: activeIntro ? "#18181b" : NEON_GREEN, 
-                                color: activeIntro ? "#a1a1aa" : "#000000", 
-                                border: activeIntro ? "1px solid #27272a" : "none", 
-                                fontWeight: "900", 
-                                padding: "12px", 
-                                borderRadius: "8px", 
-                                fontSize: "11px", 
-                                textTransform: "uppercase", 
-                                letterSpacing: "0.8px", 
-                                cursor: "pointer", 
-                                marginTop: "18px",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                gap: "6px"
-                              }}
-                            >
-                              {activeIntro ? (
-                                <>
-                                  <span>🔒 Intro Dispatched</span>
-                                  <span style={{ fontSize: "10px", color: "#d4d4d8" }}>({getDaysRemaining(brand.name)}d left)</span>
-                                </>
-                              ) : !account ? (
-                                "Sign In to Request Intro ⚡"
-                              ) : (
-                                brand.buttonText
-                              )}
-                            </button>
-                          ) : (
-                            <a
-                              href={brand.link} 
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{ 
-                                display: "block", 
-                                textAlign: "center", 
-                                backgroundColor: "#16161c", 
-                                color: "#ffffff", 
-                                border: "1px solid #2e2e38", 
-                                fontWeight: "800", 
-                                padding: "12px", 
-                                borderRadius: "8px", 
-                                fontSize: "11px", 
-                                textTransform: "uppercase", 
-                                letterSpacing: "0.8px", 
-                                textDecoration: "none", 
-                                marginTop: "18px" 
-                              }}
-                            >
-                              {brand.buttonText}
-                            </a>
-                          )}
+                                )}
+                              </div>
+                            )}
+
+                            {/* PRIMARY ACTION BUTTON (DIRECT INTRO OR AFFILIATE LINK) */}
+                            {isDirectIntro ? (
+                              <button
+                                onClick={() => handleInitiateIntro(brand)}
+                                style={{ 
+                                  width: "100%",
+                                  backgroundColor: activeIntro ? "#18181b" : NEON_GREEN, 
+                                  color: activeIntro ? "#a1a1aa" : "#000000", 
+                                  border: activeIntro ? "1px solid #27272a" : "none", 
+                                  fontWeight: "950", 
+                                  padding: "12px", 
+                                  borderRadius: "8px", 
+                                  fontSize: "11px", 
+                                  textTransform: "uppercase", 
+                                  letterSpacing: "0.8px", 
+                                  cursor: "pointer", 
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  gap: "6px"
+                                }}
+                              >
+                                {activeIntro ? (
+                                  <>
+                                    <span>🔒 Intro Dispatched</span>
+                                    <span style={{ fontSize: "10px", color: "#d4d4d8" }}>({getDaysRemaining(brand.name)}d left)</span>
+                                  </>
+                                ) : !account ? (
+                                  "Sign In to Request Intro ⚡"
+                                ) : (
+                                  brand.buttonText
+                                )}
+                              </button>
+                            ) : (
+                              <a
+                                href={brand.link} 
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ 
+                                  display: "block", 
+                                  textAlign: "center", 
+                                  backgroundColor: "#16161c", 
+                                  color: "#ffffff", 
+                                  border: "1px solid #2e2e38", 
+                                  fontWeight: "800", 
+                                  padding: "12px", 
+                                  borderRadius: "8px", 
+                                  fontSize: "11px", 
+                                  textTransform: "uppercase", 
+                                  letterSpacing: "0.8px", 
+                                  textDecoration: "none"
+                                }}
+                              >
+                                {brand.buttonText}
+                              </a>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
@@ -2273,6 +2265,118 @@ function AppContent() {
         </section>
       </div>
 
+      {/* PRE-SEND PROFILE VERIFICATION MODAL (ALL DIRECT INTROS) */}
+      {pendingIntroBrand && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.9)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1150, padding: "16px" }}>
+          <div style={{ backgroundColor: "#0c0c10", border: `2px solid ${NEON_GREEN}`, borderRadius: "22px", width: "100%", maxWidth: "560px", padding: "26px", boxShadow: "0 0 45px rgba(166, 255, 0, 0.2)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+              <div>
+                <span style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>
+                  Step 1 of 2 • Verify Your Dossier
+                </span>
+                <h3 style={{ margin: "4px 0 0 0", fontSize: "20px", fontWeight: "950", textTransform: "uppercase", color: "#ffffff" }}>
+                  Send Intro to {pendingIntroBrand.name}?
+                </h3>
+              </div>
+              <button
+                onClick={() => setPendingIntroBrand(null)}
+                style={{ background: "none", border: "none", color: "#ffffff", fontSize: "20px", cursor: "pointer" }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <p style={{ fontSize: "13px", color: "#d4d4d8", lineHeight: "1.5", margin: "0 0 14px 0" }}>
+              Please verify your current Locker Matrix data below. Once dispatched to <strong style={{ color: "#ffffff" }}>{pendingIntroBrand.brandRepName || pendingIntroBrand.name}</strong>, this partner enters a 60-day review window.
+            </p>
+
+            {/* SNAPSHOT OF CURRENT PROFILE */}
+            <div style={{ backgroundColor: "#07070a", border: "1px solid #262632", borderRadius: "14px", padding: "16px", marginBottom: "18px", display: "flex", flexDirection: "column", gap: "10px", fontSize: "12px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #1a1a24", paddingBottom: "8px" }}>
+                <span style={{ color: "#a1a1aa", fontWeight: "700" }}>Athlete & Program:</span>
+                <span style={{ color: "#ffffff", fontWeight: "900" }}>{profile.fullName} • <span style={{ color: NEON_GREEN }}>{profile.college || "Undeclared"}</span></span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #1a1a24", paddingBottom: "8px" }}>
+                <span style={{ color: "#a1a1aa", fontWeight: "700" }}>Position / Role / Class:</span>
+                <span style={{ color: "#ffffff", fontWeight: "800" }}>{profile.position || "ATH"} ({profile.primaryRole}) • {profile.collegeYear}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #1a1a24", paddingBottom: "8px" }}>
+                <span style={{ color: "#a1a1aa", fontWeight: "700" }}>Contact Details:</span>
+                <span style={{ color: "#ffffff", fontWeight: "800" }}>{profile.email} {profile.phone ? `• ${profile.phone}` : ""}</span>
+              </div>
+
+              {(profile.primaryRole === "HITTER" || profile.primaryRole === "TWP") && (
+                <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #1a1a24", paddingBottom: "8px" }}>
+                  <span style={{ color: "#a1a1aa", fontWeight: "700" }}>Hitting Telemetry:</span>
+                  <span style={{ color: NEON_GREEN, fontWeight: "900", fontFamily: "monospace" }}>
+                    Max EV: {profile.maxExitVelo || "--"} | 90th%: {profile.ninetyEV || "--"} | Bat: {profile.batSpeed || "--"} | 60yd: {profile.sixtyTime || "--"}
+                  </span>
+                </div>
+              )}
+
+              {(profile.primaryRole === "PITCHER" || profile.primaryRole === "TWP") && (
+                <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #1a1a24", paddingBottom: "8px" }}>
+                  <span style={{ color: "#a1a1aa", fontWeight: "700" }}>Mound Telemetry:</span>
+                  <span style={{ color: NEON_GREEN, fontWeight: "900", fontFamily: "monospace" }}>
+                    Peak FB: {profile.peakFB || "--"} | Stuff+: {profile.stuffPlus || "--"} | IVB: {profile.inducedVertBreak || "--"}
+                  </span>
+                </div>
+              )}
+
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "#a1a1aa", fontWeight: "700" }}>Social Gateway:</span>
+                <span style={{ color: "#ffffff", fontWeight: "800" }}>
+                  {profile.social1_Url || profile.social2_Url || "None linked"}
+                </span>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setPendingIntroBrand(null);
+                  setShowProfileModal(true);
+                }}
+                style={{
+                  flex: 1,
+                  backgroundColor: "#181820",
+                  color: "#ffffff",
+                  border: "1px solid #3f3f4e",
+                  fontWeight: "900",
+                  textTransform: "uppercase",
+                  padding: "13px",
+                  borderRadius: "10px",
+                  cursor: "pointer",
+                  fontSize: "11px"
+                }}
+              >
+                Edit Locker First ⚙️
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmAndSendIntro}
+                style={{
+                  flex: 1.4,
+                  backgroundColor: NEON_GREEN,
+                  color: "#000000",
+                  border: "none",
+                  fontWeight: "950",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.8px",
+                  padding: "13px",
+                  borderRadius: "10px",
+                  cursor: "pointer",
+                  fontSize: "12px"
+                }}
+              >
+                Confirm & Send Intro ⚡
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 60-DAY LOCKOUT NOTIFICATION MODAL */}
       {dispatchedBrand && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.88)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1100, padding: "16px" }}>
@@ -2292,7 +2396,7 @@ function AppContent() {
             <p style={{ fontSize: "14px", color: "#ffffff", fontWeight: "700", lineHeight: "1.5", margin: "16px 0 14px 0" }}>
               {isLockoutModal 
                 ? "You have already submitted a direct introduction request for this brand partner."
-                : "Your athletic dossier is officially on the decision-maker's desk."}
+                : "Your verified athletic dossier is officially on the decision-maker's desk."}
             </p>
 
             <div style={{ backgroundColor: "#060609", border: "1px solid #1f1f26", borderRadius: "14px", padding: "16px", marginBottom: "18px", display: "flex", flexDirection: "column", gap: "12px" }}>
