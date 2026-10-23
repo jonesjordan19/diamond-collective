@@ -1400,7 +1400,9 @@ function AppContent() {
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", fontSize: "11px", fontFamily: "monospace", color: NEON_GREEN, fontWeight: "800" }}>
                   <span style={{ backgroundColor: "rgba(0,0,0,0.5)", border: "1px solid #2a2a35", padding: "5px 10px", borderRadius: "8px" }}>🔑 100 $SLUG Member Exclusive</span>
                   <span style={{ backgroundColor: "rgba(0,0,0,0.5)", border: "1px solid #2a2a35", padding: "5px 10px", borderRadius: "8px" }}>📹 Auto Video Overlays</span>
-                  <span style={{ backgroundColor: "rgba(0,0,0,0.5)", border: "1px solid #2a2a35", padding: "5px 10px", borderRadius: "8px" }}>🔓 20% Off Code: DIAMONDCOLLECTIVE</span>
+                  <span style={{ backgroundColor: "rgba(0,0,0,0.5)", border: "1px solid #2a2a35", padding: "5px 10px", borderRadius: "8px" }}>
+                    {isUnlocked ? "🔓 20% Off Code: DIAMONDCOLLECTIVE" : "🔒 20% Off Code: Unlocks with 100 $SLUG"}
+                  </span>
                 </div>
               </div>
 
