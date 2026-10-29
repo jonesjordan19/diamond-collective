@@ -810,10 +810,9 @@ function AppContent() {
   const hasProfile = Boolean(profile.fullName && profile.email);
 
   const isAdmin = useMemo(() => {
-    const emailMatch = profile.email?.toLowerCase() === "emailjordanjones@gmail.com";
-    const walletMatch = account?.address?.toLowerCase() === "0x46cbd713d7440692156e1219153622c45b04d3a";
-    return emailMatch || walletMatch;
-  }, [profile.email, account?.address]);
+    // Admin access granted solely via secure wallet address (no emails in public code)
+    return account?.address?.toLowerCase() === "0x46cbd713d7440692156e1219153622c45b04d3a";
+  }, [account?.address]);
 
   const handleEnterGiveaway = async () => {
     if (!account?.address) {
