@@ -57,6 +57,7 @@ interface BrandItem {
   isPrimary?: boolean;
   couponCode?: string;
   couponLabel?: string;
+  categoryTag?: string;
 }
 
 interface MarketCategory {
@@ -66,6 +67,33 @@ interface MarketCategory {
 }
 
 const MARKET_SECTIONS: MarketCategory[] = [
+  {
+    title: "Technology",
+    emoji: "📱",
+    brands: [
+      {
+        name: "TAG Sports",
+        tagline: "Smart Sports Radar & AiCE Coaching",
+        description: "Aerospace-precision velocity tracking with zero subscription fees. Captures dual-direction speeds with video highlights overlaid directly onto auto-generated clips.",
+        buttonText: "Request Direct Intro ⚡",
+        type: "email_intro",
+        brandRepEmail: "clucas@tagsports.ai",
+        brandRepName: "C. Lucas (TAG Sports)",
+        link: "https://tagsports.ai",
+        couponCode: "DIAMONDCOLLECTIVE",
+        couponLabel: "20% Off Member Code",
+        isPrimary: true,
+      },
+      {
+        name: "Pocket Radar",
+        tagline: "Smart Coach Velocity & Data Tracking",
+        description: "Quantify throw and exit velocity on every swing, pitch, and throw. Access official collegiate ambassador programs.",
+        buttonText: "Register Ambassador Unit ↗",
+        type: "affiliate_link",
+        link: "https://af.uppromote.com/pocket-radar-inc/register",
+      },
+    ],
+  },
   {
     title: "Hitting",
     emoji: "💥",
@@ -244,59 +272,28 @@ const MARKET_SECTIONS: MarketCategory[] = [
       },
     ],
   },
-  {
-    title: "Technology",
-    emoji: "📱",
-    brands: [
-      {
-        name: "TAG Sports",
-        tagline: "Smart Sports Radar & AiCE Coaching",
-        description: "Redefining velocity tracking with aerospace precision. No-subscription radar capturing dual-direction speeds with video highlights overlaid directly onto auto-generated clips.",
-        buttonText: "Request Direct Intro ⚡",
-        type: "email_intro",
-        brandRepEmail: "clucas@tagsports.ai",
-        brandRepName: "C. Lucas (TAG Sports)",
-        link: "https://tagsports.ai",
-        couponCode: "DIAMONDCOLLECTIVE",
-        couponLabel: "20% Off Member Code",
-        isPrimary: true,
-      },
-      {
-        name: "Pocket Radar",
-        tagline: "Smart Coach Velocity & Data Tracking",
-        description: "Quantify throw and exit velocity on every swing, pitch, and throw. Access official collegiate ambassador programs.",
-        buttonText: "Register Ambassador Unit ↗",
-        type: "affiliate_link",
-        link: "https://af.uppromote.com/pocket-radar-inc/register",
-      },
-    ],
-  },
 ];
 
 const FAQS = [
+  {
+    q: "How do I unlock the 20% TAG Sports discount & Brand Intros?",
+    a: "It takes 3 quick steps: (1) Sign in with your Google, Apple, or phone ID, (2) Fill out your player bio in the 'My Locker' tab, and (3) Claim your free 100 $SLUG membership key. Once active, all direct brand intros and member codes unlock immediately.",
+  },
   {
     q: "Is this compliant with NCAA and Institutional NIL rules?",
     a: "Yes. All Slugger Coins ($SLUG) distributed during the Founders phase have zero market cash value and are non-compensatory. Each verified member claims a flat 100 $SLUG allocation used strictly as an access key to unlock brand directories, discounts, and partner introductions.",
   },
   {
     q: "How does the Halloween TAG Sports Radar Giveaway work?",
-    a: "Verified members holding 100 $SLUG who complete their Locker Matrix profile can click 'Enter Radar Giveaway' on the home banner. One random winner will be drawn live on Halloween night (Oct 31st at 8:00 PM MST) to receive a free TAG One Sports Radar.",
+    a: "Verified members holding 100 $SLUG who complete their Locker profile can click 'Enter Giveaway' on the top banner. One random winner will be drawn live on Halloween night (Oct 31st at 8:00 PM MST) to receive a free TAG One Sports Radar.",
   },
   {
-    q: "What is 'The Diamond Collective' TAG Sports discount?",
-    a: "Once you complete your Locker Matrix and claim your 100 $SLUG membership key, you unlock an exclusive 20% off discount code (DIAMONDCOLLECTIVE) inside the Brand Dugout for all radar hardware at tagsports.ai, plus 1-click direct intro access to TAG Sports.",
+    q: "How does 'The Big Black Grip' free bat grip drop work?",
+    a: "Verified college ballplayers receive 'The Big Black Grip' bat grip 100% free ($0 product cost). A flat $8.99 shipping and handling fee is paid directly through Stripe to cover USPS Ground postage with tracking and fulfillment.",
   },
   {
-    q: "How does 'The Big Black Grip' member drop work?",
-    a: "The first 60 verified college ballplayers to claim receive 'The Big Black Grip' bat grip 100% free ($0 product cost). A flat $8.99 shipping and handling fee is paid directly through Stripe to cover USPS Ground postage with tracking, bubble mailer packaging, and fulfillment.",
-  },
-  {
-    q: "Do I need crypto experience or a crypto wallet to join?",
-    a: "None at all. When you sign in using your existing Google, Apple, or phone ID, an embedded smart wallet is generated automatically in the background. All blockchain transactions are 100% free and gas-sponsored on Base.",
-  },
-  {
-    q: "Who is eligible to join The Diamond Collective?",
-    a: "Membership is exclusive to active collegiate baseball players (NCAA D1, D2, D3, NAIA, and NJCAA) as well as committed incoming freshmen. Each athlete holds a maximum of 100 $SLUG.",
+    q: "Do I need crypto experience or a wallet app to join?",
+    a: "None at all. When you sign in using your existing Google, Apple, or phone ID, your member account is generated automatically in the background and all actions are 100% free.",
   },
 ];
 
@@ -720,19 +717,24 @@ function AppContent() {
   const [justClaimed, setJustClaimed] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  const [activeMainTab, setActiveMainTab] = useState<"EXCHANGE" | "SCOREBOARD">("SCOREBOARD");
-  
+  // 3-TAB PRIMARY NAVIGATION: SCOREBOARD | EXCHANGE (BRAND DEALS) | LOCKER
+  const [activeMainTab, setActiveMainTab] = useState<"SCOREBOARD" | "EXCHANGE" | "LOCKER">("SCOREBOARD");
+  const [brandCategoryFilter, setBrandCategoryFilter] = useState<"ALL" | "DIRECT" | "PERKS" | "GEAR" | "APPAREL">("ALL");
+
+  // Scoreboard Filters & Expand State
   const [roleFilter, setRoleFilter] = useState<"ALL" | "HITTER" | "PITCHER" | "TWP">("ALL");
   const [positionFilter, setPositionFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [stateFilter, setStateFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortBy, setSortBy] = useState<"DEFAULT" | "MAX_EV" | "PEAK_FB" | "STUFF_PLUS" | "IVB">("DEFAULT");
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [expandedCardIdx, setExpandedCardIdx] = useState<number | null>(null);
 
   const [leaderboardRows, setLeaderboardRows] = useState<AthleteProfile[]>([]);
   const [loadingScoreboard, setLoadingScoreboard] = useState(false);
 
-  const [showProfileModal, setShowProfileModal] = useState(false);
+  // Locker Sub-Tabs & Modals
   const [activeMatrixTab, setActiveMatrixTab] = useState<"BIO" | "HITTING" | "PITCHING">("BIO");
   const [pendingIntroBrand, setPendingIntroBrand] = useState<BrandItem | null>(null);
   const [dispatchedBrand, setDispatchedBrand] = useState<BrandItem | null>(null);
@@ -750,7 +752,7 @@ function AppContent() {
   const [showWinnerAnimation, setShowWinnerAnimation] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [codeRevealed, setCodeRevealed] = useState(false);
-  const [countdownText, setCountdownText] = useState<string>("09d : 05h : 55m : 00s");
+  const [countdownText, setCountdownText] = useState<string>("02d : 07h : 15m : 00s");
 
   useEffect(() => {
     setMounted(true);
@@ -809,8 +811,8 @@ function AppContent() {
   const isUnlocked = balance >= 100 || justClaimed;
   const hasProfile = Boolean(profile.fullName && profile.email);
 
+  // Admin access granted solely via secure wallet address (no personal emails in public code)
   const isAdmin = useMemo(() => {
-    // Admin access granted solely via secure wallet address (no emails in public code)
     return account?.address?.toLowerCase() === "0x46cbd713d7440692156e1219153622c45b04d3a";
   }, [account?.address]);
 
@@ -820,7 +822,7 @@ function AppContent() {
       return;
     }
     if (!hasProfile) {
-      setShowProfileModal(true);
+      setActiveMainTab("LOCKER");
       return;
     }
     if (!isUnlocked) {
@@ -1056,11 +1058,12 @@ function AppContent() {
 
   const handleSaveProfile = async () => {
     if (!account?.address) {
-      alert("Please sign in or connect your wallet first.");
+      handleOpenLogin();
       return;
     }
     if (!profile.fullName || !profile.email) {
-      alert("Please fill in your Full Name and Email.");
+      alert("Please fill in your Full Name and Email in Step 1 (Bio & Roster).");
+      setActiveMatrixTab("BIO");
       return;
     }
 
@@ -1151,17 +1154,19 @@ function AppContent() {
       });
 
       setIsSavingProfile(false);
-      setShowProfileModal(false);
 
       if (typeof window !== "undefined" && (window as any).fbq) {
         (window as any).fbq('track', 'CompleteRegistration');
       }
 
-      alert("Pro metrics saved to national scoreboard database!");
+      if (!isUnlocked) {
+        setShowClaimPromptModal(true);
+      } else {
+        alert("Player profile & metrics published to the National Scoreboard!");
+      }
     } catch (err: any) {
       setIsSavingProfile(false);
-      setShowProfileModal(false);
-      alert("Error dispatching: " + err.message);
+      alert("Error saving profile: " + err.message);
     }
   };
 
@@ -1178,7 +1183,7 @@ function AppContent() {
     }
 
     if (!profile.fullName || !profile.email) {
-      setShowProfileModal(true);
+      setActiveMainTab("LOCKER");
       return;
     }
 
@@ -1224,15 +1229,22 @@ function AppContent() {
     } catch {}
   };
 
-  const searchSuggestions = useMemo(() => {
-    if (!searchQuery || searchQuery.trim() === "") return [];
-    const q = searchQuery.toLowerCase().trim();
-    return leaderboardRows.filter((ath) => {
-      const name = (ath.fullName || "").toLowerCase();
-      const school = (ath.college || "").toLowerCase();
-      return name.includes(q) || school.includes(q);
+  const flattenedBrands = useMemo(() => {
+    const list: (BrandItem & { sectionTitle: string; sectionEmoji: string })[] = [];
+    MARKET_SECTIONS.forEach((sec) => {
+      sec.brands.forEach((b) => {
+        list.push({ ...b, sectionTitle: sec.title, sectionEmoji: sec.emoji });
+      });
     });
-  }, [searchQuery, leaderboardRows]);
+
+    return list.filter((b) => {
+      if (brandCategoryFilter === "DIRECT") return b.type === "email_intro";
+      if (brandCategoryFilter === "PERKS") return Boolean(b.couponCode) || b.type === "email_intro";
+      if (brandCategoryFilter === "GEAR") return ["Technology", "Hitting", "Equipment", "Eyewear & Vision"].includes(b.sectionTitle);
+      if (brandCategoryFilter === "APPAREL") return ["Clothing & Apparel", "Footwear", "Nutrition", "Player Services"].includes(b.sectionTitle);
+      return true;
+    });
+  }, [brandCategoryFilter]);
 
   const filteredScoreboard = useMemo(() => {
     return leaderboardRows
@@ -1290,68 +1302,60 @@ function AppContent() {
 
   if (!mounted) return null;
 
+  const isFullyOnboarded = Boolean(account && hasProfile && isUnlocked);
+
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#050507", backgroundImage: "radial-gradient(circle at 50% 0%, rgba(166, 255, 0, 0.07) 0%, transparent 55%)", color: "#ffffff", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
-      {/* Compliance Header */}
-      <div style={{ backgroundColor: "rgba(10, 10, 12, 0.9)", backdropFilter: "blur(10px)", borderBottom: "1px solid #1a1a22", padding: "10px 16px", textAlign: "center", fontSize: "11px", color: "#a1a1aa", letterSpacing: "0.5px", lineHeight: "1.4" }}>
-        <strong style={{ color: "#ffffff" }}>NCAA NIL Compliance Note:</strong> All SLUGGER COINS distributed during the Founders phase have no current market value and are non-compensatory. Tokens are issued solely as a flat 100 $SLUG membership key for community participation and access purposes.
+    <div style={{ minHeight: "100vh", backgroundColor: "#050507", backgroundImage: "radial-gradient(circle at 50% 0%, rgba(166, 255, 0, 0.07) 0%, transparent 55%)", color: "#ffffff", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", paddingBottom: "80px" }}>
+      
+      {/* Slim Compliance Bar */}
+      <div style={{ backgroundColor: "#0a0a0d", borderBottom: "1px solid #181820", padding: "7px 14px", textAlign: "center", fontSize: "10px", color: "#a1a1aa", letterSpacing: "0.3px" }}>
+        <strong style={{ color: "#ffffff" }}>NCAA NIL Compliant:</strong> Slugger Coins ($SLUG) are non-compensatory ($0 cash value) and serve strictly as a flat 100 $SLUG member access key.
       </div>
 
-      <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "28px 16px" }}>
-        {/* Navigation */}
+      <div style={{ maxWidth: "1040px", margin: "0 auto", padding: "18px 14px" }}>
+        
+        {/* Clean Header */}
         <header style={{ 
           display: "flex", 
           justifyContent: "space-between", 
           alignItems: "center", 
-          borderBottom: "1px solid #1e1e26", 
-          paddingBottom: "20px", 
+          paddingBottom: "16px", 
+          borderBottom: "1px solid #1c1c24",
           flexWrap: "wrap", 
-          gap: "14px" 
+          gap: "12px" 
         }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: "24px", fontWeight: "950", letterSpacing: "1.5px", color: "#ffffff", textTransform: "uppercase" }}>
-              The Diamond Collective
-            </h1>
-            <p style={{ margin: "4px 0 0 0", fontSize: "11px", color: NEON_GREEN, fontWeight: "800", letterSpacing: "1.2px", textTransform: "uppercase" }}>
-              Powered by Slugger Coin ($SLUG)
-            </p>
-          </div>
-
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-            {account && (
-              <div style={{
-                backgroundColor: isUnlocked ? "rgba(166, 255, 0, 0.1)" : "#141418",
-                border: `1.5px solid ${isUnlocked ? NEON_GREEN : "#3f3f4e"}`,
-                borderRadius: "10px",
-                padding: "8px 12px",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px"
-              }}>
-                <span style={{ fontSize: "11px", fontWeight: "900", color: isUnlocked ? NEON_GREEN : "#d4d4d8" }}>
-                  {isUnlocked ? "🔑 100 / 100 $SLUG KEY ACTIVE" : "🔒 0 / 100 $SLUG"}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div>
+              <h1 style={{ margin: 0, fontSize: "20px", fontWeight: "950", letterSpacing: "1px", color: "#ffffff", textTransform: "uppercase" }}>
+                The Diamond Collective
+              </h1>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "3px" }}>
+                <span style={{ fontSize: "10px", color: NEON_GREEN, fontWeight: "800", letterSpacing: "0.8px", textTransform: "uppercase" }}>
+                  College Scouting & Brand Perks
+                </span>
+                <span style={{ fontSize: "10px", color: "#71717a" }}>•</span>
+                <span style={{ fontSize: "10px", color: "#a1a1aa", fontWeight: "700" }}>
+                  {totalSupplyData !== undefined ? `${remainingPercentage}% Founders Keys Left` : "16+ Brand Partners"}
                 </span>
               </div>
-            )}
+            </div>
+          </div>
 
-            {account && (
-              <button
-                onClick={() => setShowProfileModal(true)}
-                style={{
-                  backgroundColor: "#141418",
-                  border: `1.5px solid ${NEON_GREEN}`,
-                  color: NEON_GREEN,
-                  fontSize: "11px",
-                  fontWeight: "900",
-                  padding: "9px 14px",
-                  borderRadius: "10px",
-                  cursor: "pointer",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px"
-                }}
-              >
-                Locker Matrix ⚙️
-              </button>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            {isFullyOnboarded && (
+              <span style={{
+                backgroundColor: "rgba(166, 255, 0, 0.12)",
+                border: `1px solid ${NEON_GREEN}`,
+                color: NEON_GREEN,
+                fontSize: "10px",
+                fontWeight: "900",
+                padding: "7px 10px",
+                borderRadius: "8px",
+                textTransform: "uppercase",
+                letterSpacing: "0.5px"
+              }}>
+                ✅ 100 $SLUG Member
+              </span>
             )}
 
             <ConnectButton
@@ -1368,685 +1372,648 @@ function AppContent() {
           </div>
         </header>
 
-        {/* HALLOWEEN NIGHT GIVEAWAY HUB WITH LIVE COUNTDOWN */}
-        <section style={{ margin: "24px 0" }}>
-          <div style={{ 
-            background: "linear-gradient(135deg, rgba(24, 15, 38, 0.95) 0%, rgba(12, 12, 18, 0.98) 60%, rgba(25, 38, 12, 0.9) 100%)", 
-            border: `2px solid ${NEON_GREEN}`, 
-            borderRadius: "22px", 
-            padding: "24px", 
-            boxShadow: "0 12px 40px rgba(166, 255, 0, 0.14)",
-            position: "relative",
-            overflow: "hidden"
+        {/* STEP-BY-STEP ONBOARDING BAR (SHOWN UNTIL ALL 3 STEPS ARE COMPLETE) */}
+        {!isFullyOnboarded && (
+          <div style={{
+            backgroundColor: "#0c0c12",
+            border: `1.5px solid ${NEON_GREEN}`,
+            borderRadius: "16px",
+            padding: "14px 16px",
+            marginTop: "16px",
+            boxShadow: "0 8px 28px rgba(166, 255, 0, 0.1)"
           }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "20px" }}>
-              <div style={{ flex: "1 1 520px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "10px" }}>
-                  <span style={{ backgroundColor: "rgba(255, 122, 0, 0.18)", border: "1px solid #ff7a00", color: "#ff9933", fontSize: "10px", fontWeight: "900", padding: "5px 12px", borderRadius: "999px", textTransform: "uppercase", letterSpacing: "1px" }}>
-                    🎃 Halloween Night Live Draw • Oct 31 @ 8:00 PM MST
-                  </span>
-                  <span style={{ backgroundColor: "#09090d", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontSize: "11px", fontWeight: "950", padding: "5px 12px", borderRadius: "999px", fontFamily: "monospace", letterSpacing: "1px" }}>
-                    ⏱️ {countdownText}
-                  </span>
-                </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px", flexWrap: "wrap", gap: "6px" }}>
+              <span style={{ fontSize: "11px", fontWeight: "950", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "0.8px" }}>
+                🚀 Athlete Quick-Start (Unlock 20% Off TAG Sports, Giveaway & Brand Intros)
+              </span>
+              <span style={{ fontSize: "10px", color: "#a1a1aa", fontWeight: "700" }}>
+                100% Free • Takes 60 Seconds
+              </span>
+            </div>
 
-                <h2 style={{ fontSize: "26px", fontWeight: "950", color: "#ffffff", textTransform: "uppercase", margin: "0 0 8px 0", letterSpacing: "0.5px" }}>
-                  TAG Sports Radar Giveaway + 20% Member Perk
-                </h2>
-                <p style={{ fontSize: "13px", color: "#e4e4e7", maxWidth: "660px", margin: "0 0 14px 0", lineHeight: "1.5" }}>
-                  We teamed up with <strong style={{ color: NEON_GREEN }}>TAG Sports (tagsports.ai)</strong> to give away a brand-new smart baseball radar on Halloween night. Claim your <strong style={{ color: "#ffffff" }}>100 $SLUG membership key</strong>, lock in your player profile, and enter below. All 100 $SLUG holders also unlock a <strong style={{ color: NEON_GREEN }}>20% OFF discount code</strong> and direct intro access inside the Brand Dugout.
-                </p>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", fontSize: "11px", fontFamily: "monospace", color: NEON_GREEN, fontWeight: "800" }}>
-                  <span style={{ backgroundColor: "rgba(0,0,0,0.5)", border: "1px solid #2a2a35", padding: "5px 10px", borderRadius: "8px" }}>🔑 100 $SLUG Member Exclusive</span>
-                  <span style={{ backgroundColor: "rgba(0,0,0,0.5)", border: "1px solid #2a2a35", padding: "5px 10px", borderRadius: "8px" }}>📹 Auto Video Overlays</span>
-                  <span style={{ backgroundColor: "rgba(0,0,0,0.5)", border: "1px solid #2a2a35", padding: "5px 10px", borderRadius: "8px" }}>
-                    {isUnlocked ? "🔓 20% Off Code: DIAMONDCOLLECTIVE" : "🔒 20% Off Code: Unlocks with 100 $SLUG"}
-                  </span>
-                </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "8px" }}>
+              {/* Step 1: Sign In */}
+              <button
+                onClick={() => !account && handleOpenLogin()}
+                style={{
+                  backgroundColor: account ? "rgba(166, 255, 0, 0.08)" : NEON_GREEN,
+                  color: account ? NEON_GREEN : "#000000",
+                  border: account ? `1px solid ${NEON_GREEN}` : "none",
+                  borderRadius: "10px",
+                  padding: "10px 12px",
+                  textAlign: "left",
+                  cursor: account ? "default" : "pointer",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  fontWeight: "900",
+                  fontSize: "11px"
+                }}
+              >
+                <span>1. Sign In (Google / Phone)</span>
+                <span>{account ? "✅ Done" : "Tap Here ➔"}</span>
+              </button>
+
+              {/* Step 2: Complete Player Bio */}
+              <button
+                onClick={() => {
+                  if (!account) handleOpenLogin();
+                  else setActiveMainTab("LOCKER");
+                }}
+                style={{
+                  backgroundColor: hasProfile ? "rgba(166, 255, 0, 0.08)" : account ? NEON_GREEN : "#16161d",
+                  color: hasProfile ? NEON_GREEN : account ? "#000000" : "#a1a1aa",
+                  border: hasProfile ? `1px solid ${NEON_GREEN}` : "1px solid #2e2e3a",
+                  borderRadius: "10px",
+                  padding: "10px 12px",
+                  textAlign: "left",
+                  cursor: "pointer",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  fontWeight: "900",
+                  fontSize: "11px"
+                }}
+              >
+                <span>2. Fill Out Player Locker</span>
+                <span>{hasProfile ? "✅ Done" : account ? "Open Locker ➔" : "🔒 Step 2"}</span>
+              </button>
+
+              {/* Step 3: Claim 100 $SLUG Key */}
+              <button
+                onClick={() => {
+                  if (!account) handleOpenLogin();
+                  else if (!hasProfile) setActiveMainTab("LOCKER");
+                  else setShowClaimPromptModal(true);
+                }}
+                style={{
+                  backgroundColor: isUnlocked ? "rgba(166, 255, 0, 0.08)" : (account && hasProfile) ? NEON_GREEN : "#16161d",
+                  color: isUnlocked ? NEON_GREEN : (account && hasProfile) ? "#000000" : "#a1a1aa",
+                  border: isUnlocked ? `1px solid ${NEON_GREEN}` : "1px solid #2e2e3a",
+                  borderRadius: "10px",
+                  padding: "10px 12px",
+                  textAlign: "left",
+                  cursor: "pointer",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  fontWeight: "900",
+                  fontSize: "11px"
+                }}
+              >
+                <span>3. Claim Free 100 $SLUG Key</span>
+                <span>{isUnlocked ? "✅ Active" : (account && hasProfile) ? "Claim Now 🔑" : "🔒 Step 3"}</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* COMPACT HALLOWEEN GIVEAWAY BAR */}
+        <div style={{
+          background: "linear-gradient(135deg, rgba(28, 16, 42, 0.95) 0%, rgba(14, 14, 20, 0.98) 100%)",
+          border: "1.5px solid #ff7a00",
+          borderRadius: "16px",
+          padding: "14px 18px",
+          marginTop: "14px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "12px"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", flex: "1 1 320px" }}>
+            <span style={{ backgroundColor: "#09090d", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontSize: "11px", fontWeight: "950", padding: "5px 10px", borderRadius: "8px", fontFamily: "monospace" }}>
+              🎃 {countdownText}
+            </span>
+            <div>
+              <div style={{ fontSize: "14px", fontWeight: "950", color: "#ffffff", textTransform: "uppercase" }}>
+                TAG Sports Radar Giveaway + 20% Off Member Perk
               </div>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px", width: "100%", maxWidth: "260px" }}>
-                <button
-                  onClick={handleEnterGiveaway}
-                  disabled={hasEnteredGiveaway || isRegisteringGiveaway}
-                  style={{
-                    width: "100%",
-                    backgroundColor: hasEnteredGiveaway ? "rgba(166, 255, 0, 0.15)" : NEON_GREEN,
-                    color: hasEnteredGiveaway ? NEON_GREEN : "#000000",
-                    border: hasEnteredGiveaway ? `1.5px solid ${NEON_GREEN}` : "none",
-                    fontWeight: "950",
-                    padding: "14px 18px",
-                    borderRadius: "12px",
-                    cursor: hasEnteredGiveaway ? "default" : "pointer",
-                    fontSize: "12px",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.8px",
-                    boxShadow: hasEnteredGiveaway ? "none" : "0 0 20px rgba(166, 255, 0, 0.3)"
-                  }}
-                >
-                  {isRegisteringGiveaway ? "Logging Entry..." : hasEnteredGiveaway ? "✅ Entered for Oct 31st!" : "🎃 Enter Radar Giveaway ➔"}
-                </button>
-
-                <button
-                  onClick={() => setActiveMainTab("EXCHANGE")}
-                  style={{
-                    width: "100%",
-                    backgroundColor: "#14141a",
-                    color: "#ffffff",
-                    border: "1px solid #333340",
-                    fontWeight: "800",
-                    padding: "10px 14px",
-                    borderRadius: "10px",
-                    cursor: "pointer",
-                    fontSize: "11px",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px"
-                  }}
-                >
-                  TAG Sports Intro & 20% Code ↗
-                </button>
-
-                {giveawayWinner && (
-                  <div style={{ backgroundColor: "#111116", border: `1.5px solid ${NEON_GREEN}`, padding: "12px", borderRadius: "12px", marginTop: "4px", textAlign: "center" }}>
-                    <div style={{ fontSize: "10px", color: "#ff9933", fontWeight: "900", letterSpacing: "1px" }}>🏆 HALLOWEEN WINNER 🏆</div>
-                    <div style={{ fontSize: "15px", color: "#ffffff", fontWeight: "950", marginTop: "3px" }}>{giveawayWinner.fullName}</div>
-                    <div style={{ fontSize: "12px", color: NEON_GREEN, fontWeight: "800" }}>{giveawayWinner.college} ({giveawayWinner.position})</div>
-                  </div>
-                )}
-
-                {isAdmin && (
-                  <button
-                    onClick={selectRandomHalloweenWinner}
-                    style={{
-                      backgroundColor: "rgba(255, 122, 0, 0.15)",
-                      border: "1px dashed #ff7a00",
-                      color: "#ff9933",
-                      fontSize: "10px",
-                      fontWeight: "800",
-                      padding: "8px",
-                      borderRadius: "8px",
-                      cursor: "pointer",
-                      textTransform: "uppercase"
-                    }}
-                  >
-                    {showWinnerAnimation ? "Rolling Member Pool..." : "🎲 Admin: Pick Random Winner"}
-                  </button>
-                )}
+              <div style={{ fontSize: "11px", color: "#d4d4d8", marginTop: "2px" }}>
+                Live draw Oct 31 @ 8PM MST • {isUnlocked ? <strong style={{ color: NEON_GREEN }}>20% Off Code: DIAMONDCOLLECTIVE</strong> : <span>Unlock your 100 $SLUG key for 20% off & free entry</span>}
               </div>
             </div>
           </div>
-        </section>
 
-        {/* STATS TRACKER */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "12px", margin: "20px 0 28px 0" }}>
-          <div style={{ backgroundColor: "#0c0c10", border: "1px solid #1e1e26", borderRadius: "14px", padding: "14px", textAlign: "center" }}>
-            <span style={{ display: "block", fontSize: "19px", fontWeight: "950", color: NEON_GREEN }}>16+</span>
-            <span style={{ fontSize: "10px", color: "#d4d4d8", textTransform: "uppercase", fontWeight: "800", letterSpacing: "0.5px" }}>Brand Partners</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+            <button
+              onClick={handleEnterGiveaway}
+              disabled={hasEnteredGiveaway || isRegisteringGiveaway}
+              style={{
+                backgroundColor: hasEnteredGiveaway ? "rgba(166, 255, 0, 0.15)" : NEON_GREEN,
+                color: hasEnteredGiveaway ? NEON_GREEN : "#000000",
+                border: hasEnteredGiveaway ? `1px solid ${NEON_GREEN}` : "none",
+                fontWeight: "950",
+                padding: "10px 16px",
+                borderRadius: "10px",
+                cursor: hasEnteredGiveaway ? "default" : "pointer",
+                fontSize: "11px",
+                textTransform: "uppercase",
+                letterSpacing: "0.5px"
+              }}
+            >
+              {isRegisteringGiveaway ? "Entering..." : hasEnteredGiveaway ? "✅ Entered for Oct 31" : "🎃 Enter Giveaway ➔"}
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveMainTab("EXCHANGE");
+                setBrandCategoryFilter("PERKS");
+              }}
+              style={{
+                backgroundColor: "#181822",
+                color: "#ffffff",
+                border: "1px solid #383846",
+                fontWeight: "800",
+                padding: "10px 12px",
+                borderRadius: "10px",
+                cursor: "pointer",
+                fontSize: "11px",
+                textTransform: "uppercase"
+              }}
+            >
+              20% Code ↗
+            </button>
+
+            {isAdmin && (
+              <button
+                onClick={selectRandomHalloweenWinner}
+                style={{
+                  backgroundColor: "rgba(255, 122, 0, 0.2)",
+                  border: "1px dashed #ff7a00",
+                  color: "#ff9933",
+                  fontSize: "10px",
+                  fontWeight: "900",
+                  padding: "9px 12px",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  textTransform: "uppercase"
+                }}
+              >
+                {showWinnerAnimation ? "Rolling..." : "🎲 Pick Winner"}
+              </button>
+            )}
           </div>
-          <div style={{ backgroundColor: "#0c0c10", border: "1px solid #1e1e26", borderRadius: "14px", padding: "14px", textAlign: "center" }}>
-            <span style={{ display: "block", fontSize: "19px", fontWeight: "950", color: "#ffffff" }}>Oct 31 • 8PM</span>
-            <span style={{ fontSize: "10px", color: "#ff9933", textTransform: "uppercase", fontWeight: "800", letterSpacing: "0.5px" }}>TAG Radar Draw</span>
-          </div>
-          <div style={{ backgroundColor: "#0c0c10", border: "1px solid #1e1e26", borderRadius: "14px", padding: "14px", textAlign: "center" }}>
-            <span style={{ display: "block", fontSize: "19px", fontWeight: "950", color: NEON_GREEN }}>100 $SLUG</span>
-            <span style={{ fontSize: "10px", color: "#d4d4d8", textTransform: "uppercase", fontWeight: "800", letterSpacing: "0.5px" }}>Flat Member Key</span>
-          </div>
-          <div style={{ backgroundColor: "#0c0c10", border: "1px solid #1e1e26", borderRadius: "14px", padding: "14px", textAlign: "center" }}>
-            <span style={{ display: "block", fontSize: "19px", fontWeight: "950", color: "#ffffff" }}>
-              {totalSupplyData !== undefined ? `${remainingPercentage}% Left` : "Live Sync..."}
-            </span>
-            <span style={{ fontSize: "10px", color: "#d4d4d8", textTransform: "uppercase", fontWeight: "800", letterSpacing: "0.5px" }}>Founders Pool</span>
-          </div>
+
+          {giveawayWinner && (
+            <div style={{ width: "100%", backgroundColor: "#111116", border: `1.5px solid ${NEON_GREEN}`, padding: "10px", borderRadius: "10px", textAlign: "center", marginTop: "4px" }}>
+              <span style={{ fontSize: "11px", color: "#ff9933", fontWeight: "900", marginRight: "8px" }}>🏆 HALLOWEEN WINNER:</span>
+              <span style={{ fontSize: "14px", color: "#ffffff", fontWeight: "950" }}>{giveawayWinner.fullName}</span>
+              <span style={{ fontSize: "12px", color: NEON_GREEN, fontWeight: "800", marginLeft: "6px" }}>• {giveawayWinner.college} ({giveawayWinner.position})</span>
+            </div>
+          )}
         </div>
 
-        {/* 50/50 NAV SPLIT */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "28px" }}>
+        {/* 3-PILLAR NAVIGATION BAR (SCOREBOARD | BRAND DEALS | MY LOCKER) */}
+        <div style={{ 
+          display: "grid", 
+          gridTemplateColumns: "1fr 1fr 1fr", 
+          gap: "8px", 
+          margin: "18px 0 22px 0",
+          backgroundColor: "#0b0b0f",
+          padding: "6px",
+          borderRadius: "16px",
+          border: "1px solid #22222c"
+        }}>
           <button
             onClick={() => setActiveMainTab("SCOREBOARD")}
             style={{
-              backgroundColor: activeMainTab === "SCOREBOARD" ? "#121217" : "#08080b",
-              border: activeMainTab === "SCOREBOARD" ? `2px solid ${NEON_GREEN}` : "1px solid #22222a",
-              boxShadow: activeMainTab === "SCOREBOARD" ? `0 0 25px rgba(166, 255, 0, 0.16)` : "none",
-              borderRadius: "16px",
-              padding: "16px 12px",
+              backgroundColor: activeMainTab === "SCOREBOARD" ? NEON_GREEN : "transparent",
+              color: activeMainTab === "SCOREBOARD" ? "#000000" : "#ffffff",
+              border: "none",
+              borderRadius: "12px",
+              padding: "12px 8px",
               cursor: "pointer",
               textAlign: "center",
-              transition: "all 0.2s ease"
+              fontWeight: "950",
+              fontSize: "13px",
+              textTransform: "uppercase",
+              letterSpacing: "0.4px",
+              transition: "all 0.15s ease"
             }}
           >
-            <span style={{ display: "block", fontSize: "10px", fontWeight: "900", color: NEON_GREEN, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: "4px" }}>
-              Scouting & Portal
-            </span>
-            <span style={{ display: "block", fontSize: "16px", fontWeight: "950", color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-              📊 National Scoreboard
-            </span>
+            🏆 Scoreboard ({filteredScoreboard.length})
           </button>
 
           <button
             onClick={() => setActiveMainTab("EXCHANGE")}
             style={{
-              backgroundColor: activeMainTab === "EXCHANGE" ? "#121217" : "#08080b",
-              border: activeMainTab === "EXCHANGE" ? `2px solid ${NEON_GREEN}` : "1px solid #22222a",
-              boxShadow: activeMainTab === "EXCHANGE" ? `0 0 25px rgba(166, 255, 0, 0.16)` : "none",
-              borderRadius: "16px",
-              padding: "16px 12px",
+              backgroundColor: activeMainTab === "EXCHANGE" ? NEON_GREEN : "transparent",
+              color: activeMainTab === "EXCHANGE" ? "#000000" : "#ffffff",
+              border: "none",
+              borderRadius: "12px",
+              padding: "12px 8px",
               cursor: "pointer",
               textAlign: "center",
-              transition: "all 0.2s ease"
+              fontWeight: "950",
+              fontSize: "13px",
+              textTransform: "uppercase",
+              letterSpacing: "0.4px",
+              transition: "all 0.15s ease"
             }}
           >
-            <span style={{ display: "block", fontSize: "10px", fontWeight: "900", color: NEON_GREEN, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: "4px" }}>
-              20% Off TAG Sports & Perks
-            </span>
-            <span style={{ display: "block", fontSize: "16px", fontWeight: "950", color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-              🤝 The Brand Dugout
-            </span>
+            🤝 Brand Deals (16)
+          </button>
+
+          <button
+            onClick={() => setActiveMainTab("LOCKER")}
+            style={{
+              backgroundColor: activeMainTab === "LOCKER" ? NEON_GREEN : "transparent",
+              color: activeMainTab === "LOCKER" ? "#000000" : "#ffffff",
+              border: "none",
+              borderRadius: "12px",
+              padding: "12px 8px",
+              cursor: "pointer",
+              textAlign: "center",
+              fontWeight: "950",
+              fontSize: "13px",
+              textTransform: "uppercase",
+              letterSpacing: "0.4px",
+              transition: "all 0.15s ease"
+            }}
+          >
+            👤 My Locker {hasProfile ? "✓" : "⚙️"}
           </button>
         </div>
 
-        {/* PILLAR 1: SCOREBOARD */}
+        {/* =====================================================================
+            TAB 1: NATIONAL SCOUTING SCOREBOARD (COMPACT & EXPANDABLE)
+           ===================================================================== */}
         {activeMainTab === "SCOREBOARD" && (
-          <section style={{ marginBottom: "60px" }}>
-            <div style={{ backgroundColor: "#0c0c10", border: "1px solid #1e1e26", borderRadius: "20px", padding: "24px 18px", marginBottom: "20px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px", marginBottom: "18px" }}>
-                <div>
-                  <div style={{ display: "inline-block", backgroundColor: "rgba(166, 255, 0, 0.1)", border: `1px solid ${NEON_GREEN}`, borderRadius: "999px", padding: "4px 12px", fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "8px" }}>
-                    Verified Collegiate Data Registry
-                  </div>
-                  <h2 style={{ fontSize: "24px", fontWeight: "950", color: "#ffffff", textTransform: "uppercase", margin: "0 0 6px 0" }}>
-                    National Scouting Scoreboard
-                  </h2>
-                  <p style={{ fontSize: "13px", color: "#d4d4d8", maxWidth: "680px", margin: 0, lineHeight: "1.5" }}>
-                    Direct scout discovery for active college ballplayers and transfer portal candidates. Filter verified bat speeds, pitch modeling (Stuff+), IVB, and video clips.
-                  </p>
-                </div>
+          <section>
+            {/* Search & Quick Filter Bar */}
+            <div style={{ backgroundColor: "#0c0c10", border: "1px solid #1e1e26", borderRadius: "16px", padding: "16px", marginBottom: "16px" }}>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "12px" }}>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="🔍 Search player name or college..."
+                  style={{
+                    flex: "1 1 220px",
+                    backgroundColor: "#14141a",
+                    border: `1.5px solid ${searchQuery ? NEON_GREEN : "#2c2c36"}`,
+                    color: "#ffffff",
+                    padding: "11px 14px",
+                    borderRadius: "10px",
+                    fontSize: "13px",
+                    fontWeight: "700",
+                    outline: "none"
+                  }}
+                />
+
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  style={{ backgroundColor: "#14141a", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontWeight: "900", padding: "10px 12px", borderRadius: "10px", fontSize: "12px", cursor: "pointer" }}
+                >
+                  <option value="DEFAULT">Sort: Latest Added</option>
+                  <option value="PEAK_FB">Sort: Peak Fastball ↓</option>
+                  <option value="STUFF_PLUS">Sort: Stuff+ Grade ↓</option>
+                  <option value="IVB">Sort: Induced Vert Break ↓</option>
+                  <option value="MAX_EV">Sort: Max Exit Velo ↓</option>
+                </select>
 
                 <button
-                  onClick={() => (account ? setShowProfileModal(true) : handleOpenLogin())}
+                  onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
                   style={{
-                    backgroundColor: NEON_GREEN,
-                    color: "#000000",
-                    fontWeight: "950",
-                    padding: "12px 20px",
-                    borderRadius: "12px",
-                    border: "none",
-                    cursor: "pointer",
+                    backgroundColor: showAdvancedFilters ? "#22222c" : "#14141a",
+                    border: "1px solid #333340",
+                    color: "#ffffff",
+                    padding: "10px 14px",
+                    borderRadius: "10px",
                     fontSize: "12px",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.8px",
-                    whiteSpace: "nowrap"
+                    fontWeight: "800",
+                    cursor: "pointer"
                   }}
                 >
-                  {account ? "Update My Metrics ➔" : "Sign In to Post Data ➔"}
+                  {showAdvancedFilters ? "Hide Filters ▲" : "Filters ▼"}
                 </button>
               </div>
 
-              {/* PLAYER SEARCH INPUT BAR */}
-              <div style={{ position: "relative", marginBottom: "16px" }}>
-                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="🔍 Search player name or school..."
-                    style={{
-                      width: "100%",
-                      backgroundColor: "#141418",
-                      border: `1.5px solid ${searchQuery ? NEON_GREEN : "#2e2e38"}`,
-                      color: "#ffffff",
-                      padding: "12px 16px",
-                      borderRadius: "12px",
-                      fontSize: "14px",
-                      fontWeight: "700",
-                      outline: "none"
-                    }}
-                  />
-                  {searchQuery && (
+              {/* Role Filter Pills */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                  {(["ALL", "HITTER", "PITCHER", "TWP"] as const).map((r) => (
                     <button
-                      onClick={() => setSearchQuery("")}
+                      key={r}
+                      onClick={() => setRoleFilter(r)}
                       style={{
-                        backgroundColor: "#222228",
-                        border: "1px solid #444",
-                        color: "#fff",
-                        padding: "12px 16px",
-                        borderRadius: "12px",
+                        backgroundColor: roleFilter === r ? NEON_GREEN : "#15151c",
+                        color: roleFilter === r ? "#000000" : "#d4d4d8",
+                        border: roleFilter === r ? `1px solid ${NEON_GREEN}` : "1px solid #2b2b36",
+                        fontWeight: "900",
+                        fontSize: "11px",
+                        padding: "7px 14px",
+                        borderRadius: "999px",
+                        textTransform: "uppercase",
                         cursor: "pointer",
-                        fontWeight: "800",
-                        fontSize: "12px"
                       }}
                     >
-                      Clear
+                      {r === "TWP" ? "⚡ Two-Way" : r === "ALL" ? "All Players" : `${r}s`}
                     </button>
-                  )}
+                  ))}
                 </div>
 
-                {searchQuery.trim() !== "" && searchSuggestions.length > 0 && (
-                  <div style={{
-                    position: "absolute",
-                    top: "calc(100% + 6px)",
-                    left: 0,
-                    right: 0,
-                    backgroundColor: "#121216",
-                    border: `1.5px solid ${NEON_GREEN}`,
-                    borderRadius: "12px",
-                    boxShadow: "0 10px 30px rgba(0,0,0,0.85)",
-                    zIndex: 50,
-                    overflow: "hidden"
-                  }}>
-                    {searchSuggestions.map((ath, sIdx) => (
-                      <div
-                        key={sIdx}
-                        onClick={() => {
-                          setSearchQuery(ath.fullName);
-                        }}
-                        style={{
-                          padding: "12px 16px",
-                          borderBottom: sIdx < searchSuggestions.length - 1 ? "1px solid #1f1f26" : "none",
-                          cursor: "pointer",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center"
-                        }}
-                      >
-                        <div>
-                          <div style={{ fontWeight: "900", color: "#ffffff", fontSize: "14px" }}>{ath.fullName}</div>
-                          <div style={{ fontSize: "11px", color: NEON_GREEN, fontWeight: "700" }}>{ath.college} ({ath.position})</div>
-                        </div>
-                        <span style={{ fontSize: "11px", color: "#d4d4d8", textTransform: "uppercase" }}>Tap to view ↗</span>
-                      </div>
-                    ))}
+                <button
+                  onClick={() => setActiveMainTab("LOCKER")}
+                  style={{
+                    backgroundColor: "rgba(166, 255, 0, 0.14)",
+                    border: `1px solid ${NEON_GREEN}`,
+                    color: NEON_GREEN,
+                    fontWeight: "900",
+                    padding: "7px 14px",
+                    borderRadius: "999px",
+                    fontSize: "11px",
+                    textTransform: "uppercase",
+                    cursor: "pointer"
+                  }}
+                >
+                  + Post / Edit My Numbers ➔
+                </button>
+              </div>
+
+              {/* Collapsible Advanced Filters */}
+              {showAdvancedFilters && (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "8px", marginTop: "12px", paddingTop: "12px", borderTop: "1px solid #1e1e26" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#a1a1aa", textTransform: "uppercase", marginBottom: "4px" }}>Position</label>
+                    <select
+                      value={positionFilter}
+                      onChange={(e) => setPositionFilter(e.target.value)}
+                      style={{ width: "100%", backgroundColor: "#14141a", border: "1px solid #33333d", color: "#fff", padding: "8px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}
+                    >
+                      <option value="ALL">All Positions</option>
+                      <option value="RHP">RHP</option>
+                      <option value="LHP">LHP</option>
+                      <option value="C">Catcher (C)</option>
+                      <option value="MIF">Middle Inf (MIF)</option>
+                      <option value="SS">Shortstop (SS)</option>
+                      <option value="3B">Third Base (3B)</option>
+                      <option value="1B">First Base (1B)</option>
+                      <option value="OF">Outfield (OF)</option>
+                    </select>
                   </div>
-                )}
-              </div>
 
-              {/* ROLE TOGGLE PILLS */}
-              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "16px" }}>
-                {(["ALL", "HITTER", "PITCHER", "TWP"] as const).map((r) => (
-                  <button
-                    key={r}
-                    onClick={() => setRoleFilter(r)}
-                    style={{
-                      backgroundColor: roleFilter === r ? NEON_GREEN : "#141418",
-                      color: roleFilter === r ? "#000000" : "#ffffff",
-                      border: roleFilter === r ? `1px solid ${NEON_GREEN}` : "1px solid #2e2e38",
-                      fontWeight: "900",
-                      fontSize: "11px",
-                      padding: "8px 16px",
-                      borderRadius: "999px",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    {r === "TWP" ? "⚡ Two-Way" : r === "ALL" ? "All Athletes" : `${r}s`}
-                  </button>
-                ))}
-              </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#a1a1aa", textTransform: "uppercase", marginBottom: "4px" }}>Roster / Portal Status</label>
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      style={{ width: "100%", backgroundColor: "#14141a", border: "1px solid #33333d", color: "#fff", padding: "8px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}
+                    >
+                      <option value="ALL">All Statuses</option>
+                      <option value="Transfer Portal">Transfer Portal</option>
+                      <option value="Juco Uncommitted">Juco Uncommitted</option>
+                      <option value="Returning">Returning College</option>
+                      <option value="Incoming Freshman">Incoming Freshman</option>
+                    </select>
+                  </div>
 
-              {/* ADVANCED FILTER BAR */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "8px", backgroundColor: "#070709", border: "1px solid #1c1c24", borderRadius: "14px", padding: "12px" }}>
-                <div>
-                  <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#d4d4d8", textTransform: "uppercase", marginBottom: "4px" }}>Position</label>
-                  <select
-                    value={positionFilter}
-                    onChange={(e) => setPositionFilter(e.target.value)}
-                    style={{ width: "100%", backgroundColor: "#121216", border: "1px solid #33333d", color: "#fff", padding: "7px 8px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}
-                  >
-                    <option value="ALL">All Positions</option>
-                    <option value="RHP">RHP</option>
-                    <option value="LHP">LHP</option>
-                    <option value="C">Catcher (C)</option>
-                    <option value="MIF">Middle Inf (MIF)</option>
-                    <option value="SS">Shortstop (SS)</option>
-                    <option value="3B">Third Base (3B)</option>
-                    <option value="1B">First Base (1B)</option>
-                    <option value="OF">Outfield (OF)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#d4d4d8", textTransform: "uppercase", marginBottom: "4px" }}>Portal Status</label>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    style={{ width: "100%", backgroundColor: "#121216", border: "1px solid #33333d", color: "#fff", padding: "7px 8px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}
-                  >
-                    <option value="ALL">All Statuses</option>
-                    <option value="Transfer Portal">Transfer Portal</option>
-                    <option value="Juco Uncommitted">Juco Uncommitted</option>
-                    <option value="Returning">Returning College</option>
-                    <option value="Incoming Freshman">Incoming Freshman</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#d4d4d8", textTransform: "uppercase", marginBottom: "4px" }}>Region / State</label>
-                  <select
-                    value={stateFilter}
-                    onChange={(e) => setStateFilter(e.target.value)}
-                    style={{ width: "100%", backgroundColor: "#121216", border: "1px solid #33333d", color: "#fff", padding: "7px 8px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}
-                  >
-                    <option value="ALL">All States</option>
-                    <option value="UT">Utah (UT)</option>
-                    <option value="AZ">Arizona (AZ)</option>
-                    <option value="CA">California (CA)</option>
-                    <option value="TX">Texas (TX)</option>
-                    <option value="FL">Florida (FL)</option>
-                    <option value="NV">Nevada (NV)</option>
-                    <option value="CO">Colorado (CO)</option>
-                    <option value="ID">Idaho (ID)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: NEON_GREEN, textTransform: "uppercase", marginBottom: "4px" }}>Sort Leaderboard</label>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as any)}
-                    style={{ width: "100%", backgroundColor: "#121216", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontWeight: "900", padding: "7px 8px", borderRadius: "8px", fontSize: "11px" }}
-                  >
-                    <option value="DEFAULT">Latest Update</option>
-                    <option value="PEAK_FB">Peak Fastball ↓</option>
-                    <option value="STUFF_PLUS">Stuff+ Grade ↓</option>
-                    <option value="IVB">Induced Vert Break (IVB) ↓</option>
-                    <option value="MAX_EV">Max Exit Velo ↓</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* LEADERBOARD LIST */}
-            <div style={{ width: "100%" }}>
-              {filteredScoreboard.length === 0 ? (
-                <div style={{ backgroundColor: "#0a0a0d", border: "1px solid #1e1e26", borderRadius: "16px", padding: "40px 20px", textAlign: "center", color: "#d4d4d8" }}>
-                  {loadingScoreboard ? "Loading live national scoreboard..." : "No athletes match these filter criteria. Reset filters to view all."}
-                </div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                  {filteredScoreboard.map((ath, idx) => {
-                    const isAthleteTWP = ath.primaryRole === "TWP";
-                    const isPitcherRole = ath.primaryRole === "PITCHER" || isAthleteTWP;
-                    const isHitterRole = ath.primaryRole === "HITTER" || isAthleteTWP;
-
-                    const isEliteFB = parseFloat(ath.peakFB || "0") >= 92;
-                    const isEliteStuff = parseFloat(ath.stuffPlus || "0") >= 110;
-                    const isEliteIVB = parseFloat(ath.inducedVertBreak || "0") >= 18;
-                    const isEliteEV = parseFloat(ath.maxExitVelo || "0") >= 100;
-                    const isElite60 = parseFloat(ath.sixtyTime || "99") <= 6.65;
-
-                    return (
-                      <div
-                        key={idx}
-                        style={{
-                          backgroundColor: "#0e0e12",
-                          border: "1px solid #282832",
-                          borderRadius: "18px",
-                          padding: "20px",
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "16px",
-                          boxShadow: "0 6px 24px rgba(0,0,0,0.6)"
-                        }}
-                      >
-                        {/* Athlete Header */}
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px", borderBottom: "1px solid #22222a", paddingBottom: "14px" }}>
-                          <div>
-                            <div style={{ fontWeight: "950", color: "#ffffff", fontSize: "20px", letterSpacing: "0.5px" }}>
-                              {ath.fullName || "Member Athlete"}
-                            </div>
-                            <div style={{ color: NEON_GREEN, fontSize: "15px", fontWeight: "900", marginTop: "4px" }}>
-                              🏛️ {ath.college || "Undeclared College"} {ath.state ? `(${ath.state})` : ""}
-                            </div>
-                            <div style={{ color: "#e4e4e7", fontSize: "13px", fontWeight: "700", marginTop: "4px" }}>
-                              <strong style={{ color: "#ffffff" }}>{ath.position}</strong>
-                              {ath.height && ath.weight && <span> • {ath.height}, {ath.weight} lbs</span>}
-                              <span> • {ath.playerStatus}</span>
-                            </div>
-                          </div>
-
-                          <div>
-                            {isAthleteTWP ? (
-                              <span style={{ backgroundColor: "rgba(166, 255, 0, 0.18)", border: `1.5px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "6px 14px", borderRadius: "999px", fontSize: "11px", fontWeight: "900", textTransform: "uppercase", whiteSpace: "nowrap" }}>
-                                ⚡ TWO-WAY
-                              </span>
-                            ) : (
-                              <span style={{ backgroundColor: "#1c1c24", border: "1.5px solid #3f3f4e", color: "#ffffff", padding: "6px 14px", borderRadius: "999px", fontSize: "11px", fontWeight: "900", textTransform: "uppercase", whiteSpace: "nowrap" }}>
-                                {ath.primaryRole}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* HIGH-CONTRAST DATA BLOCKS */}
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "16px" }}>
-                          
-                          {/* PITCHING SECTOR */}
-                          {isPitcherRole && (
-                            <div style={{ backgroundColor: "#07070a", border: "1px solid #252530", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                <span style={{ fontSize: "11px", color: NEON_GREEN, textTransform: "uppercase", fontWeight: "900", letterSpacing: "1px" }}>⚾ Mound Telemetry</span>
-                                {ath.stuffPlus && (
-                                  <span style={{ backgroundColor: isEliteStuff ? "rgba(255, 184, 0, 0.18)" : "rgba(166, 255, 0, 0.15)", border: `1px solid ${isEliteStuff ? "#ffb800" : NEON_GREEN}`, color: isEliteStuff ? "#ffb800" : NEON_GREEN, padding: "3px 9px", borderRadius: "6px", fontSize: "12px", fontWeight: "900" }}>
-                                    {isEliteStuff ? "🔥 " : ""}Stuff+ {ath.stuffPlus}
-                                  </span>
-                                )}
-                              </div>
-
-                              <div style={{ color: "#ffffff", fontWeight: "900", fontSize: "16px", fontFamily: "monospace", display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                                <span><span style={{ color: NEON_GREEN }}>FB:</span> {ath.peakFB ? `${ath.peakFB} mph` : "Unrecorded"} {ath.sittingFB ? `(${ath.sittingFB})` : ""}</span>
-                                {isEliteFB && <span style={{ backgroundColor: "rgba(255, 184, 0, 0.18)", border: "1px solid #ffb800", color: "#ffb800", fontSize: "10px", padding: "2px 6px", borderRadius: "4px" }}>🔥 ELITE VELO</span>}
-                                {ath.fbSpinRate && <span style={{ color: "#ffffff", fontWeight: "800", fontSize: "13px" }}>• {ath.fbSpinRate} RPM</span>}
-                              </div>
-
-                              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", fontSize: "12px", color: "#ffffff", fontFamily: "monospace", fontWeight: "800" }}>
-                                {ath.inducedVertBreak && <span style={{ backgroundColor: "#14141c", border: `1px solid ${isEliteIVB ? "#ffb800" : "#383846"}`, padding: "6px 10px", borderRadius: "6px" }}><span style={{ color: isEliteIVB ? "#ffb800" : NEON_GREEN }}>{isEliteIVB ? "🔥 " : ""}IVB:</span> {ath.inducedVertBreak}"</span>}
-                                {ath.horizontalBreak && <span style={{ backgroundColor: "#14141c", border: "1px solid #383846", padding: "6px 10px", borderRadius: "6px" }}><span style={{ color: NEON_GREEN }}>HB:</span> {ath.horizontalBreak}"</span>}
-                                {ath.releaseExtension && <span style={{ backgroundColor: "#14141c", border: "1px solid #383846", padding: "6px 10px", borderRadius: "6px" }}><span style={{ color: NEON_GREEN }}>Ext:</span> {ath.releaseExtension}ft</span>}
-                                {ath.vertApproachAngle && <span style={{ backgroundColor: "#14141c", border: "1px solid #383846", padding: "6px 10px", borderRadius: "6px" }}><span style={{ color: NEON_GREEN }}>VAA:</span> {ath.vertApproachAngle}°</span>}
-                                {ath.kMinusBbPercentage && <span style={{ backgroundColor: "#14141c", border: "1px solid #383846", padding: "6px 10px", borderRadius: "6px" }}><span style={{ color: NEON_GREEN }}>K-BB:</span> {ath.kMinusBbPercentage}%</span>}
-                              </div>
-
-                              {ath.offSpeedVelo && (
-                                <div style={{ color: "#ffffff", fontSize: "13px", fontFamily: "monospace", fontWeight: "800" }}>
-                                  <span style={{ color: NEON_GREEN }}>{ath.offSpeedType || "Slider"}:</span> {ath.offSpeedVelo} mph {ath.offSpeedSpinRate ? `(${ath.offSpeedSpinRate} RPM)` : ""}
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {/* HITTING SECTOR */}
-                          {isHitterRole && (
-                            <div style={{ backgroundColor: "#07070a", border: "1px solid #252530", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                <span style={{ fontSize: "11px", color: NEON_GREEN, textTransform: "uppercase", fontWeight: "900", letterSpacing: "1px" }}>💥 Batter's Box Telemetry</span>
-                                {isEliteEV && (
-                                  <span style={{ backgroundColor: "rgba(255, 184, 0, 0.18)", border: "1px solid #ffb800", color: "#ffb800", padding: "2px 8px", borderRadius: "6px", fontSize: "10px", fontWeight: "900" }}>
-                                    🔥 100+ MPH CLUB
-                                  </span>
-                                )}
-                              </div>
-
-                              <div style={{ color: "#ffffff", fontWeight: "900", fontSize: "16px", fontFamily: "monospace" }}>
-                                {ath.maxExitVelo ? (
-                                  <div>
-                                    <span style={{ color: NEON_GREEN }}>Max EV:</span> {ath.maxExitVelo} mph
-                                  </div>
-                                ) : (
-                                  <div style={{ color: "#a1a1aa" }}>Exit Velo: Unrecorded</div>
-                                )}
-                              </div>
-
-                              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", fontSize: "12px", color: "#ffffff", fontFamily: "monospace", fontWeight: "800" }}>
-                                {ath.ninetyEV && <span style={{ backgroundColor: "#14141c", border: "1px solid #383846", padding: "6px 10px", borderRadius: "6px" }}><span style={{ color: NEON_GREEN }}>90th%:</span> {ath.ninetyEV} mph</span>}
-                                {ath.batSpeed && <span style={{ backgroundColor: "#14141c", border: "1px solid #383846", padding: "6px 10px", borderRadius: "6px" }}><span style={{ color: NEON_GREEN }}>Bat Speed:</span> {ath.batSpeed} mph</span>}
-                                {ath.sixtyTime && <span style={{ backgroundColor: "#14141c", border: `1px solid ${isElite60 ? "#ffb800" : "#383846"}`, padding: "6px 10px", borderRadius: "6px" }}><span style={{ color: isElite60 ? "#ffb800" : NEON_GREEN }}>{isElite60 ? "🔥 " : ""}60-Yard:</span> {ath.sixtyTime}s</span>}
-                              </div>
-                            </div>
-                          )}
-
-                        </div>
-
-                        {/* Footer Controls */}
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "8px", flexWrap: "wrap", gap: "10px", borderTop: "1px solid #22222a" }}>
-                          <div style={{ fontSize: "12px", color: "#e4e4e7", fontFamily: "monospace", fontWeight: "700" }}>
-                            {ath.recordedDatePitching && <span>Pitch: {String(ath.recordedDatePitching).slice(0, 10)} </span>}
-                            {ath.recordedDateHitting && <span>Hit: {String(ath.recordedDateHitting).slice(0, 10)}</span>}
-                            {!ath.recordedDatePitching && !ath.recordedDateHitting && <span>Member Verified</span>}
-                          </div>
-
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                            <button
-                              onClick={() => triggerMobileScoutShare(ath)}
-                              style={{
-                                backgroundColor: "rgba(166, 255, 0, 0.15)",
-                                border: `1.5px solid ${NEON_GREEN}`,
-                                color: NEON_GREEN,
-                                padding: "9px 16px",
-                                borderRadius: "10px",
-                                fontSize: "12px",
-                                fontWeight: "900",
-                                cursor: "pointer",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "6px",
-                                whiteSpace: "nowrap"
-                              }}
-                            >
-                              <span>Share 4:5 Card</span>
-                              <span>📸</span>
-                            </button>
-
-                            {ath.verificationLink && ath.verificationLink.startsWith("http") && (
-                              <a
-                                href={ath.verificationLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{ backgroundColor: "rgba(255, 122, 0, 0.15)", border: "1px solid #ff7a00", color: "#ff9933", padding: "9px 14px", borderRadius: "10px", textDecoration: "none", fontSize: "12px", fontWeight: "900" }}
-                              >
-                                🎥 Watch Clip ↗
-                              </a>
-                            )}
-
-                            {ath.social1_Url && (
-                              <a
-                                href={ath.social1_Url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{ backgroundColor: "#1c1c24", border: "1px solid #44444f", color: NEON_GREEN, padding: "9px 14px", borderRadius: "10px", textDecoration: "none", fontSize: "12px", fontWeight: "900" }}
-                              >
-                                {ath.social1_Type || "Social 1"} ↗
-                              </a>
-                            )}
-                            {ath.social2_Url && (
-                              <a
-                                href={ath.social2_Url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{ backgroundColor: "#1c1c24", border: "1px solid #44444f", color: NEON_GREEN, padding: "9px 14px", borderRadius: "10px", textDecoration: "none", fontSize: "12px", fontWeight: "900" }}
-                              >
-                                {ath.social2_Type || "Social 2"} ↗
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  <div>
+                    <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#a1a1aa", textTransform: "uppercase", marginBottom: "4px" }}>State</label>
+                    <select
+                      value={stateFilter}
+                      onChange={(e) => setStateFilter(e.target.value)}
+                      style={{ width: "100%", backgroundColor: "#14141a", border: "1px solid #33333d", color: "#fff", padding: "8px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}
+                    >
+                      <option value="ALL">All States</option>
+                      <option value="UT">Utah (UT)</option>
+                      <option value="AZ">Arizona (AZ)</option>
+                      <option value="CA">California (CA)</option>
+                      <option value="TX">Texas (TX)</option>
+                      <option value="FL">Florida (FL)</option>
+                      <option value="NV">Nevada (NV)</option>
+                      <option value="CO">Colorado (CO)</option>
+                      <option value="ID">Idaho (ID)</option>
+                    </select>
+                  </div>
                 </div>
               )}
             </div>
+
+            {/* Scannable Player List */}
+            {filteredScoreboard.length === 0 ? (
+              <div style={{ backgroundColor: "#0a0a0d", border: "1px solid #1e1e26", borderRadius: "16px", padding: "36px 20px", textAlign: "center", color: "#d4d4d8" }}>
+                {loadingScoreboard ? "Loading live national scoreboard..." : "No players match these filters."}
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {filteredScoreboard.map((ath, idx) => {
+                  const isExpanded = expandedCardIdx === idx;
+                  const isAthleteTWP = ath.primaryRole === "TWP";
+                  const isPitcherRole = ath.primaryRole === "PITCHER" || isAthleteTWP;
+                  const isHitterRole = ath.primaryRole === "HITTER" || isAthleteTWP;
+
+                  const isEliteFB = parseFloat(ath.peakFB || "0") >= 92;
+                  const isEliteStuff = parseFloat(ath.stuffPlus || "0") >= 110;
+                  const isEliteIVB = parseFloat(ath.inducedVertBreak || "0") >= 18;
+                  const isEliteEV = parseFloat(ath.maxExitVelo || "0") >= 100;
+                  const isElite60 = parseFloat(ath.sixtyTime || "99") <= 6.65;
+
+                  // Build Quick Headline Badges for Compact Row
+                  const headlinePills: { label: string; val: string; elite?: boolean }[] = [];
+                  if (isPitcherRole) {
+                    if (ath.peakFB) headlinePills.push({ label: "FB", val: `${ath.peakFB} mph`, elite: isEliteFB });
+                    if (ath.stuffPlus) headlinePills.push({ label: "Stuff+", val: ath.stuffPlus, elite: isEliteStuff });
+                    if (ath.inducedVertBreak) headlinePills.push({ label: "IVB", val: `${ath.inducedVertBreak}"`, elite: isEliteIVB });
+                  }
+                  if (isHitterRole) {
+                    if (ath.maxExitVelo) headlinePills.push({ label: "Max EV", val: `${ath.maxExitVelo} mph`, elite: isEliteEV });
+                    if (ath.batSpeed) headlinePills.push({ label: "Bat", val: `${ath.batSpeed} mph` });
+                    if (ath.sixtyTime) headlinePills.push({ label: "60yd", val: `${ath.sixtyTime}s`, elite: isElite60 });
+                  }
+
+                  return (
+                    <div
+                      key={idx}
+                      style={{
+                        backgroundColor: "#0d0d12",
+                        border: isExpanded ? `1.5px solid ${NEON_GREEN}` : "1px solid #24242e",
+                        borderRadius: "14px",
+                        padding: "14px 16px",
+                        transition: "all 0.15s ease"
+                      }}
+                    >
+                      {/* Compact Top Row (Always Visible - Click to Expand) */}
+                      <div
+                        onClick={() => setExpandedCardIdx(isExpanded ? null : idx)}
+                        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", cursor: "pointer" }}
+                      >
+                        <div style={{ display: "flex", flexDirection: "column", gap: "3px", minWidth: "200px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                            <span style={{ fontWeight: "950", color: "#ffffff", fontSize: "17px" }}>
+                              {ath.fullName || "Member Athlete"}
+                            </span>
+                            <span style={{ backgroundColor: isAthleteTWP ? "rgba(166, 255, 0, 0.16)" : "#1b1b24", border: `1px solid ${isAthleteTWP ? NEON_GREEN : "#383846"}`, color: isAthleteTWP ? NEON_GREEN : "#d4d4d8", padding: "2px 8px", borderRadius: "999px", fontSize: "10px", fontWeight: "900", textTransform: "uppercase" }}>
+                              {ath.position || ath.primaryRole}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: "12px", color: "#d4d4d8", fontWeight: "700" }}>
+                            <span style={{ color: NEON_GREEN, fontWeight: "800" }}>🏛️ {ath.college || "Undeclared"}</span>
+                            {ath.state ? ` (${ath.state})` : ""}
+                            {ath.height && ath.weight ? ` • ${ath.height} / ${ath.weight} lbs` : ""}
+                            <span> • {ath.playerStatus}</span>
+                          </div>
+                        </div>
+
+                        {/* Headline Metric Pills & Action Buttons */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                          {headlinePills.slice(0, 4).map((p, pIdx) => (
+                            <div
+                              key={pIdx}
+                              style={{
+                                backgroundColor: p.elite ? "rgba(255, 184, 0, 0.14)" : "#14141c",
+                                border: `1px solid ${p.elite ? "#ffb800" : "#2e2e3a"}`,
+                                padding: "5px 10px",
+                                borderRadius: "8px",
+                                fontFamily: "monospace",
+                                fontSize: "12px",
+                                fontWeight: "900"
+                              }}
+                            >
+                              <span style={{ color: p.elite ? "#ffb800" : NEON_GREEN }}>{p.elite ? "🔥 " : ""}{p.label}: </span>
+                              <span style={{ color: "#ffffff" }}>{p.val}</span>
+                            </div>
+                          ))}
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              triggerMobileScoutShare(ath);
+                            }}
+                            style={{
+                              backgroundColor: "rgba(166, 255, 0, 0.14)",
+                              border: `1px solid ${NEON_GREEN}`,
+                              color: NEON_GREEN,
+                              padding: "6px 10px",
+                              borderRadius: "8px",
+                              fontSize: "11px",
+                              fontWeight: "900",
+                              cursor: "pointer"
+                            }}
+                          >
+                            📸 4:5 Card
+                          </button>
+
+                          <span style={{ fontSize: "11px", color: "#a1a1aa", fontWeight: "800", marginLeft: "4px" }}>
+                            {isExpanded ? "▲" : "▼"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Expanded Full Telemetry Drawer */}
+                      {isExpanded && (
+                        <div style={{ marginTop: "14px", paddingTop: "14px", borderTop: "1px solid #22222c", display: "flex", flexDirection: "column", gap: "12px" }}>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "12px" }}>
+                            {isPitcherRole && (
+                              <div style={{ backgroundColor: "#07070a", border: "1px solid #24242e", borderRadius: "12px", padding: "12px", fontSize: "12px", fontFamily: "monospace" }}>
+                                <div style={{ color: NEON_GREEN, fontWeight: "900", marginBottom: "6px", textTransform: "uppercase", fontSize: "10px" }}>⚾ Full Mound Telemetry</div>
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", color: "#ffffff", fontWeight: "800" }}>
+                                  <span>Peak FB: {ath.peakFB || "--"} mph</span>
+                                  {ath.sittingFB && <span>• Sit: {ath.sittingFB}</span>}
+                                  {ath.fbSpinRate && <span>• Spin: {ath.fbSpinRate} RPM</span>}
+                                  {ath.stuffPlus && <span>• Stuff+: {ath.stuffPlus}</span>}
+                                  {ath.inducedVertBreak && <span>• IVB: {ath.inducedVertBreak}"</span>}
+                                  {ath.horizontalBreak && <span>• HB: {ath.horizontalBreak}"</span>}
+                                  {ath.releaseExtension && <span>• Ext: {ath.releaseExtension}ft</span>}
+                                  {ath.vertApproachAngle && <span>• VAA: {ath.vertApproachAngle}°</span>}
+                                  {ath.offSpeedVelo && <span>• {ath.offSpeedType || "Slider"}: {ath.offSpeedVelo} mph</span>}
+                                  {ath.kMinusBbPercentage && <span>• K-BB%: {ath.kMinusBbPercentage}%</span>}
+                                </div>
+                              </div>
+                            )}
+
+                            {isHitterRole && (
+                              <div style={{ backgroundColor: "#07070a", border: "1px solid #24242e", borderRadius: "12px", padding: "12px", fontSize: "12px", fontFamily: "monospace" }}>
+                                <div style={{ color: NEON_GREEN, fontWeight: "900", marginBottom: "6px", textTransform: "uppercase", fontSize: "10px" }}>💥 Full Hitting Telemetry</div>
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", color: "#ffffff", fontWeight: "800" }}>
+                                  <span>Max EV: {ath.maxExitVelo || "--"} mph</span>
+                                  {ath.ninetyEV && <span>• 90th% EV: {ath.ninetyEV} mph</span>}
+                                  {ath.batSpeed && <span>• Bat Speed: {ath.batSpeed} mph</span>}
+                                  {ath.sixtyTime && <span>• 60-Yd Dash: {ath.sixtyTime}s</span>}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+                            <div style={{ fontSize: "11px", color: "#a1a1aa", fontFamily: "monospace" }}>
+                              {ath.recordedDatePitching && <span>Pitch Date: {String(ath.recordedDatePitching).slice(0, 10)} </span>}
+                              {ath.recordedDateHitting && <span>Hit Date: {String(ath.recordedDateHitting).slice(0, 10)}</span>}
+                            </div>
+
+                            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                              {ath.verificationLink && ath.verificationLink.startsWith("http") && (
+                                <a
+                                  href={ath.verificationLink}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{ backgroundColor: "rgba(255, 122, 0, 0.15)", border: "1px solid #ff7a00", color: "#ff9933", padding: "7px 12px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "900" }}
+                                >
+                                  🎥 Watch Video Clip ↗
+                                </a>
+                              )}
+                              {ath.social1_Url && (
+                                <a
+                                  href={ath.social1_Url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{ backgroundColor: "#1c1c24", border: "1px solid #44444f", color: NEON_GREEN, padding: "7px 12px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "900" }}
+                                >
+                                  {ath.social1_Type || "Social 1"} ↗
+                                </a>
+                              )}
+                              {ath.social2_Url && (
+                                <a
+                                  href={ath.social2_Url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{ backgroundColor: "#1c1c24", border: "1px solid #44444f", color: NEON_GREEN, padding: "7px 12px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "900" }}
+                                >
+                                  {ath.social2_Type || "Social 2"} ↗
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </section>
         )}
 
-        {/* PILLAR 2: EXCHANGE (BRAND DUGOUT) */}
+        {/* =====================================================================
+            TAB 2: BRAND DEALS & MEMBER PERKS (FLATTENED WITH 1-TAP FILTERS)
+           ===================================================================== */}
         {activeMainTab === "EXCHANGE" && (
-          <div>
-            {!account ? (
-              <div style={{ backgroundColor: "#0c0c10", border: "1px solid #22222a", borderRadius: "20px", padding: "24px 20px", textAlign: "center", maxWidth: "680px", margin: "0 auto 36px auto" }}>
-                <h3 style={{ fontSize: "18px", fontWeight: "900", margin: "0 0 6px 0", color: "#ffffff", textTransform: "uppercase" }}>
-                  Active College Ballplayer?
-                </h3>
-                <p style={{ fontSize: "13px", color: "#d4d4d8", margin: "0 0 16px 0", lineHeight: "1.4" }}>
-                  Sign in with your Google, Apple, or phone ID to claim your 100 $SLUG membership key, unlock the 20% off TAG Sports code, and request direct brand intros.
-                </p>
-                <button
-                  onClick={handleOpenLogin}
-                  style={{ backgroundColor: NEON_GREEN, color: "#000000", fontWeight: "900", textTransform: "uppercase", letterSpacing: "0.8px", padding: "12px 24px", borderRadius: "10px", border: "none", cursor: "pointer", fontSize: "12px" }}
-                >
-                  Athlete Sign In ➔
-                </button>
-              </div>
-            ) : !hasProfile ? (
-              <div style={{ backgroundColor: "#0c0c10", border: `1px solid ${NEON_GREEN}`, borderRadius: "20px", padding: "24px 20px", textAlign: "center", maxWidth: "680px", margin: "0 auto 36px auto" }}>
-                <h3 style={{ fontSize: "18px", fontWeight: "900", margin: "0 0 6px 0", color: "#ffffff", textTransform: "uppercase" }}>
-                  Step 1: Complete Roster Verification
-                </h3>
-                <p style={{ fontSize: "13px", color: "#d4d4d8", margin: "0 0 16px 0" }}>
-                  Submit your college bio in the Locker Matrix so you can claim your 100 $SLUG membership key.
-                </p>
-                <button
-                  onClick={() => setShowProfileModal(true)}
-                  style={{ backgroundColor: NEON_GREEN, color: "#000000", fontWeight: "900", textTransform: "uppercase", letterSpacing: "0.8px", padding: "12px 24px", borderRadius: "10px", border: "none", cursor: "pointer", fontSize: "12px" }}
-                >
-                  Fill Out Locker Profile ✍️
-                </button>
-              </div>
-            ) : !isUnlocked ? (
-              <div style={{ backgroundColor: "#0c0c10", border: `2px solid ${NEON_GREEN}`, borderRadius: "20px", padding: "24px 20px", textAlign: "center", maxWidth: "680px", margin: "0 auto 36px auto", boxShadow: "0 0 30px rgba(166, 255, 0, 0.15)" }}>
-                <span style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1px" }}>
-                  Step 2: Activate Your Membership Key
-                </span>
-                <h3 style={{ fontSize: "20px", fontWeight: "950", margin: "4px 0 6px 0", color: "#ffffff", textTransform: "uppercase" }}>
-                  Claim Your Flat 100 $SLUG Allocation
-                </h3>
-                <p style={{ fontSize: "13px", color: "#d4d4d8", margin: "0 0 16px 0" }}>
-                  {profile.fullName} • {profile.college} ({profile.position}) — Claim 100 $SLUG to unlock the 20% TAG Sports code, Halloween giveaway, and Direct Brand Intros.
-                </p>
-                <TransactionButton
-                  transaction={() =>
-                    claimTo({
-                      contract: sluggerContract,
-                      to: account.address,
-                      quantity: "100",
-                    })
-                  }
-                  onTransactionConfirmed={() => {
-                    setJustClaimed(true);
-                    refetchBalance();
-                    refetchSupply();
-                  }}
-                  onError={(err) => alert(`Claim error: ${err.message}`)}
-                  style={{ backgroundColor: NEON_GREEN, color: "#000000", fontWeight: "950", textTransform: "uppercase", letterSpacing: "1px", padding: "14px 28px", borderRadius: "10px", border: "none", cursor: "pointer", fontSize: "13px" }}
-                >
-                  🔑 Claim 100 Free Slugger Coins
-                </TransactionButton>
-              </div>
-            ) : null}
-
-            {/* Member Drop Banner */}
+          <section>
+            {/* Member Drop #001 Slim Banner */}
             <div style={{ 
-              backgroundColor: "#0d0d11", 
-              border: `2px solid ${NEON_GREEN}`, 
-              borderRadius: "20px", 
-              padding: "24px", 
-              marginBottom: "40px", 
-              boxShadow: "0 0 30px rgba(166, 255, 0, 0.1)",
+              backgroundColor: "#0d0d12", 
+              border: `1.5px solid ${NEON_GREEN}`, 
+              borderRadius: "16px", 
+              padding: "16px 20px", 
+              marginBottom: "18px", 
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
               flexWrap: "wrap",
-              gap: "16px"
+              gap: "12px"
             }}>
-              <div style={{ flex: "1 1 320px" }}>
-                <span style={{ backgroundColor: NEON_GREEN, color: "#000000", fontSize: "10px", fontWeight: "900", padding: "4px 10px", borderRadius: "999px", textTransform: "uppercase", letterSpacing: "1px", display: "inline-block", marginBottom: "8px" }}>
-                  Member Drop #001
+              <div>
+                <span style={{ backgroundColor: NEON_GREEN, color: "#000000", fontSize: "9px", fontWeight: "950", padding: "3px 8px", borderRadius: "999px", textTransform: "uppercase", marginRight: "8px" }}>
+                  Free Member Drop #001
                 </span>
-                <h3 style={{ fontSize: "20px", fontWeight: "900", color: "#ffffff", margin: "0 0 4px 0", textTransform: "uppercase" }}>
-                  "The Big Black Grip" Bat Grip ($0.00 Free)
-                </h3>
-                <p style={{ fontSize: "13px", color: "#d4d4d8", margin: 0, lineHeight: "1.4" }}>
-                  Seamless pro bat grip free for college ballplayers. Just cover flat $8.99 USPS postage.
-                </p>
+                <span style={{ fontSize: "15px", fontWeight: "950", color: "#ffffff", textTransform: "uppercase" }}>
+                  "The Big Black Grip" Pro Bat Grip ($0.00 Free)
+                </span>
+                <div style={{ fontSize: "12px", color: "#d4d4d8", marginTop: "3px" }}>
+                  Free for college ballplayers — just cover flat $8.99 USPS shipping.
+                </div>
               </div>
 
               <a
@@ -2056,760 +2023,448 @@ function AppContent() {
                 style={{
                   backgroundColor: NEON_GREEN,
                   color: "#000000",
-                  fontWeight: "900",
-                  padding: "12px 22px",
+                  fontWeight: "950",
+                  padding: "10px 18px",
                   borderRadius: "10px",
-                  fontSize: "12px",
+                  fontSize: "11px",
                   textTransform: "uppercase",
-                  letterSpacing: "0.8px",
                   textDecoration: "none",
                   whiteSpace: "nowrap"
                 }}
               >
-                Claim Free Grip ($8.99 S&H) ↗
+                Claim Free Bat Grip ($8.99 S&H) ↗
               </a>
             </div>
 
-            {/* Brand Directory */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "36px" }}>
-              {MARKET_SECTIONS.filter((s) => s.brands.length > 0).map((section, idx) => (
-                <div key={idx} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                  <div style={{ 
-                    display: "flex", 
-                    alignItems: "center", 
-                    justifyContent: "space-between",
-                    backgroundColor: "#0d0d12",
-                    border: "1px solid #22222a",
-                    borderLeft: `4px solid ${NEON_GREEN}`,
-                    borderRadius: "12px",
-                    padding: "12px 16px"
-                  }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                      <span style={{ fontSize: "18px" }}>{section.emoji}</span>
-                      <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "900", textTransform: "uppercase", letterSpacing: "0.8px", color: "#ffffff" }}>
-                        {section.title}
-                      </h3>
-                    </div>
-                    <span style={{ fontSize: "10px", color: "#d4d4d8", fontWeight: "900", textTransform: "uppercase" }}>
-                      {section.brands.length} {section.brands.length === 1 ? "Partner" : "Partners"}
-                    </span>
-                  </div>
-
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "14px" }}>
-                    {section.brands.map((brand, bIdx) => {
-                      const isDirectIntro = brand.type === "email_intro";
-                      const hasCoupon = Boolean(brand.couponCode);
-                      const activeIntro = isIntroActive(brand.name);
-
-                      return (
-                        <div 
-                          key={bIdx}
-                          style={{ 
-                            backgroundColor: "#0c0c10", 
-                            border: (isDirectIntro || hasCoupon) ? `1.5px solid rgba(166, 255, 0, 0.5)` : "1px solid #1e1e26", 
-                            borderRadius: "14px", 
-                            padding: "20px", 
-                            display: "flex", 
-                            flexDirection: "column", 
-                            justifyContent: "space-between",
-                            position: "relative"
-                          }}
-                        >
-                          <div>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", marginBottom: "10px", flexWrap: "wrap" }}>
-                              <span style={{ fontSize: "10px", fontWeight: "900", color: isDirectIntro ? NEON_GREEN : "#d4d4d8", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                                {hasCoupon ? "⚡ DIRECT INTRO + 20% PERK" : isDirectIntro ? "⚡ DIRECT PARTNER INTRO" : "PORTAL COLLAB"}
-                              </span>
-                              {isDirectIntro && (
-                                <span style={{ backgroundColor: "rgba(166, 255, 0, 0.12)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontSize: "8px", fontWeight: "900", padding: "2px 6px", borderRadius: "4px", textTransform: "uppercase" }}>
-                                  100 $SLUG Key Gated
-                                </span>
-                              )}
-                            </div>
-                            <h4 style={{ fontSize: "18px", fontWeight: "950", color: "#ffffff", margin: "0 0 6px 0", textTransform: "uppercase" }}>
-                              {brand.name}
-                            </h4>
-                            <p style={{ fontSize: "12px", color: "#d4d4d8", lineHeight: "1.5", margin: 0 }}>
-                              {brand.description}
-                            </p>
-                          </div>
-
-                          <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "18px" }}>
-                            {/* 100 $SLUG GATED COUPON REVEAL (TAG SPORTS) */}
-                            {hasCoupon && (
-                              <div>
-                                {!account ? (
-                                  <button
-                                    onClick={handleOpenLogin}
-                                    style={{
-                                      width: "100%",
-                                      backgroundColor: "#16161f",
-                                      color: NEON_GREEN,
-                                      border: `1px dashed ${NEON_GREEN}`,
-                                      fontWeight: "900",
-                                      padding: "10px",
-                                      borderRadius: "8px",
-                                      fontSize: "11px",
-                                      textTransform: "uppercase",
-                                      cursor: "pointer"
-                                    }}
-                                  >
-                                    🔒 Sign In to Unlock 20% Off Code
-                                  </button>
-                                ) : !hasProfile ? (
-                                  <button
-                                    onClick={() => setShowProfileModal(true)}
-                                    style={{
-                                      width: "100%",
-                                      backgroundColor: "#16161f",
-                                      color: NEON_GREEN,
-                                      border: `1px dashed ${NEON_GREEN}`,
-                                      fontWeight: "900",
-                                      padding: "10px",
-                                      borderRadius: "8px",
-                                      fontSize: "11px",
-                                      textTransform: "uppercase",
-                                      cursor: "pointer"
-                                    }}
-                                  >
-                                    🔒 Complete Locker for 20% Off Code
-                                  </button>
-                                ) : !isUnlocked ? (
-                                  <button
-                                    onClick={() => setShowClaimPromptModal(true)}
-                                    style={{
-                                      width: "100%",
-                                      backgroundColor: "#16161f",
-                                      color: NEON_GREEN,
-                                      border: `1px dashed ${NEON_GREEN}`,
-                                      fontWeight: "900",
-                                      padding: "10px",
-                                      borderRadius: "8px",
-                                      fontSize: "11px",
-                                      textTransform: "uppercase",
-                                      cursor: "pointer"
-                                    }}
-                                  >
-                                    🔑 Claim 100 $SLUG to Unlock 20% Off
-                                  </button>
-                                ) : !codeRevealed ? (
-                                  <button
-                                    onClick={() => setCodeRevealed(true)}
-                                    style={{
-                                      width: "100%",
-                                      backgroundColor: "rgba(166, 255, 0, 0.12)",
-                                      color: NEON_GREEN,
-                                      border: `1px dashed ${NEON_GREEN}`,
-                                      fontWeight: "900",
-                                      padding: "10px",
-                                      borderRadius: "8px",
-                                      fontSize: "11px",
-                                      textTransform: "uppercase",
-                                      cursor: "pointer"
-                                    }}
-                                  >
-                                    🔓 Reveal 20% Off Member Code
-                                  </button>
-                                ) : (
-                                  <div style={{ 
-                                    backgroundColor: "rgba(166, 255, 0, 0.1)", 
-                                    border: `1.5px dashed ${NEON_GREEN}`, 
-                                    borderRadius: "8px", 
-                                    padding: "10px 12px", 
-                                    display: "flex", 
-                                    justifyContent: "space-between", 
-                                    alignItems: "center" 
-                                  }}>
-                                    <div>
-                                      <span style={{ display: "block", fontSize: "9px", color: NEON_GREEN, fontWeight: "800", textTransform: "uppercase" }}>
-                                        {brand.couponLabel || "20% Off Code"} (<a href={brand.link} target="_blank" rel="noopener noreferrer" style={{ color: "#fff", textDecoration: "underline" }}>Shop ↗</a>)
-                                      </span>
-                                      <span style={{ fontSize: "14px", fontWeight: "950", color: "#ffffff", fontFamily: "monospace", letterSpacing: "1px" }}>
-                                        {brand.couponCode}
-                                      </span>
-                                    </div>
-                                    <button
-                                      onClick={handleCopyCode}
-                                      style={{
-                                        backgroundColor: copiedCode ? NEON_GREEN : "#22222a",
-                                        color: copiedCode ? "#000000" : NEON_GREEN,
-                                        border: `1px solid ${NEON_GREEN}`,
-                                        padding: "6px 10px",
-                                        borderRadius: "6px",
-                                        fontSize: "10px",
-                                        fontWeight: "900",
-                                        cursor: "pointer",
-                                        textTransform: "uppercase"
-                                      }}
-                                    >
-                                      {copiedCode ? "Copied!" : "Copy 📋"}
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-
-                            {/* PRIMARY ACTION BUTTON (DIRECT INTRO OR AFFILIATE LINK) */}
-                            {isDirectIntro ? (
-                              <button
-                                onClick={() => handleInitiateIntro(brand)}
-                                style={{ 
-                                  width: "100%",
-                                  backgroundColor: activeIntro ? "#18181b" : NEON_GREEN, 
-                                  color: activeIntro ? "#a1a1aa" : "#000000", 
-                                  border: activeIntro ? "1px solid #27272a" : "none", 
-                                  fontWeight: "950", 
-                                  padding: "12px", 
-                                  borderRadius: "8px", 
-                                  fontSize: "11px", 
-                                  textTransform: "uppercase", 
-                                  letterSpacing: "0.8px", 
-                                  cursor: "pointer", 
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  gap: "6px"
-                                }}
-                              >
-                                {activeIntro ? (
-                                  <>
-                                    <span>🔒 Intro Dispatched</span>
-                                    <span style={{ fontSize: "10px", color: "#d4d4d8" }}>({getDaysRemaining(brand.name)}d left)</span>
-                                  </>
-                                ) : !account ? (
-                                  "Sign In to Request Intro ⚡"
-                                ) : (
-                                  brand.buttonText
-                                )}
-                              </button>
-                            ) : (
-                              <a
-                                href={brand.link} 
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{ 
-                                  display: "block", 
-                                  textAlign: "center", 
-                                  backgroundColor: "#16161c", 
-                                  color: "#ffffff", 
-                                  border: "1px solid #2e2e38", 
-                                  fontWeight: "800", 
-                                  padding: "12px", 
-                                  borderRadius: "8px", 
-                                  fontSize: "11px", 
-                                  textTransform: "uppercase", 
-                                  letterSpacing: "0.8px", 
-                                  textDecoration: "none"
-                                }}
-                              >
-                                {brand.buttonText}
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+            {/* 1-Tap Category Filter Pills */}
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "16px" }}>
+              {[
+                { id: "ALL", label: "All Partners (16)" },
+                { id: "DIRECT", label: "⚡ Direct Rep Intros (5)" },
+                { id: "PERKS", label: "🎁 Member Codes & Perks" },
+                { id: "GEAR", label: "⚾ Tech & Equipment" },
+                { id: "APPAREL", label: "👟 Apparel, Cleats & Nutrition" },
+              ].map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setBrandCategoryFilter(cat.id as any)}
+                  style={{
+                    backgroundColor: brandCategoryFilter === cat.id ? NEON_GREEN : "#13131a",
+                    color: brandCategoryFilter === cat.id ? "#000000" : "#ffffff",
+                    border: brandCategoryFilter === cat.id ? `1px solid ${NEON_GREEN}` : "1px solid #2b2b36",
+                    padding: "9px 14px",
+                    borderRadius: "999px",
+                    fontSize: "11px",
+                    fontWeight: "900",
+                    textTransform: "uppercase",
+                    cursor: "pointer"
+                  }}
+                >
+                  {cat.label}
+                </button>
               ))}
             </div>
-          </div>
+
+            {/* Unified Responsive Brand Grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: "14px" }}>
+              {flattenedBrands.map((brand, bIdx) => {
+                const isDirectIntro = brand.type === "email_intro";
+                const hasCoupon = Boolean(brand.couponCode);
+                const activeIntro = isIntroActive(brand.name);
+
+                return (
+                  <div 
+                    key={bIdx}
+                    style={{ 
+                      backgroundColor: "#0c0c10", 
+                      border: (isDirectIntro || hasCoupon) ? `1.5px solid rgba(166, 255, 0, 0.55)` : "1px solid #1e1e26", 
+                      borderRadius: "14px", 
+                      padding: "18px", 
+                      display: "flex", 
+                      flexDirection: "column", 
+                      justifyContent: "space-between"
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "6px", marginBottom: "8px", flexWrap: "wrap" }}>
+                        <span style={{ fontSize: "10px", fontWeight: "900", color: isDirectIntro ? NEON_GREEN : "#a1a1aa", textTransform: "uppercase" }}>
+                          {brand.sectionEmoji} {brand.sectionTitle}
+                        </span>
+                        {isDirectIntro && (
+                          <span style={{ backgroundColor: "rgba(166, 255, 0, 0.12)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontSize: "9px", fontWeight: "900", padding: "2px 7px", borderRadius: "999px", textTransform: "uppercase" }}>
+                            ⚡ Direct Rep Intro
+                          </span>
+                        )}
+                      </div>
+
+                      <h4 style={{ fontSize: "18px", fontWeight: "950", color: "#ffffff", margin: "0 0 4px 0", textTransform: "uppercase" }}>
+                        {brand.name}
+                      </h4>
+                      <div style={{ fontSize: "11px", color: NEON_GREEN, fontWeight: "800", marginBottom: "8px" }}>
+                        {brand.tagline}
+                      </div>
+                      <p style={{ fontSize: "12px", color: "#d4d4d8", lineHeight: "1.45", margin: 0 }}>
+                        {brand.description}
+                      </p>
+                    </div>
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "16px" }}>
+                      {hasCoupon && (
+                        <div>
+                          {!account ? (
+                            <button
+                              onClick={handleOpenLogin}
+                              style={{ width: "100%", backgroundColor: "#16161f", color: NEON_GREEN, border: `1px dashed ${NEON_GREEN}`, fontWeight: "900", padding: "9px", borderRadius: "8px", fontSize: "11px", textTransform: "uppercase", cursor: "pointer" }}
+                            >
+                              🔒 Sign In to Unlock 20% Off Code
+                            </button>
+                          ) : !hasProfile ? (
+                            <button
+                              onClick={() => setActiveMainTab("LOCKER")}
+                              style={{ width: "100%", backgroundColor: "#16161f", color: NEON_GREEN, border: `1px dashed ${NEON_GREEN}`, fontWeight: "900", padding: "9px", borderRadius: "8px", fontSize: "11px", textTransform: "uppercase", cursor: "pointer" }}
+                            >
+                              🔒 Complete Locker for 20% Off Code
+                            </button>
+                          ) : !isUnlocked ? (
+                            <button
+                              onClick={() => setShowClaimPromptModal(true)}
+                              style={{ width: "100%", backgroundColor: "#16161f", color: NEON_GREEN, border: `1px dashed ${NEON_GREEN}`, fontWeight: "900", padding: "9px", borderRadius: "8px", fontSize: "11px", textTransform: "uppercase", cursor: "pointer" }}
+                            >
+                              🔑 Claim 100 $SLUG to Unlock 20% Off
+                            </button>
+                          ) : !codeRevealed ? (
+                            <button
+                              onClick={() => setCodeRevealed(true)}
+                              style={{ width: "100%", backgroundColor: "rgba(166, 255, 0, 0.12)", color: NEON_GREEN, border: `1px dashed ${NEON_GREEN}`, fontWeight: "900", padding: "9px", borderRadius: "8px", fontSize: "11px", textTransform: "uppercase", cursor: "pointer" }}
+                            >
+                              🔓 Reveal 20% Off Member Code
+                            </button>
+                          ) : (
+                            <div style={{ backgroundColor: "rgba(166, 255, 0, 0.1)", border: `1.5px dashed ${NEON_GREEN}`, borderRadius: "8px", padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <div>
+                                <span style={{ display: "block", fontSize: "9px", color: NEON_GREEN, fontWeight: "800", textTransform: "uppercase" }}>
+                                  {brand.couponLabel || "20% Off Code"} (<a href={brand.link} target="_blank" rel="noopener noreferrer" style={{ color: "#fff", textDecoration: "underline" }}>Shop ↗</a>)
+                                </span>
+                                <span style={{ fontSize: "13px", fontWeight: "950", color: "#ffffff", fontFamily: "monospace" }}>
+                                  {brand.couponCode}
+                                </span>
+                              </div>
+                              <button
+                                onClick={handleCopyCode}
+                                style={{ backgroundColor: copiedCode ? NEON_GREEN : "#22222a", color: copiedCode ? "#000000" : NEON_GREEN, border: `1px solid ${NEON_GREEN}`, padding: "5px 9px", borderRadius: "6px", fontSize: "10px", fontWeight: "900", cursor: "pointer", textTransform: "uppercase" }}
+                              >
+                                {copiedCode ? "Copied!" : "Copy 📋"}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {isDirectIntro ? (
+                        <button
+                          onClick={() => handleInitiateIntro(brand)}
+                          style={{ 
+                            width: "100%",
+                            backgroundColor: activeIntro ? "#18181b" : NEON_GREEN, 
+                            color: activeIntro ? "#a1a1aa" : "#000000", 
+                            border: activeIntro ? "1px solid #27272a" : "none", 
+                            fontWeight: "950", 
+                            padding: "11px", 
+                            borderRadius: "8px", 
+                            fontSize: "11px", 
+                            textTransform: "uppercase", 
+                            cursor: "pointer"
+                          }}
+                        >
+                          {activeIntro ? `🔒 Intro Sent (${getDaysRemaining(brand.name)}d window)` : brand.buttonText}
+                        </button>
+                      ) : (
+                        <a
+                          href={brand.link} 
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ 
+                            display: "block", 
+                            textAlign: "center", 
+                            backgroundColor: "#16161c", 
+                            color: "#ffffff", 
+                            border: "1px solid #2e2e38", 
+                            fontWeight: "800", 
+                            padding: "11px", 
+                            borderRadius: "8px", 
+                            fontSize: "11px", 
+                            textTransform: "uppercase", 
+                            textDecoration: "none"
+                          }}
+                        >
+                          {brand.buttonText}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
         )}
 
-        {/* FAQ Accordion */}
-        <section style={{ margin: "56px 0" }}>
-          <div style={{ textAlign: "center", marginBottom: "32px" }}>
-            <span style={{ fontSize: "11px", fontWeight: "800", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>
-              Got Questions?
-            </span>
-            <h3 style={{ fontSize: "26px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", margin: "6px 0 0 0" }}>
-              Frequently Asked Questions
-            </h3>
-          </div>
-
-          <div style={{ maxWidth: "800px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "12px" }}>
-            {FAQS.map((faq, fIdx) => (
-              <div 
-                key={fIdx} 
-                style={{ backgroundColor: "#0c0c10", border: "1px solid #1e1e26", borderRadius: "14px", overflow: "hidden" }}
-              >
+        {/* =====================================================================
+            TAB 3: MY LOCKER (DIRECT IN-PAGE PROFILE & METRICS EDITOR)
+           ===================================================================== */}
+        {activeMainTab === "LOCKER" && (
+          <section style={{ maxWidth: "720px", margin: "0 auto" }}>
+            {!account ? (
+              <div style={{ backgroundColor: "#0c0c10", border: `1.5px solid ${NEON_GREEN}`, borderRadius: "18px", padding: "32px 20px", textAlign: "center" }}>
+                <div style={{ fontSize: "34px", marginBottom: "8px" }}>👤</div>
+                <h2 style={{ fontSize: "20px", fontWeight: "950", textTransform: "uppercase", margin: "0 0 8px 0" }}>
+                  Sign In to Open Your Athlete Locker
+                </h2>
+                <p style={{ fontSize: "13px", color: "#d4d4d8", maxWidth: "460px", margin: "0 auto 18px auto", lineHeight: "1.5" }}>
+                  Use your Google, Apple, or phone ID to create your player card, post verified scouting metrics, and claim your free 100 $SLUG membership key.
+                </p>
                 <button
-                  onClick={() => setOpenFaq(openFaq === fIdx ? null : fIdx)}
-                  style={{ width: "100%", textAlign: "left", padding: "18px 20px", background: "none", border: "none", color: "#ffffff", fontSize: "15px", fontWeight: "800", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                  onClick={handleOpenLogin}
+                  style={{ backgroundColor: NEON_GREEN, color: "#000000", fontWeight: "950", padding: "13px 26px", borderRadius: "10px", border: "none", fontSize: "12px", textTransform: "uppercase", cursor: "pointer" }}
                 >
-                  <span>{faq.q}</span>
-                  <span style={{ color: NEON_GREEN, fontSize: "18px", fontWeight: "900", marginLeft: "12px" }}>
-                    {openFaq === fIdx ? "−" : "+"}
-                  </span>
+                  Athlete Sign In ➔
                 </button>
-                {openFaq === fIdx && (
-                  <div style={{ padding: "0 20px 20px 20px", color: "#d4d4d8", fontSize: "13px", lineHeight: "1.6" }}>
-                    {faq.a}
+              </div>
+            ) : (
+              <div style={{ backgroundColor: "#0c0c10", border: `1.5px solid ${NEON_GREEN}`, borderRadius: "18px", padding: "22px" }}>
+                {/* Locker Status Header */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", borderBottom: "1px solid #22222a", paddingBottom: "16px", marginBottom: "18px" }}>
+                  <div>
+                    <h2 style={{ margin: 0, fontSize: "18px", fontWeight: "950", textTransform: "uppercase" }}>
+                      {profile.fullName ? `${profile.fullName}'s Locker` : "My Athlete Locker & Metrics"}
+                    </h2>
+                    <p style={{ margin: "3px 0 0 0", fontSize: "12px", color: "#d4d4d8" }}>
+                      Fill out your bio and numbers below, then click <strong style={{ color: NEON_GREEN }}>Save Profile</strong>.
+                    </p>
+                  </div>
+
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                    {hasProfile && (
+                      <button
+                        type="button"
+                        onClick={() => triggerMobileScoutShare(profile)}
+                        style={{ backgroundColor: "rgba(166, 255, 0, 0.14)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "9px 14px", borderRadius: "10px", fontSize: "11px", fontWeight: "900", cursor: "pointer" }}
+                      >
+                        📸 Download My 4:5 Card
+                      </button>
+                    )}
+
+                    {!isUnlocked && hasProfile && (
+                      <button
+                        type="button"
+                        onClick={() => setShowClaimPromptModal(true)}
+                        style={{ backgroundColor: NEON_GREEN, color: "#000000", border: "none", padding: "9px 14px", borderRadius: "10px", fontSize: "11px", fontWeight: "950", cursor: "pointer", textTransform: "uppercase" }}
+                      >
+                        🔑 Claim 100 $SLUG Key
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* 3 Sub-Tabs Inside Locker */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "18px" }}>
+                  <button
+                    type="button"
+                    onClick={() => setActiveMatrixTab("BIO")}
+                    style={{
+                      backgroundColor: activeMatrixTab === "BIO" ? NEON_GREEN : "#14141a",
+                      color: activeMatrixTab === "BIO" ? "#000000" : "#ffffff",
+                      border: activeMatrixTab === "BIO" ? `1px solid ${NEON_GREEN}` : "1px solid #33333d",
+                      padding: "10px",
+                      borderRadius: "10px",
+                      fontWeight: "900",
+                      fontSize: "11px",
+                      textTransform: "uppercase",
+                      cursor: "pointer"
+                    }}
+                  >
+                    1. Bio & Roster
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveMatrixTab("HITTING")}
+                    style={{
+                      backgroundColor: activeMatrixTab === "HITTING" ? NEON_GREEN : "#14141a",
+                      color: activeMatrixTab === "HITTING" ? "#000000" : "#ffffff",
+                      border: activeMatrixTab === "HITTING" ? `1px solid ${NEON_GREEN}` : "1px solid #33333d",
+                      padding: "10px",
+                      borderRadius: "10px",
+                      fontWeight: "900",
+                      fontSize: "11px",
+                      textTransform: "uppercase",
+                      cursor: "pointer"
+                    }}
+                  >
+                    2. Hitting Numbers
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveMatrixTab("PITCHING")}
+                    style={{
+                      backgroundColor: activeMatrixTab === "PITCHING" ? NEON_GREEN : "#14141a",
+                      color: activeMatrixTab === "PITCHING" ? "#000000" : "#ffffff",
+                      border: activeMatrixTab === "PITCHING" ? `1px solid ${NEON_GREEN}` : "1px solid #33333d",
+                      padding: "10px",
+                      borderRadius: "10px",
+                      fontWeight: "900",
+                      fontSize: "11px",
+                      textTransform: "uppercase",
+                      cursor: "pointer"
+                    }}
+                  >
+                    3. Pitching & Stuff+
+                  </button>
+                </div>
+
+                {/* Sub-Tab 1: Bio */}
+                {activeMatrixTab === "BIO" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                      <div>
+                        <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#ffffff", marginBottom: "4px" }}>Full Name *</label>
+                        <input 
+                          type="text" 
+                          value={profile.fullName} 
+                          onChange={(e) => setProfile({ ...profile, fullName: e.target.value })}
+                          placeholder="e.g. Jordan Jones" 
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #444", color: "#ffffff", padding: "10px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>College / Program *</label>
+                        <input 
+                          type="text" 
+                          value={profile.college} 
+                          onChange={(e) => setProfile({ ...profile, college: e.target.value })}
+                          placeholder="e.g. Utah Tech" 
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #444", color: "#ffffff", padding: "10px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px" }}>
+                      <div>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>Height</label>
+                        <input 
+                          type="text" 
+                          value={profile.height || ""} 
+                          onChange={(e) => setProfile({ ...profile, height: e.target.value })}
+                          placeholder="6'3&quot;" 
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px 8px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>Weight</label>
+                        <input 
+                          type="number" 
+                          value={profile.weight || ""} 
+                          onChange={(e) => setProfile({ ...profile, weight: e.target.value })}
+                          placeholder="210" 
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px 8px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>Position</label>
+                        <input 
+                          type="text" 
+                          value={profile.position} 
+                          onChange={(e) => setProfile({ ...profile, position: e.target.value })}
+                          placeholder="RHP / OF" 
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px 8px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: NEON_GREEN, marginBottom: "4px" }}>Primary Role</label>
+                        <select
+                          value={profile.primaryRole}
+                          onChange={(e) => setProfile({ ...profile, primaryRole: e.target.value as any })}
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "10px 4px", borderRadius: "8px", fontSize: "11px", fontWeight: "900" }}
+                        >
+                          <option value="HITTER">Hitter</option>
+                          <option value="PITCHER">Pitcher</option>
+                          <option value="TWP">Two-Way</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
+                      <div>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>State</label>
+                        <select
+                          value={profile.state || "UT"}
+                          onChange={(e) => setProfile({ ...profile, state: e.target.value })}
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}
+                        >
+                          <option value="UT">UT</option>
+                          <option value="AZ">AZ</option>
+                          <option value="CA">CA</option>
+                          <option value="TX">TX</option>
+                          <option value="FL">FL</option>
+                          <option value="NV">NV</option>
+                          <option value="CO">CO</option>
+                          <option value="ID">ID</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>Roster Status</label>
+                        <select
+                          value={profile.playerStatus}
+                          onChange={(e) => setProfile({ ...profile, playerStatus: e.target.value })}
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}
+                        >
+                          <option value="Transfer Portal">Transfer Portal</option>
+                          <option value="Returning College Player">Returning</option>
+                          <option value="Incoming Freshman">Incoming Freshman</option>
+                          <option value="Juco Uncommitted">Juco Uncommitted</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>Class Year</label>
+                        <select
+                          value={profile.collegeYear}
+                          onChange={(e) => setProfile({ ...profile, collegeYear: e.target.value })}
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}
+                        >
+                          <option value="Freshman">Freshman</option>
+                          <option value="Sophomore">Sophomore</option>
+                          <option value="Junior">Junior</option>
+                          <option value="Senior">Senior</option>
+                          <option value="Graduate">Graduate</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                      <div>
+                        <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>Email *</label>
+                        <input 
+                          type="email" 
+                          value={profile.email} 
+                          onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+                          placeholder="athlete@school.edu" 
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: `1px solid ${NEON_GREEN}`, color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#ffffff", marginBottom: "4px" }}>Cell Phone *</label>
+                        <input 
+                          type="tel" 
+                          value={profile.phone} 
+                          onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                          placeholder="(555) 000-0000" 
+                          style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}
+                        />
+                      </div>
+                    </div>
                   </div>
                 )}
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
 
-      {/* 100 $SLUG MEMBERSHIP KEY CLAIM MODAL */}
-      {showClaimPromptModal && account && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.9)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1200, padding: "16px" }}>
-          <div style={{ backgroundColor: "#0c0c10", border: `2px solid ${NEON_GREEN}`, borderRadius: "22px", width: "100%", maxWidth: "480px", padding: "28px 24px", textAlign: "center", boxShadow: "0 0 45px rgba(166, 255, 0, 0.2)" }}>
-            <div style={{ fontSize: "36px", marginBottom: "8px" }}>🔑</div>
-            <span style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>
-              Member Access Required
-            </span>
-            <h3 style={{ margin: "6px 0 10px 0", fontSize: "22px", fontWeight: "950", textTransform: "uppercase", color: "#ffffff" }}>
-              Claim Your 100 $SLUG Key
-            </h3>
-            <p style={{ fontSize: "13px", color: "#d4d4d8", lineHeight: "1.5", margin: "0 0 20px 0" }}>
-              Every verified member holds a flat <strong style={{ color: "#ffffff" }}>100 $SLUG allocation</strong> (100% free, gas-sponsored). Claim yours below to unlock the Halloween TAG Radar giveaway, 20% off discount code, and Direct Brand Intros.
-            </p>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              <TransactionButton
-                transaction={() =>
-                  claimTo({
-                    contract: sluggerContract,
-                    to: account.address,
-                    quantity: "100",
-                  })
-                }
-                onTransactionConfirmed={() => {
-                  setJustClaimed(true);
-                  refetchBalance();
-                  refetchSupply();
-                  setShowClaimPromptModal(false);
-                }}
-                onError={(err) => alert(`Claim error: ${err.message}`)}
-                style={{ width: "100%", backgroundColor: NEON_GREEN, color: "#000000", fontWeight: "950", textTransform: "uppercase", letterSpacing: "1px", padding: "14px", borderRadius: "10px", border: "none", cursor: "pointer", fontSize: "13px" }}
-              >
-                🔑 Claim 100 Free $SLUG Now
-              </TransactionButton>
-
-              <button
-                onClick={() => setShowClaimPromptModal(false)}
-                style={{ width: "100%", backgroundColor: "transparent", border: "1px solid #33333d", color: "#a1a1aa", fontWeight: "800", padding: "10px", borderRadius: "10px", cursor: "pointer", fontSize: "11px", textTransform: "uppercase" }}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* PRE-SEND PROFILE VERIFICATION MODAL (ALL DIRECT INTROS) */}
-      {pendingIntroBrand && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.9)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1150, padding: "16px" }}>
-          <div style={{ backgroundColor: "#0c0c10", border: `2px solid ${NEON_GREEN}`, borderRadius: "22px", width: "100%", maxWidth: "560px", padding: "26px", boxShadow: "0 0 45px rgba(166, 255, 0, 0.2)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
-              <div>
-                <span style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>
-                  Step 1 of 2 • Verify Your Dossier
-                </span>
-                <h3 style={{ margin: "4px 0 0 0", fontSize: "20px", fontWeight: "950", textTransform: "uppercase", color: "#ffffff" }}>
-                  Send Intro to {pendingIntroBrand.name}?
-                </h3>
-              </div>
-              <button
-                onClick={() => setPendingIntroBrand(null)}
-                style={{ background: "none", border: "none", color: "#ffffff", fontSize: "20px", cursor: "pointer" }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <p style={{ fontSize: "13px", color: "#d4d4d8", lineHeight: "1.5", margin: "0 0 14px 0" }}>
-              Please verify your current Locker Matrix data below. Once dispatched to <strong style={{ color: "#ffffff" }}>{pendingIntroBrand.brandRepName || pendingIntroBrand.name}</strong>, this partner enters a 60-day review window.
-            </p>
-
-            <div style={{ backgroundColor: "#07070a", border: "1px solid #262632", borderRadius: "14px", padding: "16px", marginBottom: "18px", display: "flex", flexDirection: "column", gap: "10px", fontSize: "12px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #1a1a24", paddingBottom: "8px" }}>
-                <span style={{ color: "#a1a1aa", fontWeight: "700" }}>Athlete & Program:</span>
-                <span style={{ color: "#ffffff", fontWeight: "900" }}>{profile.fullName} • <span style={{ color: NEON_GREEN }}>{profile.college || "Undeclared"}</span></span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #1a1a24", paddingBottom: "8px" }}>
-                <span style={{ color: "#a1a1aa", fontWeight: "700" }}>Position / Role / Class:</span>
-                <span style={{ color: "#ffffff", fontWeight: "800" }}>{profile.position || "ATH"} ({profile.primaryRole}) • {profile.collegeYear}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #1a1a24", paddingBottom: "8px" }}>
-                <span style={{ color: "#a1a1aa", fontWeight: "700" }}>Contact Details:</span>
-                <span style={{ color: "#ffffff", fontWeight: "800" }}>{profile.email} {profile.phone ? `• ${profile.phone}` : ""}</span>
-              </div>
-
-              {(profile.primaryRole === "HITTER" || profile.primaryRole === "TWP") && (
-                <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #1a1a24", paddingBottom: "8px" }}>
-                  <span style={{ color: "#a1a1aa", fontWeight: "700" }}>Hitting Telemetry:</span>
-                  <span style={{ color: NEON_GREEN, fontWeight: "900", fontFamily: "monospace" }}>
-                    Max EV: {profile.maxExitVelo || "--"} | 90th%: {profile.ninetyEV || "--"} | Bat: {profile.batSpeed || "--"} | 60yd: {profile.sixtyTime || "--"}
-                  </span>
-                </div>
-              )}
-
-              {(profile.primaryRole === "PITCHER" || profile.primaryRole === "TWP") && (
-                <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #1a1a24", paddingBottom: "8px" }}>
-                  <span style={{ color: "#a1a1aa", fontWeight: "700" }}>Mound Telemetry:</span>
-                  <span style={{ color: NEON_GREEN, fontWeight: "900", fontFamily: "monospace" }}>
-                    Peak FB: {profile.peakFB || "--"} | Stuff+: {profile.stuffPlus || "--"} | IVB: {profile.inducedVertBreak || "--"}
-                  </span>
-                </div>
-              )}
-
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "#a1a1aa", fontWeight: "700" }}>Video / Social Proof:</span>
-                <span style={{ color: "#ffffff", fontWeight: "800" }}>
-                  {profile.verificationLink || profile.social1_Url || profile.social2_Url || "None linked"}
-                </span>
-              </div>
-            </div>
-
-            <div style={{ display: "flex", gap: "10px" }}>
-              <button
-                type="button"
-                onClick={() => {
-                  setPendingIntroBrand(null);
-                  setShowProfileModal(true);
-                }}
-                style={{
-                  flex: 1,
-                  backgroundColor: "#181820",
-                  color: "#ffffff",
-                  border: "1px solid #3f3f4e",
-                  fontWeight: "900",
-                  textTransform: "uppercase",
-                  padding: "13px",
-                  borderRadius: "10px",
-                  cursor: "pointer",
-                  fontSize: "11px"
-                }}
-              >
-                Edit Locker First ⚙️
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmAndSendIntro}
-                style={{
-                  flex: 1.4,
-                  backgroundColor: NEON_GREEN,
-                  color: "#000000",
-                  border: "none",
-                  fontWeight: "950",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.8px",
-                  padding: "13px",
-                  borderRadius: "10px",
-                  cursor: "pointer",
-                  fontSize: "12px"
-                }}
-              >
-                Confirm & Send Intro ⚡
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 60-DAY LOCKOUT NOTIFICATION MODAL */}
-      {dispatchedBrand && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.88)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1100, padding: "16px" }}>
-          <div style={{ backgroundColor: "#0d0d12", border: `2px solid ${isLockoutModal ? "#eab308" : NEON_GREEN}`, borderRadius: "24px", width: "100%", maxWidth: "520px", padding: "30px 26px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-              <span style={{ fontSize: "28px" }}>{isLockoutModal ? "⏳" : "⚡"}</span>
-              <div>
-                <span style={{ fontSize: "11px", fontWeight: "900", color: isLockoutModal ? "#eab308" : NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>
-                  {isLockoutModal ? "Direct Intro Already Active" : "Direct Intro Dispatched"}
-                </span>
-                <h3 style={{ margin: "2px 0 0 0", fontSize: "22px", fontWeight: "900", textTransform: "uppercase", color: "#ffffff" }}>
-                  {dispatchedBrand.name}
-                </h3>
-              </div>
-            </div>
-
-            <p style={{ fontSize: "14px", color: "#ffffff", fontWeight: "700", lineHeight: "1.5", margin: "16px 0 14px 0" }}>
-              {isLockoutModal 
-                ? "You have already submitted a direct introduction request for this brand partner."
-                : "Your verified athletic dossier is officially on the decision-maker's desk."}
-            </p>
-
-            <div style={{ backgroundColor: "#060609", border: "1px solid #1f1f26", borderRadius: "14px", padding: "16px", marginBottom: "18px", display: "flex", flexDirection: "column", gap: "12px" }}>
-              <div style={{ fontSize: "13px", color: "#d4d4d8", lineHeight: "1.5" }}>
-                Brand representatives are provided a <strong style={{ color: "#ffffff" }}>60-day contact window</strong> to review your verified metrics, collegiate roster status, and initiate direct communication.
-              </div>
-              <div style={{ fontSize: "12px", color: isLockoutModal ? "#eab308" : NEON_GREEN, fontWeight: "800" }}>
-                🔒 60-Day Review Window: ~{getDaysRemaining(dispatchedBrand.name)} days remaining before re-submission unlocks.
-              </div>
-            </div>
-
-            <button
-              onClick={() => {
-                setDispatchedBrand(null);
-                setIsLockoutModal(false);
-              }}
-              style={{
-                width: "100%",
-                backgroundColor: isLockoutModal ? "#262626" : NEON_GREEN,
-                color: isLockoutModal ? "#ffffff" : "#000000",
-                fontWeight: "900",
-                textTransform: "uppercase",
-                letterSpacing: "1px",
-                padding: "14px",
-                borderRadius: "10px",
-                border: "none",
-                cursor: "pointer",
-                fontSize: "13px"
-              }}
-            >
-              Back to Dugout ➔
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ATHLETE LOCKER MODAL */}
-      {showProfileModal && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.88)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000, padding: "16px" }}>
-          <div style={{ backgroundColor: "#0c0c10", border: `1.5px solid ${NEON_GREEN}`, borderRadius: "20px", width: "100%", maxWidth: "680px", maxHeight: "90vh", overflowY: "auto", padding: "26px" }}>
-            
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", borderBottom: "1px solid #22222a", paddingBottom: "12px" }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "950", textTransform: "uppercase", color: "#ffffff" }}>
-                  Athlete Locker & Scouting Matrix
-                </h3>
-                <p style={{ fontSize: "11px", color: "#d4d4d8", margin: "2px 0 0 0" }}>
-                  Step through tabs to log bio, hitting, pitching, and video proof.
-                </p>
-              </div>
-              <button
-                onClick={() => setShowProfileModal(false)}
-                style={{ background: "none", border: "none", color: "#ffffff", fontSize: "20px", cursor: "pointer" }}
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* 3-TAB SELECTOR */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "20px" }}>
-              <button
-                type="button"
-                onClick={() => setActiveMatrixTab("BIO")}
-                style={{
-                  backgroundColor: activeMatrixTab === "BIO" ? NEON_GREEN : "#14141a",
-                  color: activeMatrixTab === "BIO" ? "#000000" : "#ffffff",
-                  border: activeMatrixTab === "BIO" ? `1px solid ${NEON_GREEN}` : "1px solid #33333d",
-                  padding: "10px",
-                  borderRadius: "10px",
-                  fontWeight: "900",
-                  fontSize: "11px",
-                  textTransform: "uppercase",
-                  cursor: "pointer"
-                }}
-              >
-                1. Bio & Roster
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveMatrixTab("HITTING")}
-                style={{
-                  backgroundColor: activeMatrixTab === "HITTING" ? NEON_GREEN : "#14141a",
-                  color: activeMatrixTab === "HITTING" ? "#000000" : "#ffffff",
-                  border: activeMatrixTab === "HITTING" ? `1px solid ${NEON_GREEN}` : "1px solid #33333d",
-                  padding: "10px",
-                  borderRadius: "10px",
-                  fontWeight: "900",
-                  fontSize: "11px",
-                  textTransform: "uppercase",
-                  cursor: "pointer"
-                }}
-              >
-                2. Hitting
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveMatrixTab("PITCHING")}
-                style={{
-                  backgroundColor: activeMatrixTab === "PITCHING" ? NEON_GREEN : "#14141a",
-                  color: activeMatrixTab === "PITCHING" ? "#000000" : "#ffffff",
-                  border: activeMatrixTab === "PITCHING" ? `1px solid ${NEON_GREEN}` : "1px solid #33333d",
-                  padding: "10px",
-                  borderRadius: "10px",
-                  fontWeight: "900",
-                  fontSize: "11px",
-                  textTransform: "uppercase",
-                  cursor: "pointer"
-                }}
-              >
-                3. Pitching & Stuff+
-              </button>
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              
-              {/* TAB 1: BIO & ROSTER */}
-              {activeMatrixTab === "BIO" && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                    <div>
-                      <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#ffffff", marginBottom: "4px" }}>Full Name *</label>
-                      <input 
-                        type="text" 
-                        value={profile.fullName} 
-                        onChange={(e) => setProfile({ ...profile, fullName: e.target.value })}
-                        placeholder="e.g. Jordan Jones" 
-                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #444", color: "#ffffff", padding: "10px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>College / Program *</label>
-                      <input 
-                        type="text" 
-                        value={profile.college} 
-                        onChange={(e) => setProfile({ ...profile, college: e.target.value })}
-                        placeholder="e.g. Utah Tech" 
-                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #444", color: "#ffffff", padding: "10px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}
-                      />
-                    </div>
-                  </div>
-
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px" }}>
-                    <div>
-                      <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>Height</label>
-                      <input 
-                        type="text" 
-                        value={profile.height || ""} 
-                        onChange={(e) => setProfile({ ...profile, height: e.target.value })}
-                        placeholder="6'3&quot;" 
-                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px 8px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>Weight</label>
-                      <input 
-                        type="number" 
-                        value={profile.weight || ""} 
-                        onChange={(e) => setProfile({ ...profile, weight: e.target.value })}
-                        placeholder="210" 
-                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px 8px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>Position</label>
-                      <input 
-                        type="text" 
-                        value={profile.position} 
-                        onChange={(e) => setProfile({ ...profile, position: e.target.value })}
-                        placeholder="RHP / OF" 
-                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px 8px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: NEON_GREEN, marginBottom: "4px" }}>Role</label>
-                      <select
-                        value={profile.primaryRole}
-                        onChange={(e) => setProfile({ ...profile, primaryRole: e.target.value as any })}
-                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "10px 4px", borderRadius: "8px", fontSize: "11px", fontWeight: "900" }}
-                      >
-                        <option value="HITTER">Hitter</option>
-                        <option value="PITCHER">Pitcher</option>
-                        <option value="TWP">Two-Way</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
-                    <div>
-                      <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>State</label>
-                      <select
-                        value={profile.state || "UT"}
-                        onChange={(e) => setProfile({ ...profile, state: e.target.value })}
-                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}
-                      >
-                        <option value="UT">UT</option>
-                        <option value="AZ">AZ</option>
-                        <option value="CA">CA</option>
-                        <option value="TX">TX</option>
-                        <option value="FL">FL</option>
-                        <option value="NV">NV</option>
-                        <option value="CO">CO</option>
-                        <option value="ID">ID</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>Status</label>
-                      <select
-                        value={profile.playerStatus}
-                        onChange={(e) => setProfile({ ...profile, playerStatus: e.target.value })}
-                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}
-                      >
-                        <option value="Transfer Portal">Transfer Portal</option>
-                        <option value="Returning College Player">Returning</option>
-                        <option value="Incoming Freshman">Incoming Freshman</option>
-                        <option value="Juco Uncommitted">Juco Uncommitted</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>Class Year</label>
-                      <select
-                        value={profile.collegeYear}
-                        onChange={(e) => setProfile({ ...profile, collegeYear: e.target.value })}
-                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}
-                      >
-                        <option value="Freshman">Freshman</option>
-                        <option value="Sophomore">Sophomore</option>
-                        <option value="Junior">Junior</option>
-                        <option value="Senior">Senior</option>
-                        <option value="Graduate">Graduate</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                    <div>
-                      <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>Email *</label>
-                      <input 
-                        type="email" 
-                        value={profile.email} 
-                        onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                        placeholder="athlete@school.edu" 
-                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: `1px solid ${NEON_GREEN}`, color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ display: "block", fontSize: "10px", fontWeight: "800", textTransform: "uppercase", color: "#ffffff", marginBottom: "4px" }}>Cell Phone *</label>
-                      <input 
-                        type="tel" 
-                        value={profile.phone} 
-                        onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                        placeholder="(555) 000-0000" 
-                        style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}
-                      />
-                    </div>
-                  </div>
-
-                  <div style={{ display: "flex", gap: "10px", marginTop: "6px" }}>
-                    <button
-                      type="button"
-                      onClick={() => setActiveMatrixTab("HITTING")}
-                      style={{ flex: 1, backgroundColor: "#1c1c24", color: NEON_GREEN, border: `1px solid ${NEON_GREEN}`, padding: "12px", borderRadius: "10px", fontWeight: "900", cursor: "pointer", textTransform: "uppercase", fontSize: "11px" }}
-                    >
-                      Next: Hitting ➔
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleSaveProfile}
-                      disabled={isSavingProfile}
-                      style={{ flex: 1, backgroundColor: NEON_GREEN, color: "#000000", border: "none", fontWeight: "950", padding: "12px", borderRadius: "10px", cursor: "pointer", fontSize: "11px", textTransform: "uppercase" }}
-                    >
-                      {isSavingProfile ? "Saving..." : "Save Now ✓"}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 2: HITTING */}
-              {activeMatrixTab === "HITTING" && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                {/* Sub-Tab 2: Hitting */}
+                {activeMatrixTab === "HITTING" && (
                   <div style={{ backgroundColor: "#060609", border: "1px solid #22222a", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
                     <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase" }}>
                       💥 Batter's Box Benchmarks
@@ -2827,7 +2482,6 @@ function AppContent() {
                           style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px", fontWeight: "700" }}
                         />
                       </div>
-
                       <div>
                         <label style={{ display: "block", fontSize: "10px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>90TH% EV (CONSISTENCY)</label>
                         <input
@@ -2866,37 +2520,10 @@ function AppContent() {
                       </div>
                     </div>
                   </div>
+                )}
 
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    <button
-                      type="button"
-                      onClick={() => setActiveMatrixTab("BIO")}
-                      style={{ flex: 1, backgroundColor: "#141418", color: "#ffffff", border: "1px solid #444", padding: "12px", borderRadius: "10px", fontWeight: "800", cursor: "pointer", textTransform: "uppercase", fontSize: "11px" }}
-                    >
-                      ← Bio
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveMatrixTab("PITCHING")}
-                      style={{ flex: 1, backgroundColor: "#1c1c24", color: NEON_GREEN, border: `1px solid ${NEON_GREEN}`, padding: "12px", borderRadius: "10px", fontWeight: "900", cursor: "pointer", textTransform: "uppercase", fontSize: "11px" }}
-                    >
-                      Pitching ➔
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleSaveProfile}
-                      disabled={isSavingProfile}
-                      style={{ flex: 1, backgroundColor: NEON_GREEN, color: "#000000", border: "none", fontWeight: "950", padding: "12px", borderRadius: "10px", cursor: "pointer", fontSize: "11px", textTransform: "uppercase" }}
-                    >
-                      {isSavingProfile ? "Saving..." : "Save ✓"}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 3: FULL PITCHING & STUFF+ */}
-              {activeMatrixTab === "PITCHING" && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                {/* Sub-Tab 3: Pitching */}
+                {activeMatrixTab === "PITCHING" && (
                   <div style={{ backgroundColor: "#060609", border: "1px solid #22222a", borderRadius: "14px", padding: "14px", display: "flex", flexDirection: "column", gap: "10px" }}>
                     <span style={{ fontSize: "11px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase" }}>
                       ⚾ Velocity, Stuff+ & Movement Shapes
@@ -3044,82 +2671,302 @@ function AppContent() {
                       </div>
                     </div>
                   </div>
+                )}
 
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    <button
-                      type="button"
-                      onClick={() => setActiveMatrixTab("HITTING")}
-                      style={{ flex: 1, backgroundColor: "#141418", color: "#ffffff", border: "1px solid #444", padding: "12px", borderRadius: "10px", fontWeight: "800", cursor: "pointer", textTransform: "uppercase", fontSize: "11px" }}
+                {/* Video & Social Proof Inputs */}
+                <div style={{ borderTop: "1px solid #22222a", paddingTop: "14px", marginTop: "16px" }}>
+                  <span style={{ fontSize: "10px", fontWeight: "900", color: "#ff9933", textTransform: "uppercase", letterSpacing: "0.8px", display: "block", marginBottom: "6px" }}>
+                    🎥 Video / TrackMan / TAG Sports Clip Link (Optional)
+                  </span>
+                  <input
+                    type="url"
+                    placeholder="https://x.com/... or YouTube / TAG Sports video link"
+                    value={profile.verificationLink || ""}
+                    onChange={(e) => setProfile({ ...profile, verificationLink: e.target.value })}
+                    style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #444", color: "#ffffff", padding: "9px 10px", borderRadius: "8px", fontSize: "12px", fontWeight: "700", marginBottom: "12px" }}
+                  />
+
+                  <span style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "0.8px", display: "block", marginBottom: "8px" }}>
+                    Public Social Links (For Coaches & Scouts)
+                  </span>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "8px", marginBottom: "8px" }}>
+                    <select
+                      value={profile.social1_Type || "X"}
+                      onChange={(e) => setProfile({ ...profile, social1_Type: e.target.value })}
+                      style={{ backgroundColor: "#000000", border: "1px solid #444", color: "#ffffff", padding: "9px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}
                     >
-                      ← Back
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleSaveProfile}
-                      disabled={isSavingProfile}
-                      style={{ flex: 2, backgroundColor: NEON_GREEN, color: "#000000", border: "none", fontWeight: "950", padding: "12px", borderRadius: "10px", cursor: "pointer", fontSize: "12px", textTransform: "uppercase", letterSpacing: "1px" }}
+                      <option value="X">X (Twitter)</option>
+                      <option value="IG">Instagram</option>
+                      <option value="TIKTOK">TikTok</option>
+                    </select>
+                    <input
+                      type="url"
+                      placeholder="https://x.com/athlete"
+                      value={profile.social1_Url || ""}
+                      onChange={(e) => setProfile({ ...profile, social1_Url: e.target.value })}
+                      style={{ backgroundColor: "#000000", border: "1px solid #444", color: "#ffffff", padding: "9px 10px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}
+                    />
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "8px" }}>
+                    <select
+                      value={profile.social2_Type || "IG"}
+                      onChange={(e) => setProfile({ ...profile, social2_Type: e.target.value })}
+                      style={{ backgroundColor: "#000000", border: "1px solid #444", color: "#ffffff", padding: "9px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}
                     >
-                      {isSavingProfile ? "Saving to Database..." : "Save Metrics & Profile 🚀"}
-                    </button>
+                      <option value="IG">Instagram</option>
+                      <option value="X">X (Twitter)</option>
+                      <option value="TIKTOK">TikTok</option>
+                    </select>
+                    <input
+                      type="url"
+                      placeholder="https://instagram.com/athlete"
+                      value={profile.social2_Url || ""}
+                      onChange={(e) => setProfile({ ...profile, social2_Url: e.target.value })}
+                      style={{ backgroundColor: "#000000", border: "1px solid #444", color: "#ffffff", padding: "9px 10px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}
+                    />
                   </div>
                 </div>
-              )}
 
-              {/* VIDEO PROOF & SOCIAL LINKS */}
-              <div style={{ borderTop: "1px solid #22222a", paddingTop: "14px", marginTop: "4px" }}>
-                <span style={{ fontSize: "10px", fontWeight: "900", color: "#ff9933", textTransform: "uppercase", letterSpacing: "0.8px", display: "block", marginBottom: "6px" }}>
-                  🎥 Video / TrackMan / TAG Sports Proof Link (Optional)
-                </span>
-                <input
-                  type="url"
-                  placeholder="https://x.com/... or YouTube / TAG Sports clip link"
-                  value={profile.verificationLink || ""}
-                  onChange={(e) => setProfile({ ...profile, verificationLink: e.target.value })}
-                  style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #444", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "11px", fontWeight: "700", marginBottom: "12px" }}
-                />
-
-                <span style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "0.8px", display: "block", marginBottom: "8px" }}>
-                  Public Scout Gateway Links
-                </span>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "8px", marginBottom: "8px" }}>
-                  <select
-                    value={profile.social1_Type || "X"}
-                    onChange={(e) => setProfile({ ...profile, social1_Type: e.target.value })}
-                    style={{ backgroundColor: "#000000", border: "1px solid #444", color: "#ffffff", padding: "8px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}
-                  >
-                    <option value="X">X (Twitter)</option>
-                    <option value="IG">Instagram</option>
-                    <option value="TIKTOK">TikTok</option>
-                  </select>
-                  <input
-                    type="url"
-                    placeholder="https://x.com/athlete"
-                    value={profile.social1_Url || ""}
-                    onChange={(e) => setProfile({ ...profile, social1_Url: e.target.value })}
-                    style={{ backgroundColor: "#000000", border: "1px solid #444", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}
-                  />
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "8px" }}>
-                  <select
-                    value={profile.social2_Type || "IG"}
-                    onChange={(e) => setProfile({ ...profile, social2_Type: e.target.value })}
-                    style={{ backgroundColor: "#000000", border: "1px solid #444", color: "#ffffff", padding: "8px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}
-                  >
-                    <option value="IG">Instagram</option>
-                    <option value="X">X (Twitter)</option>
-                    <option value="TIKTOK">TikTok</option>
-                  </select>
-                  <input
-                    type="url"
-                    placeholder="https://instagram.com/athlete"
-                    value={profile.social2_Url || ""}
-                    onChange={(e) => setProfile({ ...profile, social2_Url: e.target.value })}
-                    style={{ backgroundColor: "#000000", border: "1px solid #444", color: "#ffffff", padding: "8px 10px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}
-                  />
-                </div>
+                {/* Primary Save Button */}
+                <button
+                  type="button"
+                  onClick={handleSaveProfile}
+                  disabled={isSavingProfile}
+                  style={{
+                    width: "100%",
+                    marginTop: "18px",
+                    backgroundColor: NEON_GREEN,
+                    color: "#000000",
+                    border: "none",
+                    fontWeight: "950",
+                    padding: "14px",
+                    borderRadius: "12px",
+                    cursor: "pointer",
+                    fontSize: "13px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.8px"
+                  }}
+                >
+                  {isSavingProfile ? "Saving to National Scoreboard..." : "Save Profile & Publish Metrics 🚀"}
+                </button>
               </div>
+            )}
+          </section>
+        )}
 
+        {/* FAQ Accordion */}
+        <section style={{ margin: "48px 0 20px 0" }}>
+          <div style={{ textAlign: "center", marginBottom: "20px" }}>
+            <span style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>
+              How It Works
+            </span>
+            <h3 style={{ fontSize: "20px", fontWeight: "950", color: "#ffffff", textTransform: "uppercase", margin: "4px 0 0 0" }}>
+              Frequently Asked Questions
+            </h3>
+          </div>
+
+          <div style={{ maxWidth: "760px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "10px" }}>
+            {FAQS.map((faq, fIdx) => (
+              <div 
+                key={fIdx} 
+                style={{ backgroundColor: "#0c0c10", border: "1px solid #1e1e26", borderRadius: "12px", overflow: "hidden" }}
+              >
+                <button
+                  onClick={() => setOpenFaq(openFaq === fIdx ? null : fIdx)}
+                  style={{ width: "100%", textAlign: "left", padding: "15px 18px", background: "none", border: "none", color: "#ffffff", fontSize: "14px", fontWeight: "800", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                >
+                  <span>{faq.q}</span>
+                  <span style={{ color: NEON_GREEN, fontSize: "18px", fontWeight: "900", marginLeft: "12px" }}>
+                    {openFaq === fIdx ? "−" : "+"}
+                  </span>
+                </button>
+                {openFaq === fIdx && (
+                  <div style={{ padding: "0 18px 16px 18px", color: "#d4d4d8", fontSize: "13px", lineHeight: "1.55" }}>
+                    {faq.a}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      {/* 100 $SLUG MEMBERSHIP KEY CLAIM MODAL */}
+      {showClaimPromptModal && account && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.9)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1200, padding: "16px" }}>
+          <div style={{ backgroundColor: "#0c0c10", border: `2px solid ${NEON_GREEN}`, borderRadius: "22px", width: "100%", maxWidth: "460px", padding: "26px 22px", textAlign: "center", boxShadow: "0 0 45px rgba(166, 255, 0, 0.2)" }}>
+            <div style={{ fontSize: "34px", marginBottom: "6px" }}>🔑</div>
+            <span style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>
+              Final Step • 100% Free
+            </span>
+            <h3 style={{ margin: "6px 0 10px 0", fontSize: "21px", fontWeight: "950", textTransform: "uppercase", color: "#ffffff" }}>
+              Activate Your 100 $SLUG Key
+            </h3>
+            <p style={{ fontSize: "13px", color: "#d4d4d8", lineHeight: "1.5", margin: "0 0 18px 0" }}>
+              Your player profile is saved! Tap below to claim your free <strong style={{ color: "#ffffff" }}>100 $SLUG membership key</strong> to unlock the Halloween TAG Radar giveaway, 20% off discount code, and Direct Brand Intros.
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <TransactionButton
+                transaction={() =>
+                  claimTo({
+                    contract: sluggerContract,
+                    to: account.address,
+                    quantity: "100",
+                  })
+                }
+                onTransactionConfirmed={() => {
+                  setJustClaimed(true);
+                  refetchBalance();
+                  refetchSupply();
+                  setShowClaimPromptModal(false);
+                }}
+                onError={(err) => alert(`Claim error: ${err.message}`)}
+                style={{ width: "100%", backgroundColor: NEON_GREEN, color: "#000000", fontWeight: "950", textTransform: "uppercase", letterSpacing: "1px", padding: "14px", borderRadius: "10px", border: "none", cursor: "pointer", fontSize: "13px" }}
+              >
+                🔑 Claim 100 Free $SLUG Now
+              </TransactionButton>
+
+              <button
+                onClick={() => setShowClaimPromptModal(false)}
+                style={{ width: "100%", backgroundColor: "transparent", border: "1px solid #33333d", color: "#a1a1aa", fontWeight: "800", padding: "10px", borderRadius: "10px", cursor: "pointer", fontSize: "11px", textTransform: "uppercase" }}
+              >
+                Close
+              </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* PRE-SEND PROFILE VERIFICATION MODAL (ALL DIRECT INTROS) */}
+      {pendingIntroBrand && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.9)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1150, padding: "16px" }}>
+          <div style={{ backgroundColor: "#0c0c10", border: `2px solid ${NEON_GREEN}`, borderRadius: "22px", width: "100%", maxWidth: "540px", padding: "24px", boxShadow: "0 0 45px rgba(166, 255, 0, 0.2)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+              <div>
+                <span style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>
+                  Verify Your Dossier
+                </span>
+                <h3 style={{ margin: "4px 0 0 0", fontSize: "20px", fontWeight: "950", textTransform: "uppercase", color: "#ffffff" }}>
+                  Send Intro to {pendingIntroBrand.name}?
+                </h3>
+              </div>
+              <button
+                onClick={() => setPendingIntroBrand(null)}
+                style={{ background: "none", border: "none", color: "#ffffff", fontSize: "20px", cursor: "pointer" }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <p style={{ fontSize: "13px", color: "#d4d4d8", lineHeight: "1.5", margin: "0 0 14px 0" }}>
+              We will email your player profile directly to <strong style={{ color: "#ffffff" }}>{pendingIntroBrand.brandRepName || pendingIntroBrand.name}</strong> and CC you so you can connect directly.
+            </p>
+
+            <div style={{ backgroundColor: "#07070a", border: "1px solid #262632", borderRadius: "14px", padding: "14px", marginBottom: "18px", display: "flex", flexDirection: "column", gap: "8px", fontSize: "12px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "#a1a1aa", fontWeight: "700" }}>Athlete & School:</span>
+                <span style={{ color: "#ffffff", fontWeight: "900" }}>{profile.fullName} • <span style={{ color: NEON_GREEN }}>{profile.college || "Undeclared"}</span></span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "#a1a1aa", fontWeight: "700" }}>Position / Class:</span>
+                <span style={{ color: "#ffffff", fontWeight: "800" }}>{profile.position || "ATH"} ({profile.primaryRole}) • {profile.collegeYear}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "#a1a1aa", fontWeight: "700" }}>Contact:</span>
+                <span style={{ color: "#ffffff", fontWeight: "800" }}>{profile.email} {profile.phone ? `• ${profile.phone}` : ""}</span>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setPendingIntroBrand(null);
+                  setActiveMainTab("LOCKER");
+                }}
+                style={{
+                  flex: 1,
+                  backgroundColor: "#181820",
+                  color: "#ffffff",
+                  border: "1px solid #3f3f4e",
+                  fontWeight: "900",
+                  textTransform: "uppercase",
+                  padding: "13px",
+                  borderRadius: "10px",
+                  cursor: "pointer",
+                  fontSize: "11px"
+                }}
+              >
+                Edit Locker First ⚙️
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmAndSendIntro}
+                style={{
+                  flex: 1.4,
+                  backgroundColor: NEON_GREEN,
+                  color: "#000000",
+                  border: "none",
+                  fontWeight: "950",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.8px",
+                  padding: "13px",
+                  borderRadius: "10px",
+                  cursor: "pointer",
+                  fontSize: "12px"
+                }}
+              >
+                Confirm & Send Intro ⚡
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 60-DAY LOCKOUT NOTIFICATION MODAL */}
+      {dispatchedBrand && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.88)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1100, padding: "16px" }}>
+          <div style={{ backgroundColor: "#0d0d12", border: `2px solid ${isLockoutModal ? "#eab308" : NEON_GREEN}`, borderRadius: "24px", width: "100%", maxWidth: "500px", padding: "26px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+              <span style={{ fontSize: "28px" }}>{isLockoutModal ? "⏳" : "⚡"}</span>
+              <div>
+                <span style={{ fontSize: "11px", fontWeight: "900", color: isLockoutModal ? "#eab308" : NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>
+                  {isLockoutModal ? "Direct Intro Already Active" : "Direct Intro Dispatched"}
+                </span>
+                <h3 style={{ margin: "2px 0 0 0", fontSize: "22px", fontWeight: "900", textTransform: "uppercase", color: "#ffffff" }}>
+                  {dispatchedBrand.name}
+                </h3>
+              </div>
+            </div>
+
+            <p style={{ fontSize: "13px", color: "#d4d4d8", lineHeight: "1.5", margin: "12px 0 18px 0" }}>
+              {isLockoutModal 
+                ? `You already sent an intro to ${dispatchedBrand.name}. Check your email inbox for your CC'd introduction thread (~${getDaysRemaining(dispatchedBrand.name)} days left in current window).`
+                : `Your verified player dossier has been emailed directly to ${dispatchedBrand.name} with you CC'd on the thread!`}
+            </p>
+
+            <button
+              onClick={() => {
+                setDispatchedBrand(null);
+                setIsLockoutModal(false);
+              }}
+              style={{
+                width: "100%",
+                backgroundColor: isLockoutModal ? "#262626" : NEON_GREEN,
+                color: isLockoutModal ? "#ffffff" : "#000000",
+                fontWeight: "900",
+                textTransform: "uppercase",
+                letterSpacing: "1px",
+                padding: "13px",
+                borderRadius: "10px",
+                border: "none",
+                cursor: "pointer",
+                fontSize: "12px"
+              }}
+            >
+              Done ➔
+            </button>
           </div>
         </div>
       )}
