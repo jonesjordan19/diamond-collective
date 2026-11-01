@@ -864,20 +864,30 @@ function AppContent() {
   };
 
   const selectRandomHalloweenWinner = () => {
-    if (leaderboardRows.length === 0) {
-      alert("No athletes loaded on the scoreboard yet.");
+    // Exclude your admin wallet/email so you can never win by default
+    const eligiblePool = leaderboardRows.filter(ath => {
+      const isUserWallet = account?.address && ath.walletAddress && 
+        ath.walletAddress.toLowerCase() === account.address.toLowerCase();
+      const isUserEmail = ath.email && 
+        ath.email.toLowerCase() === "jordan@diamondcollective.net";
+      
+      return !isUserWallet && !isUserEmail;
+    });
+
+    if (eligiblePool.length === 0) {
+      alert("No eligible player entries found on the scoreboard yet.");
       return;
     }
     
     setShowWinnerAnimation(true);
     let counter = 0;
     const interval = setInterval(() => {
-      const tempIndex = Math.floor(Math.random() * leaderboardRows.length);
-      setGiveawayWinner(leaderboardRows[tempIndex]);
+      const tempIndex = Math.floor(Math.random() * eligiblePool.length);
+      setGiveawayWinner(eligiblePool[tempIndex]);
       counter++;
       if (counter > 28) {
         clearInterval(interval);
-        const win = leaderboardRows[Math.floor(Math.random() * leaderboardRows.length)];
+        const win = eligiblePool[Math.floor(Math.random() * eligiblePool.length)];
         setGiveawayWinner(win);
         setShowWinnerAnimation(false);
       }
