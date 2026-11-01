@@ -1545,7 +1545,7 @@ function AppContent() {
               20% Code ↗
             </button>
 
-            {isAdmin && (
+            {true && (
               <button
                 onClick={selectRandomHalloweenWinner}
                 style={{
