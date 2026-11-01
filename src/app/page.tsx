@@ -20,8 +20,6 @@ const NEON_GREEN = "#a6ff00";
 
 const FOUNDERS_POOL_TOTAL = 100000;
 const SIXTY_DAYS_MS = 60 * 24 * 60 * 60 * 1000;
-// Halloween Draw: Oct 31, 2026 at 8:00 PM Mountain Time (UTC-6 MDT)
-const HALLOWEEN_DRAW_TIMESTAMP = new Date("2026-10-31T20:00:00-06:00").getTime();
 
 const client = createThirdwebClient({
   clientId: "770a552ed494b40543a6696298d41606",
@@ -284,8 +282,8 @@ const FAQS = [
     a: "Yes. All Slugger Coins ($SLUG) distributed during the Founders phase have zero market cash value and are non-compensatory. Each verified member claims a flat 100 $SLUG allocation used strictly as an access key to unlock brand directories, discounts, and partner introductions.",
   },
   {
-    q: "How does the Halloween TAG Sports Radar Giveaway work?",
-    a: "Verified members holding 100 $SLUG who complete their Locker profile can click 'Enter Giveaway' on the top banner. One random winner will be drawn live on Halloween night (Oct 31st at 8:00 PM MST) to receive a free TAG One Sports Radar.",
+    q: "How do Member Giveaways & Gear Drops work?",
+    a: "Verified collegiate members holding their 100 $SLUG key and an active Locker profile are automatically eligible for exclusive equipment giveaways, radar drops, and partner gear allocations announced at the top of the dashboard.",
   },
   {
     q: "How does 'The Big Black Grip' free bat grip drop work?",
@@ -358,6 +356,7 @@ const emptyProfile: AthleteProfile = {
   weight: "",
   primaryRole: "HITTER",
   isProfileVisible: true,
+  walletAddress: "",
   social1_Type: "X",
   social1_Url: "",
   social2_Type: "IG",
@@ -746,39 +745,12 @@ function AppContent() {
   const [introTimestamps, setIntroTimestamps] = useState<{ [brandName: string]: number }>({});
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  // HALLOWEEN RADAR GIVEAWAY, COUNTDOWN & 100 $SLUG GATE STATE
-  const [hasEnteredGiveaway, setHasEnteredGiveaway] = useState(false);
-  const [isRegisteringGiveaway, setIsRegisteringGiveaway] = useState(false);
-  const [giveawayWinner, setGiveawayWinner] = useState<AthleteProfile | null>(null);
-  const [showWinnerAnimation, setShowWinnerAnimation] = useState(false);
+  // Member Perk Code State
   const [copiedCode, setCopiedCode] = useState(false);
   const [codeRevealed, setCodeRevealed] = useState(false);
-  const [countdownText, setCountdownText] = useState<string>("02d : 07h : 15m : 00s");
 
   useEffect(() => {
     setMounted(true);
-    const entered = localStorage.getItem("halloween_user_entered_state");
-    if (entered) {
-      setHasEnteredGiveaway(true);
-    }
-
-    const updateCountdown = () => {
-      const diff = HALLOWEEN_DRAW_TIMESTAMP - Date.now();
-      if (diff <= 0) {
-        setCountdownText("🎃 LIVE DRAW IN PROGRESS");
-        return;
-      }
-      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const m = Math.floor((diff / 1000 / 60) % 60);
-      const s = Math.floor((diff / 1000) % 60);
-      const pad = (n: number) => String(n).padStart(2, "0");
-      setCountdownText(`${pad(d)}d : ${pad(h)}h : ${pad(m)}m : ${pad(s)}s`);
-    };
-
-    updateCountdown();
-    const timer = setInterval(updateCountdown, 1000);
-    return () => clearInterval(timer);
   }, []);
 
   const handleOpenLogin = () => {
@@ -812,89 +784,6 @@ function AppContent() {
   const isUnlocked = balance >= 100 || justClaimed;
   const hasProfile = Boolean(profile.fullName && profile.email);
 
-  // Admin access granted solely via secure wallet address (no personal emails in public code)
-  const isAdmin = useMemo(() => {
-    return account?.address?.toLowerCase() === "0x46cbd713d7440692156e1219153622c45b04d3a";
-  }, [account?.address]);
-
-  const handleEnterGiveaway = async () => {
-    if (!account?.address) {
-      handleOpenLogin();
-      return;
-    }
-    if (!hasProfile) {
-      setActiveMainTab("LOCKER");
-      return;
-    }
-    if (!isUnlocked) {
-      setShowClaimPromptModal(true);
-      return;
-    }
-
-    setIsRegisteringGiveaway(true);
-
-    try {
-      await fetch(GOOGLE_SCRIPT_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({
-          action: "saveProfile",
-          walletAddress: account.address.toLowerCase(),
-          athleteEmail: profile.email,
-          email: profile.email,
-          fullName: profile.fullName,
-          college: profile.college,
-          currentCollege: profile.college,
-          position: profile.position,
-          playerStatus: profile.playerStatus,
-          portalStatus: profile.playerStatus,
-          primaryRole: profile.primaryRole,
-          isProfileVisible: profile.isProfileVisible !== false,
-          verificationLink: profile.verificationLink || "",
-          giveawayEntry: "HALLOWEEN_TAG_RADAR_2026",
-        }),
-      });
-    } catch {}
-
-    setTimeout(() => {
-      setHasEnteredGiveaway(true);
-      localStorage.setItem("halloween_user_entered_state", "true");
-      setIsRegisteringGiveaway(false);
-    }, 900);
-  };
-
-  const selectRandomHalloweenWinner = () => {
-    // Exclude your admin wallet/email so you can never win by default
-    const eligiblePool = leaderboardRows.filter(ath => {
-      const isUserWallet = account?.address && ath.walletAddress && 
-        ath.walletAddress.toLowerCase() === account.address.toLowerCase();
-      const isUserEmail = ath.email && 
-        ath.email.toLowerCase() === "jordan@diamondcollective.net";
-      
-      return !isUserWallet && !isUserEmail;
-    });
-
-    if (eligiblePool.length === 0) {
-      alert("No eligible player entries found on the scoreboard yet.");
-      return;
-    }
-    
-    setShowWinnerAnimation(true);
-    let counter = 0;
-    const interval = setInterval(() => {
-      const tempIndex = Math.floor(Math.random() * eligiblePool.length);
-      setGiveawayWinner(eligiblePool[tempIndex]);
-      counter++;
-      if (counter > 28) {
-        clearInterval(interval);
-        const win = eligiblePool[Math.floor(Math.random() * eligiblePool.length)];
-        setGiveawayWinner(win);
-        setShowWinnerAnimation(false);
-      }
-    }, 85);
-  };
-
   const handleCopyCode = () => {
     navigator.clipboard.writeText("DIAMONDCOLLECTIVE");
     setCopiedCode(true);
@@ -914,6 +803,10 @@ function AppContent() {
     const remainingMs = SIXTY_DAYS_MS - elapsed;
     return Math.max(1, Math.ceil(remainingMs / (24 * 60 * 60 * 1000)));
   };
+
+  const activeIntroList = useMemo(() => {
+    return Object.keys(introTimestamps).filter((bName) => isIntroActive(bName));
+  }, [introTimestamps]);
 
   useEffect(() => {
     const sheetUrl = 
@@ -935,6 +828,7 @@ function AppContent() {
                 ...emptyProfile,
                 fullName: item.fullName && item.fullName.trim() !== "" ? item.fullName : nameFromEmail,
                 email: item.athleteEmail || item.email || "",
+                walletAddress: item.walletAddress ? String(item.walletAddress) : "",
                 college: item.currentCollege || item.college || "Undeclared",
                 state: item.state || "",
                 position: item.position || validRole,
@@ -1091,6 +985,7 @@ function AppContent() {
 
     const updatedProfile: AthleteProfile = {
       ...profile,
+      walletAddress: lowerWallet,
       kMinusBbPercentage: computedKminusBB,
       recordedDateHitting: profile.maxExitVelo ? (profile.recordedDateHitting || today) : "",
       recordedDatePitching: (profile.peakFB || profile.stuffPlus) ? (profile.recordedDatePitching || today) : "",
@@ -1395,7 +1290,7 @@ function AppContent() {
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px", flexWrap: "wrap", gap: "6px" }}>
               <span style={{ fontSize: "11px", fontWeight: "950", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "0.8px" }}>
-                🚀 Athlete Quick-Start (Unlock 20% Off TAG Sports, Giveaway & Brand Intros)
+                🚀 Athlete Quick-Start (Unlock 20% Off TAG Sports, Giveaways & Brand Intros)
               </span>
               <span style={{ fontSize: "10px", color: "#a1a1aa", fontWeight: "700" }}>
                 100% Free • Takes 60 Seconds
@@ -1479,10 +1374,10 @@ function AppContent() {
           </div>
         )}
 
-        {/* COMPACT HALLOWEEN GIVEAWAY BAR */}
+        {/* NEXT GIVEAWAY & MEMBER PERK HUB (COMING SOON) */}
         <div style={{
-          background: "linear-gradient(135deg, rgba(28, 16, 42, 0.95) 0%, rgba(14, 14, 20, 0.98) 100%)",
-          border: "1.5px solid #ff7a00",
+          background: "linear-gradient(135deg, rgba(16, 24, 14, 0.95) 0%, rgba(12, 12, 18, 0.98) 100%)",
+          border: "1.5px solid #262632",
           borderRadius: "16px",
           padding: "14px 18px",
           marginTop: "14px",
@@ -1493,38 +1388,60 @@ function AppContent() {
           gap: "12px"
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", flex: "1 1 320px" }}>
-            <span style={{ backgroundColor: "#09090d", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontSize: "11px", fontWeight: "950", padding: "5px 10px", borderRadius: "8px", fontFamily: "monospace" }}>
-              🎃 {countdownText}
+            <span style={{ backgroundColor: "rgba(166, 255, 0, 0.12)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontSize: "10px", fontWeight: "950", padding: "5px 10px", borderRadius: "999px", textTransform: "uppercase", letterSpacing: "0.8px" }}>
+              🎁 Next Member Giveaway • Coming Soon
             </span>
             <div>
               <div style={{ fontSize: "14px", fontWeight: "950", color: "#ffffff", textTransform: "uppercase" }}>
-                TAG Sports Radar Giveaway + 20% Off Member Perk
+                Exclusive Hardware & Pro Gear Drops
               </div>
               <div style={{ fontSize: "11px", color: "#d4d4d8", marginTop: "2px" }}>
-                Live draw Oct 31 @ 8PM MST • {isUnlocked ? <strong style={{ color: NEON_GREEN }}>20% Off Code: DIAMONDCOLLECTIVE</strong> : <span>Unlock your 100 $SLUG key for 20% off & free entry</span>}
+                {isFullyOnboarded ? (
+                  <span>You are verified & eligible for the next drop • <strong style={{ color: NEON_GREEN }}>20% TAG Sports Code: DIAMONDCOLLECTIVE</strong></span>
+                ) : (
+                  <span>Complete your Locker & claim your free 100 $SLUG key to qualify for the next member giveaway.</span>
+                )}
               </div>
             </div>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-            <button
-              onClick={handleEnterGiveaway}
-              disabled={hasEnteredGiveaway || isRegisteringGiveaway}
-              style={{
-                backgroundColor: hasEnteredGiveaway ? "rgba(166, 255, 0, 0.15)" : NEON_GREEN,
-                color: hasEnteredGiveaway ? NEON_GREEN : "#000000",
-                border: hasEnteredGiveaway ? `1px solid ${NEON_GREEN}` : "none",
-                fontWeight: "950",
-                padding: "10px 16px",
+            {!isFullyOnboarded ? (
+              <button
+                onClick={() => {
+                  if (!account) handleOpenLogin();
+                  else if (!hasProfile) setActiveMainTab("LOCKER");
+                  else setShowClaimPromptModal(true);
+                }}
+                style={{
+                  backgroundColor: NEON_GREEN,
+                  color: "#000000",
+                  border: "none",
+                  fontWeight: "950",
+                  padding: "10px 16px",
+                  borderRadius: "10px",
+                  cursor: "pointer",
+                  fontSize: "11px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px"
+                }}
+              >
+                🔓 Get Eligible for Next Drop ➔
+              </button>
+            ) : (
+              <span style={{
+                backgroundColor: "rgba(166, 255, 0, 0.1)",
+                border: `1px solid ${NEON_GREEN}`,
+                color: NEON_GREEN,
+                fontWeight: "900",
+                padding: "9px 14px",
                 borderRadius: "10px",
-                cursor: hasEnteredGiveaway ? "default" : "pointer",
                 fontSize: "11px",
-                textTransform: "uppercase",
-                letterSpacing: "0.5px"
-              }}
-            >
-              {isRegisteringGiveaway ? "Entering..." : hasEnteredGiveaway ? "✅ Entered for Oct 31" : "🎃 Enter Giveaway ➔"}
-            </button>
+                textTransform: "uppercase"
+              }}>
+                ✅ Eligible for Next Drop
+              </span>
+            )}
 
             <button
               onClick={() => {
@@ -1543,36 +1460,9 @@ function AppContent() {
                 textTransform: "uppercase"
               }}
             >
-              20% Code ↗
+              Active Perks & 20% Code ↗
             </button>
-
-            {true && (
-              <button
-                onClick={selectRandomHalloweenWinner}
-                style={{
-                  backgroundColor: "rgba(255, 122, 0, 0.2)",
-                  border: "1px dashed #ff7a00",
-                  color: "#ff9933",
-                  fontSize: "10px",
-                  fontWeight: "900",
-                  padding: "9px 12px",
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                  textTransform: "uppercase"
-                }}
-              >
-                {showWinnerAnimation ? "Rolling..." : "🎲 Pick Winner"}
-              </button>
-            )}
           </div>
-
-          {giveawayWinner && (
-            <div style={{ width: "100%", backgroundColor: "#111116", border: `1.5px solid ${NEON_GREEN}`, padding: "10px", borderRadius: "10px", textAlign: "center", marginTop: "4px" }}>
-              <span style={{ fontSize: "11px", color: "#ff9933", fontWeight: "900", marginRight: "8px" }}>🏆 HALLOWEEN WINNER:</span>
-              <span style={{ fontSize: "14px", color: "#ffffff", fontWeight: "950" }}>{giveawayWinner.fullName}</span>
-              <span style={{ fontSize: "12px", color: NEON_GREEN, fontWeight: "800", marginLeft: "6px" }}>• {giveawayWinner.college} ({giveawayWinner.position})</span>
-            </div>
-          )}
         </div>
 
         {/* 3-PILLAR NAVIGATION BAR (SCOREBOARD | BRAND DEALS | MY LOCKER) */}
@@ -1816,6 +1706,11 @@ function AppContent() {
                   const isPitcherRole = ath.primaryRole === "PITCHER" || isAthleteTWP;
                   const isHitterRole = ath.primaryRole === "HITTER" || isAthleteTWP;
 
+                  const isCurrentUser = Boolean(
+                    (profile.email && ath.email && profile.email.toLowerCase() === ath.email.toLowerCase()) ||
+                    (account?.address && ath.walletAddress && account.address.toLowerCase() === ath.walletAddress.toLowerCase())
+                  );
+
                   const isEliteFB = parseFloat(ath.peakFB || "0") >= 92;
                   const isEliteStuff = parseFloat(ath.stuffPlus || "0") >= 110;
                   const isEliteIVB = parseFloat(ath.inducedVertBreak || "0") >= 18;
@@ -1840,7 +1735,7 @@ function AppContent() {
                       key={idx}
                       style={{
                         backgroundColor: "#0d0d12",
-                        border: isExpanded ? `1.5px solid ${NEON_GREEN}` : "1px solid #24242e",
+                        border: isExpanded || isCurrentUser ? `1.5px solid ${NEON_GREEN}` : "1px solid #24242e",
                         borderRadius: "14px",
                         padding: "14px 16px",
                         transition: "all 0.15s ease"
@@ -1856,6 +1751,11 @@ function AppContent() {
                             <span style={{ fontWeight: "950", color: "#ffffff", fontSize: "17px" }}>
                               {ath.fullName || "Member Athlete"}
                             </span>
+                            {isCurrentUser && (
+                              <span style={{ backgroundColor: NEON_GREEN, color: "#000000", padding: "2px 7px", borderRadius: "999px", fontSize: "9px", fontWeight: "950", textTransform: "uppercase" }}>
+                                ⭐ YOU
+                              </span>
+                            )}
                             <span style={{ backgroundColor: isAthleteTWP ? "rgba(166, 255, 0, 0.16)" : "#1b1b24", border: `1px solid ${isAthleteTWP ? NEON_GREEN : "#383846"}`, color: isAthleteTWP ? NEON_GREEN : "#d4d4d8", padding: "2px 8px", borderRadius: "999px", fontSize: "10px", fontWeight: "900", textTransform: "uppercase" }}>
                               {ath.position || ath.primaryRole}
                             </span>
@@ -2275,6 +2175,22 @@ function AppContent() {
                     )}
                   </div>
                 </div>
+
+                {/* Active Brand Intros Tracker (If Any) */}
+                {activeIntroList.length > 0 && (
+                  <div style={{ backgroundColor: "#07070a", border: "1px solid #24242e", borderRadius: "12px", padding: "12px 14px", marginBottom: "18px" }}>
+                    <div style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", marginBottom: "6px" }}>
+                      ⚡ Active Direct Brand Intros (60-Day Review Window)
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                      {activeIntroList.map((bName, idx) => (
+                        <span key={idx} style={{ backgroundColor: "#14141c", border: "1px solid #333340", padding: "4px 10px", borderRadius: "999px", fontSize: "11px", fontWeight: "800", color: "#ffffff" }}>
+                          {bName} <span style={{ color: "#a1a1aa" }}>({getDaysRemaining(bName)}d left)</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* 3 Sub-Tabs Inside Locker */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "18px" }}>
@@ -2814,7 +2730,7 @@ function AppContent() {
               Activate Your 100 $SLUG Key
             </h3>
             <p style={{ fontSize: "13px", color: "#d4d4d8", lineHeight: "1.5", margin: "0 0 18px 0" }}>
-              Your player profile is saved! Tap below to claim your free <strong style={{ color: "#ffffff" }}>100 $SLUG membership key</strong> to unlock the Halloween TAG Radar giveaway, 20% off discount code, and Direct Brand Intros.
+              Your player profile is saved! Tap below to claim your free <strong style={{ color: "#ffffff" }}>100 $SLUG membership key</strong> to unlock upcoming member giveaways, your 20% off TAG Sports code, and Direct Brand Intros.
             </p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
