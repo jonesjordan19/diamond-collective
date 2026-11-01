@@ -387,6 +387,63 @@ const emptyProfile: AthleteProfile = {
   kMinusBbPercentage: "",
 };
 
+// Helper component for Visual Telemetry Progress Bars inside Expanded Cards
+function MetricBar({
+  label,
+  valueStr,
+  unit,
+  min,
+  max,
+  eliteThreshold,
+  invert = false,
+  subLabel,
+}: {
+  label: string;
+  valueStr?: string;
+  unit: string;
+  min: number;
+  max: number;
+  eliteThreshold: number;
+  invert?: boolean;
+  subLabel?: string;
+}) {
+  const num = parseFloat(valueStr || "");
+  if (isNaN(num)) return null;
+
+  const isElite = invert ? num <= eliteThreshold : num >= eliteThreshold;
+  let pct = invert
+    ? ((max - num) / (max - min)) * 100
+    : ((num - min) / (max - min)) * 100;
+  pct = Math.max(10, Math.min(100, Math.round(pct)));
+
+  const barColor = isElite ? "#ffb800" : NEON_GREEN;
+
+  return (
+    <div style={{ marginBottom: "10px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px", marginBottom: "4px", fontFamily: "monospace" }}>
+        <span style={{ color: "#d4d4d8", fontWeight: "800" }}>
+          {label} {subLabel && <span style={{ color: "#71717a", fontWeight: "600" }}>({subLabel})</span>}
+        </span>
+        <span style={{ color: isElite ? "#ffb800" : "#ffffff", fontWeight: "950", fontSize: "12px" }}>
+          {isElite ? "🔥 " : ""}{valueStr}{unit}
+        </span>
+      </div>
+      <div style={{ width: "100%", height: "7px", backgroundColor: "#16161f", borderRadius: "999px", overflow: "hidden", border: "1px solid #262632" }}>
+        <div
+          style={{
+            width: `${pct}%`,
+            height: "100%",
+            backgroundColor: barColor,
+            borderRadius: "999px",
+            boxShadow: isElite ? "0 0 10px rgba(255, 184, 0, 0.5)" : "0 0 8px rgba(166, 255, 0, 0.35)",
+            transition: "width 0.35s ease",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
 async function triggerMobileScoutShare(athlete: AthleteProfile) {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
@@ -730,6 +787,7 @@ function AppContent() {
   const [sortBy, setSortBy] = useState<"DEFAULT" | "MAX_EV" | "PEAK_FB" | "STUFF_PLUS" | "IVB">("DEFAULT");
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [expandedCardIdx, setExpandedCardIdx] = useState<number | null>(null);
+  const [copiedPlayerName, setCopiedPlayerName] = useState<string | null>(null);
 
   const [leaderboardRows, setLeaderboardRows] = useState<AthleteProfile[]>([]);
   const [loadingScoreboard, setLoadingScoreboard] = useState(false);
@@ -751,7 +809,27 @@ function AppContent() {
 
   useEffect(() => {
     setMounted(true);
+    // Check if URL has ?player=Name for direct shareable profile links
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const sharedPlayer = params.get("player");
+      if (sharedPlayer && sharedPlayer.trim() !== "") {
+        setSearchQuery(sharedPlayer.trim());
+        setActiveMainTab("SCOREBOARD");
+        setExpandedCardIdx(0);
+      }
+    }
   }, []);
+
+  const handleCopyPlayerLink = (athleteName: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const cleanName = athleteName || "Athlete";
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://sluggercoin.com";
+    const shareUrl = `${origin}/?player=${encodeURIComponent(cleanName)}`;
+    navigator.clipboard.writeText(shareUrl);
+    setCopiedPlayerName(cleanName);
+    setTimeout(() => setCopiedPlayerName(null), 2500);
+  };
 
   const handleOpenLogin = () => {
     connect({
@@ -1211,7 +1289,7 @@ function AppContent() {
   const isFullyOnboarded = Boolean(account && hasProfile && isUnlocked);
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#050507", backgroundImage: "radial-gradient(circle at 50% 0%, rgba(166, 255, 0, 0.07) 0%, transparent 55%)", color: "#ffffff", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", paddingBottom: "80px" }}>
+    <div style={{ minHeight: "100vh", backgroundColor: "#050507", backgroundImage: "radial-gradient(circle at 50% 0%, rgba(166, 255, 0, 0.07) 0%, transparent 55%)", color: "#ffffff", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", paddingBottom: "96px" }}>
       
       {/* Slim Compliance Bar */}
       <div style={{ backgroundColor: "#0a0a0d", borderBottom: "1px solid #181820", padding: "7px 14px", textAlign: "center", fontSize: "10px", color: "#a1a1aa", letterSpacing: "0.3px" }}>
@@ -1465,7 +1543,7 @@ function AppContent() {
           </div>
         </div>
 
-        {/* 3-PILLAR NAVIGATION BAR (SCOREBOARD | BRAND DEALS | MY LOCKER) */}
+        {/* 3-PILLAR TOP NAVIGATION BAR */}
         <div style={{ 
           display: "grid", 
           gridTemplateColumns: "1fr 1fr 1fr", 
@@ -1538,7 +1616,7 @@ function AppContent() {
         </div>
 
         {/* =====================================================================
-            TAB 1: NATIONAL SCOUTING SCOREBOARD (COMPACT & EXPANDABLE)
+            TAB 1: NATIONAL SCOUTING SCOREBOARD (COMPACT, SHAREABLE & VISUAL BARS)
            ===================================================================== */}
         {activeMainTab === "SCOREBOARD" && (
           <section>
@@ -1562,6 +1640,29 @@ function AppContent() {
                     outline: "none"
                   }}
                 />
+
+                {searchQuery && (
+                  <button
+                    onClick={() => {
+                      setSearchQuery("");
+                      if (typeof window !== "undefined" && window.location.search) {
+                        window.history.replaceState({}, "", window.location.pathname);
+                      }
+                    }}
+                    style={{
+                      backgroundColor: "#22222c",
+                      border: "1px solid #3f3f4e",
+                      color: "#ffffff",
+                      padding: "10px 14px",
+                      borderRadius: "10px",
+                      fontSize: "12px",
+                      fontWeight: "800",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Clear ✕
+                  </button>
+                )}
 
                 <select
                   value={sortBy}
@@ -1730,6 +1831,8 @@ function AppContent() {
                     if (ath.sixtyTime) headlinePills.push({ label: "60yd", val: `${ath.sixtyTime}s`, elite: isElite60 });
                   }
 
+                  const isLinkCopied = copiedPlayerName === (ath.fullName || "Athlete");
+
                   return (
                     <div
                       key={idx}
@@ -1769,7 +1872,7 @@ function AppContent() {
                         </div>
 
                         {/* Headline Metric Pills & Action Buttons */}
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
                           {headlinePills.slice(0, 4).map((p, pIdx) => (
                             <div
                               key={pIdx}
@@ -1787,6 +1890,23 @@ function AppContent() {
                               <span style={{ color: "#ffffff" }}>{p.val}</span>
                             </div>
                           ))}
+
+                          <button
+                            onClick={(e) => handleCopyPlayerLink(ath.fullName, e)}
+                            title="Copy direct link to this player's profile"
+                            style={{
+                              backgroundColor: isLinkCopied ? NEON_GREEN : "#16161f",
+                              border: `1px solid ${isLinkCopied ? NEON_GREEN : "#383846"}`,
+                              color: isLinkCopied ? "#000000" : "#ffffff",
+                              padding: "6px 10px",
+                              borderRadius: "8px",
+                              fontSize: "11px",
+                              fontWeight: "900",
+                              cursor: "pointer"
+                            }}
+                          >
+                            {isLinkCopied ? "✓ Link Copied" : "🔗 Link"}
+                          </button>
 
                           <button
                             onClick={(e) => {
@@ -1813,37 +1933,41 @@ function AppContent() {
                         </div>
                       </div>
 
-                      {/* Expanded Full Telemetry Drawer */}
+                      {/* Expanded Full Telemetry Drawer with Visual Progress Bars */}
                       {isExpanded && (
                         <div style={{ marginTop: "14px", paddingTop: "14px", borderTop: "1px solid #22222c", display: "flex", flexDirection: "column", gap: "12px" }}>
-                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "12px" }}>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "12px" }}>
                             {isPitcherRole && (
-                              <div style={{ backgroundColor: "#07070a", border: "1px solid #24242e", borderRadius: "12px", padding: "12px", fontSize: "12px", fontFamily: "monospace" }}>
-                                <div style={{ color: NEON_GREEN, fontWeight: "900", marginBottom: "6px", textTransform: "uppercase", fontSize: "10px" }}>⚾ Full Mound Telemetry</div>
-                                <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", color: "#ffffff", fontWeight: "800" }}>
-                                  <span>Peak FB: {ath.peakFB || "--"} mph</span>
-                                  {ath.sittingFB && <span>• Sit: {ath.sittingFB}</span>}
-                                  {ath.fbSpinRate && <span>• Spin: {ath.fbSpinRate} RPM</span>}
-                                  {ath.stuffPlus && <span>• Stuff+: {ath.stuffPlus}</span>}
-                                  {ath.inducedVertBreak && <span>• IVB: {ath.inducedVertBreak}"</span>}
-                                  {ath.horizontalBreak && <span>• HB: {ath.horizontalBreak}"</span>}
-                                  {ath.releaseExtension && <span>• Ext: {ath.releaseExtension}ft</span>}
-                                  {ath.vertApproachAngle && <span>• VAA: {ath.vertApproachAngle}°</span>}
-                                  {ath.offSpeedVelo && <span>• {ath.offSpeedType || "Slider"}: {ath.offSpeedVelo} mph</span>}
-                                  {ath.kMinusBbPercentage && <span>• K-BB%: {ath.kMinusBbPercentage}%</span>}
+                              <div style={{ backgroundColor: "#07070a", border: "1px solid #24242e", borderRadius: "12px", padding: "14px" }}>
+                                <div style={{ color: NEON_GREEN, fontWeight: "900", marginBottom: "10px", textTransform: "uppercase", fontSize: "10px", letterSpacing: "0.8px" }}>
+                                  ⚾ Mound Telemetry & Visual Benchmarks
+                                </div>
+
+                                <MetricBar label="PEAK FASTBALL" valueStr={ath.peakFB} unit=" mph" min={78} max={98} eliteThreshold={92} subLabel={ath.sittingFB ? `Sit ${ath.sittingFB}` : undefined} />
+                                <MetricBar label="STUFF+ GRADE" valueStr={ath.stuffPlus} unit="" min={80} max={140} eliteThreshold={110} subLabel="100 = Avg" />
+                                <MetricBar label="INDUCED VERT BREAK" valueStr={ath.inducedVertBreak} unit='"' min={8} max={24} eliteThreshold={18} subLabel="Carry" />
+                                <MetricBar label="FASTBALL SPIN" valueStr={ath.fbSpinRate} unit=" RPM" min={1800} max={2700} eliteThreshold={2400} />
+
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", color: "#d4d4d8", fontSize: "11px", fontFamily: "monospace", fontWeight: "800", marginTop: "8px" }}>
+                                  {ath.horizontalBreak && <span style={{ backgroundColor: "#121218", padding: "4px 8px", borderRadius: "6px" }}>HB: {ath.horizontalBreak}"</span>}
+                                  {ath.releaseExtension && <span style={{ backgroundColor: "#121218", padding: "4px 8px", borderRadius: "6px" }}>Ext: {ath.releaseExtension}ft</span>}
+                                  {ath.vertApproachAngle && <span style={{ backgroundColor: "#121218", padding: "4px 8px", borderRadius: "6px" }}>VAA: {ath.vertApproachAngle}°</span>}
+                                  {ath.offSpeedVelo && <span style={{ backgroundColor: "#121218", padding: "4px 8px", borderRadius: "6px" }}>{ath.offSpeedType || "Slider"}: {ath.offSpeedVelo} mph</span>}
+                                  {ath.kMinusBbPercentage && <span style={{ backgroundColor: "#121218", padding: "4px 8px", borderRadius: "6px" }}>K-BB%: {ath.kMinusBbPercentage}%</span>}
                                 </div>
                               </div>
                             )}
 
                             {isHitterRole && (
-                              <div style={{ backgroundColor: "#07070a", border: "1px solid #24242e", borderRadius: "12px", padding: "12px", fontSize: "12px", fontFamily: "monospace" }}>
-                                <div style={{ color: NEON_GREEN, fontWeight: "900", marginBottom: "6px", textTransform: "uppercase", fontSize: "10px" }}>💥 Full Hitting Telemetry</div>
-                                <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", color: "#ffffff", fontWeight: "800" }}>
-                                  <span>Max EV: {ath.maxExitVelo || "--"} mph</span>
-                                  {ath.ninetyEV && <span>• 90th% EV: {ath.ninetyEV} mph</span>}
-                                  {ath.batSpeed && <span>• Bat Speed: {ath.batSpeed} mph</span>}
-                                  {ath.sixtyTime && <span>• 60-Yd Dash: {ath.sixtyTime}s</span>}
+                              <div style={{ backgroundColor: "#07070a", border: "1px solid #24242e", borderRadius: "12px", padding: "14px" }}>
+                                <div style={{ color: NEON_GREEN, fontWeight: "900", marginBottom: "10px", textTransform: "uppercase", fontSize: "10px", letterSpacing: "0.8px" }}>
+                                  💥 Hitting & Speed Visual Benchmarks
                                 </div>
+
+                                <MetricBar label="MAX EXIT VELO" valueStr={ath.maxExitVelo} unit=" mph" min={82} max={110} eliteThreshold={100} />
+                                <MetricBar label="90TH% EXIT VELO" valueStr={ath.ninetyEV} unit=" mph" min={78} max={105} eliteThreshold={95} subLabel="Consistency" />
+                                <MetricBar label="BAT SPEED" valueStr={ath.batSpeed} unit=" mph" min={62} max={85} eliteThreshold={75} subLabel="Blast" />
+                                <MetricBar label="60-YARD DASH" valueStr={ath.sixtyTime} unit="s" min={6.2} max={7.5} eliteThreshold={6.65} invert={true} subLabel="Laser" />
                               </div>
                             )}
                           </div>
@@ -2157,10 +2281,20 @@ function AppContent() {
                     {hasProfile && (
                       <button
                         type="button"
+                        onClick={() => handleCopyPlayerLink(profile.fullName)}
+                        style={{ backgroundColor: "#16161f", border: "1px solid #383846", color: "#ffffff", padding: "9px 14px", borderRadius: "10px", fontSize: "11px", fontWeight: "900", cursor: "pointer" }}
+                      >
+                        {copiedPlayerName === profile.fullName ? "✓ Profile Link Copied!" : "🔗 Copy My Profile Link"}
+                      </button>
+                    )}
+
+                    {hasProfile && (
+                      <button
+                        type="button"
                         onClick={() => triggerMobileScoutShare(profile)}
                         style={{ backgroundColor: "rgba(166, 255, 0, 0.14)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "9px 14px", borderRadius: "10px", fontSize: "11px", fontWeight: "900", cursor: "pointer" }}
                       >
-                        📸 Download My 4:5 Card
+                        📸 Download 4:5 Card
                       </button>
                     )}
 
@@ -2717,6 +2851,101 @@ function AppContent() {
           </div>
         </section>
       </div>
+
+      {/* STICKY GLASSMORPHIC BOTTOM NAVIGATION BAR (NATIVE APP FEEL) */}
+      <nav
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: "rgba(10, 10, 14, 0.92)",
+          backdropFilter: "blur(14px)",
+          borderTop: "1px solid #242430",
+          padding: "8px 12px 12px 12px",
+          zIndex: 950,
+          display: "flex",
+          justifyContent: "center",
+          boxShadow: "0 -8px 25px rgba(0, 0, 0, 0.7)",
+        }}
+      >
+        <div style={{ width: "100%", maxWidth: "540px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
+          <button
+            onClick={() => {
+              setActiveMainTab("SCOREBOARD");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            style={{
+              backgroundColor: activeMainTab === "SCOREBOARD" ? "rgba(166, 255, 0, 0.15)" : "transparent",
+              color: activeMainTab === "SCOREBOARD" ? NEON_GREEN : "#a1a1aa",
+              border: activeMainTab === "SCOREBOARD" ? `1px solid ${NEON_GREEN}` : "1px solid transparent",
+              borderRadius: "10px",
+              padding: "8px 4px",
+              cursor: "pointer",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "2px",
+              fontWeight: "900",
+              fontSize: "10px",
+              textTransform: "uppercase",
+            }}
+          >
+            <span style={{ fontSize: "15px" }}>🏆</span>
+            <span>Scoreboard</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveMainTab("EXCHANGE");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            style={{
+              backgroundColor: activeMainTab === "EXCHANGE" ? "rgba(166, 255, 0, 0.15)" : "transparent",
+              color: activeMainTab === "EXCHANGE" ? NEON_GREEN : "#a1a1aa",
+              border: activeMainTab === "EXCHANGE" ? `1px solid ${NEON_GREEN}` : "1px solid transparent",
+              borderRadius: "10px",
+              padding: "8px 4px",
+              cursor: "pointer",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "2px",
+              fontWeight: "900",
+              fontSize: "10px",
+              textTransform: "uppercase",
+            }}
+          >
+            <span style={{ fontSize: "15px" }}>🤝</span>
+            <span>Brand Deals</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveMainTab("LOCKER");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            style={{
+              backgroundColor: activeMainTab === "LOCKER" ? "rgba(166, 255, 0, 0.15)" : "transparent",
+              color: activeMainTab === "LOCKER" ? NEON_GREEN : "#a1a1aa",
+              border: activeMainTab === "LOCKER" ? `1px solid ${NEON_GREEN}` : "1px solid transparent",
+              borderRadius: "10px",
+              padding: "8px 4px",
+              cursor: "pointer",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "2px",
+              fontWeight: "900",
+              fontSize: "10px",
+              textTransform: "uppercase",
+            }}
+          >
+            <span style={{ fontSize: "15px" }}>👤</span>
+            <span>My Locker {hasProfile ? "✓" : ""}</span>
+          </button>
+        </div>
+      </nav>
 
       {/* 100 $SLUG MEMBERSHIP KEY CLAIM MODAL */}
       {showClaimPromptModal && account && (
