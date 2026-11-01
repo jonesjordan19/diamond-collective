@@ -312,6 +312,7 @@ export interface AthleteProfile {
   weight?: string;
   primaryRole: "HITTER" | "PITCHER" | "TWP";
   isProfileVisible: boolean;
+  walletAddress?: string;
   social1_Type?: string;
   social1_Url?: string;
   social2_Type?: string;
