@@ -290,8 +290,8 @@ const FAQS = [
     a: "Verified college ballplayers receive 'The Big Black Grip' bat grip 100% free ($0 product cost). A flat $8.99 shipping and handling fee is paid directly through Stripe to cover USPS Ground postage with tracking and fulfillment.",
   },
   {
-    q: "Do I need crypto experience or a wallet app to join?",
-    a: "None at all. When you sign in using your existing Google, Apple, or phone ID, your member account is generated automatically in the background and all actions are 100% free.",
+    q: "I'm a Scout or Coach. How do I view player contact info?",
+    a: "Click 'Scout & Pro Access' in the header to log in. Once you complete your brief Pro Credential profile, you will unlock full access to the athletes' cell phones, emails, and TrackMan video links directly on their Scoreboard cards.",
   },
 ];
 
@@ -341,6 +341,14 @@ export interface AthleteProfile {
   kMinusBbPercentage?: string;
 }
 
+export interface ScoutProfile {
+  fullName: string;
+  organization: string;
+  jobTitle: string;
+  email: string;
+  walletAddress?: string;
+}
+
 const emptyProfile: AthleteProfile = {
   verificationStatus: "Pending",
   fullName: "",
@@ -387,26 +395,14 @@ const emptyProfile: AthleteProfile = {
   kMinusBbPercentage: "",
 };
 
-// Helper component for Visual Telemetry Progress Bars inside Expanded Cards
-function MetricBar({
-  label,
-  valueStr,
-  unit,
-  min,
-  max,
-  eliteThreshold,
-  invert = false,
-  subLabel,
-}: {
-  label: string;
-  valueStr?: string;
-  unit: string;
-  min: number;
-  max: number;
-  eliteThreshold: number;
-  invert?: boolean;
-  subLabel?: string;
-}) {
+const emptyScout: ScoutProfile = {
+  fullName: "",
+  organization: "",
+  jobTitle: "",
+  email: "",
+};
+
+function MetricBar({ label, valueStr, unit, min, max, eliteThreshold, invert = false, subLabel }: { label: string; valueStr?: string; unit: string; min: number; max: number; eliteThreshold: number; invert?: boolean; subLabel?: string; }) {
   const num = parseFloat(valueStr || "");
   if (isNaN(num)) return null;
 
@@ -429,16 +425,7 @@ function MetricBar({
         </span>
       </div>
       <div style={{ width: "100%", height: "7px", backgroundColor: "#16161f", borderRadius: "999px", overflow: "hidden", border: "1px solid #262632" }}>
-        <div
-          style={{
-            width: `${pct}%`,
-            height: "100%",
-            backgroundColor: barColor,
-            borderRadius: "999px",
-            boxShadow: isElite ? "0 0 10px rgba(255, 184, 0, 0.5)" : "0 0 8px rgba(166, 255, 0, 0.35)",
-            transition: "width 0.35s ease",
-          }}
-        />
+        <div style={{ width: `${pct}%`, height: "100%", backgroundColor: barColor, borderRadius: "999px", boxShadow: isElite ? "0 0 10px rgba(255, 184, 0, 0.5)" : "0 0 8px rgba(166, 255, 0, 0.35)", transition: "width 0.35s ease" }} />
       </div>
     </div>
   );
@@ -774,11 +761,15 @@ function AppContent() {
   const [justClaimed, setJustClaimed] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // 3-TAB PRIMARY NAVIGATION: SCOREBOARD | EXCHANGE (BRAND DEALS) | LOCKER
+  // Identity & Routing State
+  const [intendedRole, setIntendedRole] = useState<"ATHLETE" | "SCOUT" | null>(null);
+  const [userRole, setUserRole] = useState<"GUEST" | "ATHLETE" | "SCOUT">("GUEST");
+
+  // 3-TAB PRIMARY NAVIGATION
   const [activeMainTab, setActiveMainTab] = useState<"SCOREBOARD" | "EXCHANGE" | "LOCKER">("SCOREBOARD");
   const [brandCategoryFilter, setBrandCategoryFilter] = useState<"ALL" | "DIRECT" | "PERKS" | "GEAR" | "APPAREL">("ALL");
 
-  // Scoreboard Filters & Expand State
+  // Scoreboard Filters
   const [roleFilter, setRoleFilter] = useState<"ALL" | "HITTER" | "PITCHER" | "TWP">("ALL");
   const [positionFilter, setPositionFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
@@ -792,14 +783,18 @@ function AppContent() {
   const [leaderboardRows, setLeaderboardRows] = useState<AthleteProfile[]>([]);
   const [loadingScoreboard, setLoadingScoreboard] = useState(false);
 
-  // Locker Sub-Tabs & Modals
+  // Forms & Profiles
   const [activeMatrixTab, setActiveMatrixTab] = useState<"BIO" | "HITTING" | "PITCHING">("BIO");
   const [pendingIntroBrand, setPendingIntroBrand] = useState<BrandItem | null>(null);
   const [dispatchedBrand, setDispatchedBrand] = useState<BrandItem | null>(null);
   const [isLockoutModal, setIsLockoutModal] = useState(false);
   const [showClaimPromptModal, setShowClaimPromptModal] = useState(false);
+  
   const [profile, setProfile] = useState<AthleteProfile>(emptyProfile);
+  const [scoutProfile, setScoutProfile] = useState<ScoutProfile>(emptyScout);
+  
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isSavingScout, setIsSavingScout] = useState(false);
   const [introTimestamps, setIntroTimestamps] = useState<{ [brandName: string]: number }>({});
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
@@ -809,7 +804,7 @@ function AppContent() {
 
   useEffect(() => {
     setMounted(true);
-    // Check if URL has ?player=Name for direct shareable profile links
+    // Direct shareable profile links check
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const sharedPlayer = params.get("player");
@@ -831,7 +826,8 @@ function AppContent() {
     setTimeout(() => setCopiedPlayerName(null), 2500);
   };
 
-  const handleOpenLogin = () => {
+  const handleOpenLogin = (roleTarget: "ATHLETE" | "SCOUT") => {
+    setIntendedRole(roleTarget);
     connect({
       client,
       wallets: supportedWallets,
@@ -857,10 +853,14 @@ function AppContent() {
   const rawRemaining = ((FOUNDERS_POOL_TOTAL - totalMinted) / FOUNDERS_POOL_TOTAL) * 100;
   const remainingPercentage = Math.max(0, Math.min(100, Math.round(rawRemaining)));
 
-  // Flat 100 $SLUG Membership Key Check
+  // Role & Gating Validations
+  const isAdmin = useMemo(() => account?.address?.toLowerCase() === "0x46cbd713d7440692156e1219153622c45b04d3a", [account?.address]);
   const balance = balanceData ? Math.min(100, Number(balanceData.displayValue)) : 0;
   const isUnlocked = balance >= 100 || justClaimed;
+  
   const hasProfile = Boolean(profile.fullName && profile.email);
+  const isScoutOnboarded = Boolean(scoutProfile.fullName && scoutProfile.organization && userRole === "SCOUT");
+  const isFullyOnboardedAthlete = Boolean(account && hasProfile && isUnlocked && userRole === "ATHLETE");
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText("DIAMONDCOLLECTIVE");
@@ -906,6 +906,7 @@ function AppContent() {
                 ...emptyProfile,
                 fullName: item.fullName && item.fullName.trim() !== "" ? item.fullName : nameFromEmail,
                 email: item.athleteEmail || item.email || "",
+                phone: item.phone ? String(item.phone) : "",
                 walletAddress: item.walletAddress ? String(item.walletAddress) : "",
                 college: item.currentCollege || item.college || "Undeclared",
                 state: item.state || "",
@@ -965,85 +966,106 @@ function AppContent() {
   useEffect(() => {
     if (account?.address) {
       const lowerWallet = account.address.toLowerCase();
-      const localKey = `athlete_profile_${lowerWallet}`;
+      const localRoleKey = `app_role_${lowerWallet}`;
+      const localProfileKey = `athlete_profile_${lowerWallet}`;
+      const localScoutKey = `scout_profile_${lowerWallet}`;
       const localIntroKey = `athlete_intros_${lowerWallet}`;
       const acctEmail = (account as any)?.email || "";
       
-      const savedLocal = localStorage.getItem(localKey);
-      if (savedLocal) {
-        try {
-          const parsed = JSON.parse(savedLocal);
-          if (parsed.fullName) {
-            setProfile((prev) => ({ 
-              ...prev, 
-              ...parsed, 
-              email: parsed.email || acctEmail || prev.email || "",
-              college: parsed.college || parsed.currentCollege || prev.college || ""
-            }));
-          }
-        } catch {}
-      } else if (acctEmail) {
-        setProfile((prev) => ({
-          ...prev,
-          email: acctEmail || prev.email || ""
-        }));
-      }
-
-      const savedIntros = localStorage.getItem(localIntroKey);
-      if (savedIntros) {
-        try {
-          const parsed = JSON.parse(savedIntros);
-          const formatted: { [bName: string]: number } = {};
-          Object.keys(parsed).forEach((k) => {
-            formatted[k] = typeof parsed[k] === "number" ? parsed[k] : Date.now();
-          });
-          setIntroTimestamps(formatted);
-        } catch {}
-      }
-
-      const callbackName = `cb_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-      (window as any)[callbackName] = (data: any) => {
-        if (data && data.profile && data.profile.fullName) {
-          setProfile((prev) => ({ 
-            ...prev, 
-            ...data.profile,
-            email: data.profile.email || data.profile.athleteEmail || acctEmail || prev.email || "",
-            college: data.profile.college || data.profile.currentCollege || prev.college || ""
+      const savedRole = localStorage.getItem(localRoleKey);
+      if (savedRole === "SCOUT" || intendedRole === "SCOUT") {
+        setUserRole("SCOUT");
+        localStorage.setItem(localRoleKey, "SCOUT");
+        
+        const savedScout = localStorage.getItem(localScoutKey);
+        if (savedScout) {
+          try {
+            const parsed = JSON.parse(savedScout);
+            setScoutProfile({ ...emptyScout, ...parsed, email: parsed.email || acctEmail });
+          } catch {}
+        } else {
+          setScoutProfile({ ...emptyScout, email: acctEmail });
+        }
+      } else {
+        setUserRole("ATHLETE");
+        localStorage.setItem(localRoleKey, "ATHLETE");
+        
+        const savedLocal = localStorage.getItem(localProfileKey);
+        if (savedLocal) {
+          try {
+            const parsed = JSON.parse(savedLocal);
+            if (parsed.fullName) {
+              setProfile((prev) => ({ 
+                ...prev, 
+                ...parsed, 
+                email: parsed.email || acctEmail || prev.email || "",
+                college: parsed.college || parsed.currentCollege || prev.college || ""
+              }));
+            }
+          } catch {}
+        } else if (acctEmail) {
+          setProfile((prev) => ({
+            ...prev,
+            email: acctEmail || prev.email || ""
           }));
-          localStorage.setItem(localKey, JSON.stringify(data.profile));
         }
 
-        if (data && data.existingIntros) {
-          const introsMap: { [brandName: string]: number } = {};
-          Object.keys(data.existingIntros).forEach((bName: string) => {
-            introsMap[bName] = Number(data.existingIntros[bName]);
-          });
-          setIntroTimestamps((prev) => {
-            const updated = { ...prev, ...introsMap };
-            localStorage.setItem(localIntroKey, JSON.stringify(updated));
-            return updated;
-          });
+        const savedIntros = localStorage.getItem(localIntroKey);
+        if (savedIntros) {
+          try {
+            const parsed = JSON.parse(savedIntros);
+            const formatted: { [bName: string]: number } = {};
+            Object.keys(parsed).forEach((k) => {
+              formatted[k] = typeof parsed[k] === "number" ? parsed[k] : Date.now();
+            });
+            setIntroTimestamps(formatted);
+          } catch {}
         }
-
-        try {
-          delete (window as any)[callbackName];
-          const elem = document.getElementById(callbackName);
-          if (elem) elem.remove();
-        } catch {}
-      };
-
-      const script = document.createElement("script");
-      script.id = callbackName;
-      script.src = `${GOOGLE_SCRIPT_URL}?walletAddress=${encodeURIComponent(lowerWallet)}&callback=${callbackName}&_t=${Date.now()}`;
-      document.body.appendChild(script);
+      }
+    } else {
+      setUserRole("GUEST");
     }
-  }, [account]);
+  }, [account, intendedRole]);
 
-  const handleSaveProfile = async () => {
-    if (!account?.address) {
-      handleOpenLogin();
+  const handleSaveScoutProfile = async () => {
+    if (!account?.address) return;
+    if (!scoutProfile.fullName || !scoutProfile.organization) {
+      alert("Please fill out your Name and Organization to unlock contact access.");
       return;
     }
+
+    setIsSavingScout(true);
+    const lowerWallet = account.address.toLowerCase();
+    
+    const payload = {
+      action: "saveScout",
+      walletAddress: lowerWallet,
+      fullName: scoutProfile.fullName,
+      organization: scoutProfile.organization,
+      jobTitle: scoutProfile.jobTitle,
+      email: scoutProfile.email
+    };
+
+    localStorage.setItem(`scout_profile_${lowerWallet}`, JSON.stringify(scoutProfile));
+    setUserRole("SCOUT");
+
+    try {
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload),
+      });
+      setIsSavingScout(false);
+      setActiveMainTab("SCOREBOARD");
+    } catch (err: any) {
+      setIsSavingScout(false);
+      alert("Error saving scout profile.");
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!account?.address) return;
     if (!profile.fullName || !profile.email) {
       alert("Please fill in your Full Name and Email in Step 1 (Bio & Roster).");
       setActiveMatrixTab("BIO");
@@ -1162,7 +1184,7 @@ function AppContent() {
     }
 
     if (!account) {
-      handleOpenLogin();
+      handleOpenLogin("ATHLETE");
       return;
     }
 
@@ -1286,8 +1308,6 @@ function AppContent() {
 
   if (!mounted) return null;
 
-  const isFullyOnboarded = Boolean(account && hasProfile && isUnlocked);
-
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#050507", backgroundImage: "radial-gradient(circle at 50% 0%, rgba(166, 255, 0, 0.07) 0%, transparent 55%)", color: "#ffffff", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", paddingBottom: "96px" }}>
       
@@ -1295,6 +1315,72 @@ function AppContent() {
       <div style={{ backgroundColor: "#0a0a0d", borderBottom: "1px solid #181820", padding: "7px 14px", textAlign: "center", fontSize: "10px", color: "#a1a1aa", letterSpacing: "0.3px" }}>
         <strong style={{ color: "#ffffff" }}>NCAA NIL Compliant:</strong> Slugger Coins ($SLUG) are non-compensatory ($0 cash value) and serve strictly as a flat 100 $SLUG member access key.
       </div>
+
+      {/* PRO SCOUT / AGENT ONBOARDING MODAL OVERLAY */}
+      {userRole === "SCOUT" && !isScoutOnboarded && account && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(5, 5, 7, 0.98)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 2000, padding: "16px" }}>
+          <div style={{ backgroundColor: "#0c0c10", border: `2px solid ${NEON_GREEN}`, borderRadius: "22px", width: "100%", maxWidth: "460px", padding: "26px", boxShadow: "0 0 45px rgba(166, 255, 0, 0.15)" }}>
+            <span style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>
+              Verified Pro Gateway
+            </span>
+            <h3 style={{ margin: "6px 0 10px 0", fontSize: "22px", fontWeight: "950", textTransform: "uppercase", color: "#ffffff" }}>
+              Unlock Player Contact Info
+            </h3>
+            <p style={{ fontSize: "13px", color: "#a1a1aa", lineHeight: "1.5", margin: "0 0 20px 0" }}>
+              Complete your credential profile to gain immediate access to athlete phone numbers, emails, and full trackman video links on the National Scoreboard.
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "10px", fontWeight: "800", color: "#ffffff", marginBottom: "4px", textTransform: "uppercase" }}>Full Name *</label>
+                <input 
+                  type="text" value={scoutProfile.fullName} 
+                  onChange={(e) => setScoutProfile({ ...scoutProfile, fullName: e.target.value })}
+                  placeholder="e.g. Jason Smith" 
+                  style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px", fontWeight: "700" }}
+                />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "10px", fontWeight: "800", color: "#ffffff", marginBottom: "4px", textTransform: "uppercase" }}>University / Agency / MLB Org *</label>
+                <input 
+                  type="text" value={scoutProfile.organization} 
+                  onChange={(e) => setScoutProfile({ ...scoutProfile, organization: e.target.value })}
+                  placeholder="e.g. State University Baseball" 
+                  style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px", fontWeight: "700" }}
+                />
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "10px", fontWeight: "800", color: "#ffffff", marginBottom: "4px", textTransform: "uppercase" }}>Job Title</label>
+                  <input 
+                    type="text" value={scoutProfile.jobTitle} 
+                    onChange={(e) => setScoutProfile({ ...scoutProfile, jobTitle: e.target.value })}
+                    placeholder="Recruiting Coord." 
+                    style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px", fontWeight: "700" }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: "10px", fontWeight: "800", color: "#ffffff", marginBottom: "4px", textTransform: "uppercase" }}>Work Email</label>
+                  <input 
+                    type="email" value={scoutProfile.email} 
+                    onChange={(e) => setScoutProfile({ ...scoutProfile, email: e.target.value })}
+                    placeholder="coach@state.edu" 
+                    style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px", fontWeight: "700" }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={handleSaveScoutProfile}
+              disabled={isSavingScout}
+              style={{ width: "100%", backgroundColor: NEON_GREEN, color: "#000", fontWeight: "950", padding: "14px", borderRadius: "10px", border: "none", cursor: "pointer", fontSize: "13px", textTransform: "uppercase" }}
+            >
+              {isSavingScout ? "Verifying..." : "Unlock Pro Access 🔓"}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div style={{ maxWidth: "1040px", margin: "0 auto", padding: "18px 14px" }}>
         
@@ -1325,39 +1411,49 @@ function AppContent() {
             </div>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            {isFullyOnboarded && (
-              <span style={{
-                backgroundColor: "rgba(166, 255, 0, 0.12)",
-                border: `1px solid ${NEON_GREEN}`,
-                color: NEON_GREEN,
-                fontSize: "10px",
-                fontWeight: "900",
-                padding: "7px 10px",
-                borderRadius: "8px",
-                textTransform: "uppercase",
-                letterSpacing: "0.5px"
-              }}>
-                ✅ 100 $SLUG Member
-              </span>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+            {account ? (
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                {userRole === "SCOUT" && (
+                   <span style={{ backgroundColor: "#181822", border: "1px solid #383846", color: "#ffffff", fontSize: "10px", fontWeight: "900", padding: "7px 10px", borderRadius: "8px", textTransform: "uppercase" }}>
+                     Verified Pro
+                   </span>
+                )}
+                {userRole === "ATHLETE" && isUnlocked && (
+                  <span style={{ backgroundColor: "rgba(166, 255, 0, 0.12)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontSize: "10px", fontWeight: "900", padding: "7px 10px", borderRadius: "8px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    ✅ 100 $SLUG Member
+                  </span>
+                )}
+                <ConnectButton
+                  client={client}
+                  wallets={supportedWallets}
+                  accountAbstraction={{ chain: base, sponsorGas: true }}
+                  chain={base}
+                  theme="dark"
+                  connectButton={{ label: "Manage Account" }}
+                />
+              </div>
+            ) : (
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  onClick={() => handleOpenLogin("SCOUT")}
+                  style={{ backgroundColor: "transparent", border: "1px solid #383846", color: "#d4d4d8", fontSize: "11px", fontWeight: "800", padding: "8px 12px", borderRadius: "8px", cursor: "pointer" }}
+                >
+                  Scout & Pro Access
+                </button>
+                <button
+                  onClick={() => handleOpenLogin("ATHLETE")}
+                  style={{ backgroundColor: NEON_GREEN, border: "none", color: "#000000", fontSize: "11px", fontWeight: "900", padding: "8px 14px", borderRadius: "8px", cursor: "pointer" }}
+                >
+                  Athlete Sign In
+                </button>
+              </div>
             )}
-
-            <ConnectButton
-              client={client}
-              wallets={supportedWallets}
-              accountAbstraction={{
-                chain: base,
-                sponsorGas: true,
-              }}
-              chain={base}
-              theme="dark"
-              connectButton={{ label: "Athlete Sign In" }}
-            />
           </div>
         </header>
 
-        {/* STEP-BY-STEP ONBOARDING BAR (SHOWN UNTIL ALL 3 STEPS ARE COMPLETE) */}
-        {!isFullyOnboarded && (
+        {/* STEP-BY-STEP ONBOARDING BAR (SHOWN TO ATHLETES UNTIL 3 STEPS COMPLETE) */}
+        {!isFullyOnboardedAthlete && userRole !== "SCOUT" && (
           <div style={{
             backgroundColor: "#0c0c12",
             border: `1.5px solid ${NEON_GREEN}`,
@@ -1378,7 +1474,7 @@ function AppContent() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "8px" }}>
               {/* Step 1: Sign In */}
               <button
-                onClick={() => !account && handleOpenLogin()}
+                onClick={() => !account && handleOpenLogin("ATHLETE")}
                 style={{
                   backgroundColor: account ? "rgba(166, 255, 0, 0.08)" : NEON_GREEN,
                   color: account ? NEON_GREEN : "#000000",
@@ -1401,7 +1497,7 @@ function AppContent() {
               {/* Step 2: Complete Player Bio */}
               <button
                 onClick={() => {
-                  if (!account) handleOpenLogin();
+                  if (!account) handleOpenLogin("ATHLETE");
                   else setActiveMainTab("LOCKER");
                 }}
                 style={{
@@ -1426,7 +1522,7 @@ function AppContent() {
               {/* Step 3: Claim 100 $SLUG Key */}
               <button
                 onClick={() => {
-                  if (!account) handleOpenLogin();
+                  if (!account) handleOpenLogin("ATHLETE");
                   else if (!hasProfile) setActiveMainTab("LOCKER");
                   else setShowClaimPromptModal(true);
                 }}
@@ -1453,100 +1549,102 @@ function AppContent() {
         )}
 
         {/* NEXT GIVEAWAY & MEMBER PERK HUB (COMING SOON) */}
-        <div style={{
-          background: "linear-gradient(135deg, rgba(16, 24, 14, 0.95) 0%, rgba(12, 12, 18, 0.98) 100%)",
-          border: "1.5px solid #262632",
-          borderRadius: "16px",
-          padding: "14px 18px",
-          marginTop: "14px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "12px"
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", flex: "1 1 320px" }}>
-            <span style={{ backgroundColor: "rgba(166, 255, 0, 0.12)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontSize: "10px", fontWeight: "950", padding: "5px 10px", borderRadius: "999px", textTransform: "uppercase", letterSpacing: "0.8px" }}>
-              🎁 Next Member Giveaway • Coming Soon
-            </span>
-            <div>
-              <div style={{ fontSize: "14px", fontWeight: "950", color: "#ffffff", textTransform: "uppercase" }}>
-                Exclusive Hardware & Pro Gear Drops
-              </div>
-              <div style={{ fontSize: "11px", color: "#d4d4d8", marginTop: "2px" }}>
-                {isFullyOnboarded ? (
-                  <span>You are verified & eligible for the next drop • <strong style={{ color: NEON_GREEN }}>20% TAG Sports Code: DIAMONDCOLLECTIVE</strong></span>
-                ) : (
-                  <span>Complete your Locker & claim your free 100 $SLUG key to qualify for the next member giveaway.</span>
-                )}
+        {userRole !== "SCOUT" && (
+          <div style={{
+            background: "linear-gradient(135deg, rgba(16, 24, 14, 0.95) 0%, rgba(12, 12, 18, 0.98) 100%)",
+            border: "1.5px solid #262632",
+            borderRadius: "16px",
+            padding: "14px 18px",
+            marginTop: "14px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "12px"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", flex: "1 1 320px" }}>
+              <span style={{ backgroundColor: "rgba(166, 255, 0, 0.12)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontSize: "10px", fontWeight: "950", padding: "5px 10px", borderRadius: "999px", textTransform: "uppercase", letterSpacing: "0.8px" }}>
+                🎁 Next Member Giveaway • Coming Soon
+              </span>
+              <div>
+                <div style={{ fontSize: "14px", fontWeight: "950", color: "#ffffff", textTransform: "uppercase" }}>
+                  Exclusive Hardware & Pro Gear Drops
+                </div>
+                <div style={{ fontSize: "11px", color: "#d4d4d8", marginTop: "2px" }}>
+                  {isFullyOnboardedAthlete ? (
+                    <span>You are verified & eligible for the next drop • <strong style={{ color: NEON_GREEN }}>20% TAG Sports Code: DIAMONDCOLLECTIVE</strong></span>
+                  ) : (
+                    <span>Complete your Locker & claim your free 100 $SLUG key to qualify for the next member giveaway.</span>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-            {!isFullyOnboarded ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+              {!isFullyOnboardedAthlete ? (
+                <button
+                  onClick={() => {
+                    if (!account) handleOpenLogin("ATHLETE");
+                    else if (!hasProfile) setActiveMainTab("LOCKER");
+                    else setShowClaimPromptModal(true);
+                  }}
+                  style={{
+                    backgroundColor: NEON_GREEN,
+                    color: "#000000",
+                    border: "none",
+                    fontWeight: "950",
+                    padding: "10px 16px",
+                    borderRadius: "10px",
+                    cursor: "pointer",
+                    fontSize: "11px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px"
+                  }}
+                >
+                  🔓 Get Eligible for Next Drop ➔
+                </button>
+              ) : (
+                <span style={{
+                  backgroundColor: "rgba(166, 255, 0, 0.1)",
+                  border: `1px solid ${NEON_GREEN}`,
+                  color: NEON_GREEN,
+                  fontWeight: "900",
+                  padding: "9px 14px",
+                  borderRadius: "10px",
+                  fontSize: "11px",
+                  textTransform: "uppercase"
+                }}>
+                  ✅ Eligible for Next Drop
+                </span>
+              )}
+
               <button
                 onClick={() => {
-                  if (!account) handleOpenLogin();
-                  else if (!hasProfile) setActiveMainTab("LOCKER");
-                  else setShowClaimPromptModal(true);
+                  setActiveMainTab("EXCHANGE");
+                  setBrandCategoryFilter("PERKS");
                 }}
                 style={{
-                  backgroundColor: NEON_GREEN,
-                  color: "#000000",
-                  border: "none",
-                  fontWeight: "950",
-                  padding: "10px 16px",
+                  backgroundColor: "#181822",
+                  color: "#ffffff",
+                  border: "1px solid #383846",
+                  fontWeight: "800",
+                  padding: "10px 12px",
                   borderRadius: "10px",
                   cursor: "pointer",
                   fontSize: "11px",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px"
+                  textTransform: "uppercase"
                 }}
               >
-                🔓 Get Eligible for Next Drop ➔
+                Active Perks & 20% Code ↗
               </button>
-            ) : (
-              <span style={{
-                backgroundColor: "rgba(166, 255, 0, 0.1)",
-                border: `1px solid ${NEON_GREEN}`,
-                color: NEON_GREEN,
-                fontWeight: "900",
-                padding: "9px 14px",
-                borderRadius: "10px",
-                fontSize: "11px",
-                textTransform: "uppercase"
-              }}>
-                ✅ Eligible for Next Drop
-              </span>
-            )}
-
-            <button
-              onClick={() => {
-                setActiveMainTab("EXCHANGE");
-                setBrandCategoryFilter("PERKS");
-              }}
-              style={{
-                backgroundColor: "#181822",
-                color: "#ffffff",
-                border: "1px solid #383846",
-                fontWeight: "800",
-                padding: "10px 12px",
-                borderRadius: "10px",
-                cursor: "pointer",
-                fontSize: "11px",
-                textTransform: "uppercase"
-              }}
-            >
-              Active Perks & 20% Code ↗
-            </button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* 3-PILLAR TOP NAVIGATION BAR */}
         <div style={{ 
           display: "grid", 
-          gridTemplateColumns: "1fr 1fr 1fr", 
+          gridTemplateColumns: userRole === "SCOUT" ? "1fr" : "1fr 1fr 1fr", 
           gap: "8px", 
           margin: "18px 0 22px 0",
           backgroundColor: "#0b0b0f",
@@ -1574,49 +1672,52 @@ function AppContent() {
             🏆 Scoreboard ({filteredScoreboard.length})
           </button>
 
-          <button
-            onClick={() => setActiveMainTab("EXCHANGE")}
-            style={{
-              backgroundColor: activeMainTab === "EXCHANGE" ? NEON_GREEN : "transparent",
-              color: activeMainTab === "EXCHANGE" ? "#000000" : "#ffffff",
-              border: "none",
-              borderRadius: "12px",
-              padding: "12px 8px",
-              cursor: "pointer",
-              textAlign: "center",
-              fontWeight: "950",
-              fontSize: "13px",
-              textTransform: "uppercase",
-              letterSpacing: "0.4px",
-              transition: "all 0.15s ease"
-            }}
-          >
-            🤝 Brand Deals (16)
-          </button>
-
-          <button
-            onClick={() => setActiveMainTab("LOCKER")}
-            style={{
-              backgroundColor: activeMainTab === "LOCKER" ? NEON_GREEN : "transparent",
-              color: activeMainTab === "LOCKER" ? "#000000" : "#ffffff",
-              border: "none",
-              borderRadius: "12px",
-              padding: "12px 8px",
-              cursor: "pointer",
-              textAlign: "center",
-              fontWeight: "950",
-              fontSize: "13px",
-              textTransform: "uppercase",
-              letterSpacing: "0.4px",
-              transition: "all 0.15s ease"
-            }}
-          >
-            👤 My Locker {hasProfile ? "✓" : "⚙️"}
-          </button>
+          {userRole !== "SCOUT" && (
+            <>
+              <button
+                onClick={() => setActiveMainTab("EXCHANGE")}
+                style={{
+                  backgroundColor: activeMainTab === "EXCHANGE" ? NEON_GREEN : "transparent",
+                  color: activeMainTab === "EXCHANGE" ? "#000000" : "#ffffff",
+                  border: "none",
+                  borderRadius: "12px",
+                  padding: "12px 8px",
+                  cursor: "pointer",
+                  textAlign: "center",
+                  fontWeight: "950",
+                  fontSize: "13px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.4px",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                🤝 Brand Deals (16)
+              </button>
+              <button
+                onClick={() => setActiveMainTab("LOCKER")}
+                style={{
+                  backgroundColor: activeMainTab === "LOCKER" ? NEON_GREEN : "transparent",
+                  color: activeMainTab === "LOCKER" ? "#000000" : "#ffffff",
+                  border: "none",
+                  borderRadius: "12px",
+                  padding: "12px 8px",
+                  cursor: "pointer",
+                  textAlign: "center",
+                  fontWeight: "950",
+                  fontSize: "13px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.4px",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                👤 My Locker {hasProfile ? "✓" : "⚙️"}
+              </button>
+            </>
+          )}
         </div>
 
         {/* =====================================================================
-            TAB 1: NATIONAL SCOUTING SCOREBOARD (COMPACT, SHAREABLE & VISUAL BARS)
+            TAB 1: NATIONAL SCOUTING SCOREBOARD
            ===================================================================== */}
         {activeMainTab === "SCOREBOARD" && (
           <section>
@@ -1717,22 +1818,24 @@ function AppContent() {
                   ))}
                 </div>
 
-                <button
-                  onClick={() => setActiveMainTab("LOCKER")}
-                  style={{
-                    backgroundColor: "rgba(166, 255, 0, 0.14)",
-                    border: `1px solid ${NEON_GREEN}`,
-                    color: NEON_GREEN,
-                    fontWeight: "900",
-                    padding: "7px 14px",
-                    borderRadius: "999px",
-                    fontSize: "11px",
-                    textTransform: "uppercase",
-                    cursor: "pointer"
-                  }}
-                >
-                  + Post / Edit My Numbers ➔
-                </button>
+                {userRole !== "SCOUT" && (
+                  <button
+                    onClick={() => setActiveMainTab("LOCKER")}
+                    style={{
+                      backgroundColor: "rgba(166, 255, 0, 0.14)",
+                      border: `1px solid ${NEON_GREEN}`,
+                      color: NEON_GREEN,
+                      fontWeight: "900",
+                      padding: "7px 14px",
+                      borderRadius: "999px",
+                      fontSize: "11px",
+                      textTransform: "uppercase",
+                      cursor: "pointer"
+                    }}
+                  >
+                    + Post / Edit My Numbers ➔
+                  </button>
+                )}
               </div>
 
               {/* Collapsible Advanced Filters */}
@@ -1812,13 +1915,15 @@ function AppContent() {
                     (account?.address && ath.walletAddress && account.address.toLowerCase() === ath.walletAddress.toLowerCase())
                   );
 
+                  // Gated Content check: Scout, Admin, or the athlete themselves
+                  const canViewContact = userRole === "SCOUT" || isAdmin || isCurrentUser;
+
                   const isEliteFB = parseFloat(ath.peakFB || "0") >= 92;
                   const isEliteStuff = parseFloat(ath.stuffPlus || "0") >= 110;
                   const isEliteIVB = parseFloat(ath.inducedVertBreak || "0") >= 18;
                   const isEliteEV = parseFloat(ath.maxExitVelo || "0") >= 100;
                   const isElite60 = parseFloat(ath.sixtyTime || "99") <= 6.65;
 
-                  // Build Quick Headline Badges for Compact Row
                   const headlinePills: { label: string; val: string; elite?: boolean }[] = [];
                   if (isPitcherRole) {
                     if (ath.peakFB) headlinePills.push({ label: "FB", val: `${ath.peakFB} mph`, elite: isEliteFB });
@@ -1972,23 +2077,46 @@ function AppContent() {
                             )}
                           </div>
 
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
-                            <div style={{ fontSize: "11px", color: "#a1a1aa", fontFamily: "monospace" }}>
-                              {ath.recordedDatePitching && <span>Pitch Date: {String(ath.recordedDatePitching).slice(0, 10)} </span>}
-                              {ath.recordedDateHitting && <span>Hit Date: {String(ath.recordedDateHitting).slice(0, 10)}</span>}
+                          {/* Gated Scout Info & Social Links */}
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+                            
+                            {/* Contact Gateway */}
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                              {canViewContact ? (
+                                <>
+                                  {ath.verificationLink && ath.verificationLink.startsWith("http") && (
+                                    <a
+                                      href={ath.verificationLink}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      style={{ backgroundColor: "rgba(255, 122, 0, 0.15)", border: "1px solid #ff7a00", color: "#ff9933", padding: "7px 12px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "900" }}
+                                    >
+                                      🎥 Watch Video Clip ↗
+                                    </a>
+                                  )}
+                                  {ath.phone && (
+                                    <a href={`tel:${ath.phone}`} style={{ backgroundColor: "#181822", border: "1px solid #3f3f4e", color: "#ffffff", padding: "7px 12px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "900" }}>
+                                      📞 {ath.phone}
+                                    </a>
+                                  )}
+                                  {ath.email && (
+                                    <a href={`mailto:${ath.email}`} style={{ backgroundColor: "#181822", border: "1px solid #3f3f4e", color: "#ffffff", padding: "7px 12px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "900" }}>
+                                      ✉️ {ath.email}
+                                    </a>
+                                  )}
+                                </>
+                              ) : (
+                                <button
+                                  onClick={() => handleOpenLogin("SCOUT")}
+                                  style={{ backgroundColor: "#121218", border: `1px dashed ${NEON_GREEN}`, color: NEON_GREEN, padding: "7px 12px", borderRadius: "8px", fontSize: "11px", fontWeight: "900", cursor: "pointer", textTransform: "uppercase" }}
+                                >
+                                  🔒 Contact & Video: [Verified Pro Login Required]
+                                </button>
+                              )}
                             </div>
 
+                            {/* Public Social Links */}
                             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                              {ath.verificationLink && ath.verificationLink.startsWith("http") && (
-                                <a
-                                  href={ath.verificationLink}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{ backgroundColor: "rgba(255, 122, 0, 0.15)", border: "1px solid #ff7a00", color: "#ff9933", padding: "7px 12px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "900" }}
-                                >
-                                  🎥 Watch Video Clip ↗
-                                </a>
-                              )}
                               {ath.social1_Url && (
                                 <a
                                   href={ath.social1_Url}
@@ -2022,9 +2150,9 @@ function AppContent() {
         )}
 
         {/* =====================================================================
-            TAB 2: BRAND DEALS & MEMBER PERKS (FLATTENED WITH 1-TAP FILTERS)
+            TAB 2: BRAND DEALS & MEMBER PERKS
            ===================================================================== */}
-        {activeMainTab === "EXCHANGE" && (
+        {activeMainTab === "EXCHANGE" && userRole !== "SCOUT" && (
           <section>
             {/* Member Drop #001 Slim Banner */}
             <div style={{ 
@@ -2148,7 +2276,7 @@ function AppContent() {
                         <div>
                           {!account ? (
                             <button
-                              onClick={handleOpenLogin}
+                              onClick={() => handleOpenLogin("ATHLETE")}
                               style={{ width: "100%", backgroundColor: "#16161f", color: NEON_GREEN, border: `1px dashed ${NEON_GREEN}`, fontWeight: "900", padding: "9px", borderRadius: "8px", fontSize: "11px", textTransform: "uppercase", cursor: "pointer" }}
                             >
                               🔒 Sign In to Unlock 20% Off Code
@@ -2246,7 +2374,7 @@ function AppContent() {
         {/* =====================================================================
             TAB 3: MY LOCKER (DIRECT IN-PAGE PROFILE & METRICS EDITOR)
            ===================================================================== */}
-        {activeMainTab === "LOCKER" && (
+        {activeMainTab === "LOCKER" && userRole !== "SCOUT" && (
           <section style={{ maxWidth: "720px", margin: "0 auto" }}>
             {!account ? (
               <div style={{ backgroundColor: "#0c0c10", border: `1.5px solid ${NEON_GREEN}`, borderRadius: "18px", padding: "32px 20px", textAlign: "center" }}>
@@ -2258,7 +2386,7 @@ function AppContent() {
                   Use your Google, Apple, or phone ID to create your player card, post verified scouting metrics, and claim your free 100 $SLUG membership key.
                 </p>
                 <button
-                  onClick={handleOpenLogin}
+                  onClick={() => handleOpenLogin("ATHLETE")}
                   style={{ backgroundColor: NEON_GREEN, color: "#000000", fontWeight: "950", padding: "13px 26px", borderRadius: "10px", border: "none", fontSize: "12px", textTransform: "uppercase", cursor: "pointer" }}
                 >
                   Athlete Sign In ➔
@@ -2869,7 +2997,7 @@ function AppContent() {
           boxShadow: "0 -8px 25px rgba(0, 0, 0, 0.7)",
         }}
       >
-        <div style={{ width: "100%", maxWidth: "540px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
+        <div style={{ width: "100%", maxWidth: "540px", display: "grid", gridTemplateColumns: userRole === "SCOUT" ? "1fr" : "1fr 1fr 1fr", gap: "8px" }}>
           <button
             onClick={() => {
               setActiveMainTab("SCOREBOARD");
@@ -2895,237 +3023,61 @@ function AppContent() {
             <span>Scoreboard</span>
           </button>
 
-          <button
-            onClick={() => {
-              setActiveMainTab("EXCHANGE");
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-            style={{
-              backgroundColor: activeMainTab === "EXCHANGE" ? "rgba(166, 255, 0, 0.15)" : "transparent",
-              color: activeMainTab === "EXCHANGE" ? NEON_GREEN : "#a1a1aa",
-              border: activeMainTab === "EXCHANGE" ? `1px solid ${NEON_GREEN}` : "1px solid transparent",
-              borderRadius: "10px",
-              padding: "8px 4px",
-              cursor: "pointer",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "2px",
-              fontWeight: "900",
-              fontSize: "10px",
-              textTransform: "uppercase",
-            }}
-          >
-            <span style={{ fontSize: "15px" }}>🤝</span>
-            <span>Brand Deals</span>
-          </button>
+          {userRole !== "SCOUT" && (
+            <>
+              <button
+                onClick={() => {
+                  setActiveMainTab("EXCHANGE");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                style={{
+                  backgroundColor: activeMainTab === "EXCHANGE" ? "rgba(166, 255, 0, 0.15)" : "transparent",
+                  color: activeMainTab === "EXCHANGE" ? NEON_GREEN : "#a1a1aa",
+                  border: activeMainTab === "EXCHANGE" ? `1px solid ${NEON_GREEN}` : "1px solid transparent",
+                  borderRadius: "10px",
+                  padding: "8px 4px",
+                  cursor: "pointer",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "2px",
+                  fontWeight: "900",
+                  fontSize: "10px",
+                  textTransform: "uppercase",
+                }}
+              >
+                <span style={{ fontSize: "15px" }}>🤝</span>
+                <span>Brand Deals</span>
+              </button>
 
-          <button
-            onClick={() => {
-              setActiveMainTab("LOCKER");
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-            style={{
-              backgroundColor: activeMainTab === "LOCKER" ? "rgba(166, 255, 0, 0.15)" : "transparent",
-              color: activeMainTab === "LOCKER" ? NEON_GREEN : "#a1a1aa",
-              border: activeMainTab === "LOCKER" ? `1px solid ${NEON_GREEN}` : "1px solid transparent",
-              borderRadius: "10px",
-              padding: "8px 4px",
-              cursor: "pointer",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "2px",
-              fontWeight: "900",
-              fontSize: "10px",
-              textTransform: "uppercase",
-            }}
-          >
-            <span style={{ fontSize: "15px" }}>👤</span>
-            <span>My Locker {hasProfile ? "✓" : ""}</span>
-          </button>
+              <button
+                onClick={() => {
+                  setActiveMainTab("LOCKER");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                style={{
+                  backgroundColor: activeMainTab === "LOCKER" ? "rgba(166, 255, 0, 0.15)" : "transparent",
+                  color: activeMainTab === "LOCKER" ? NEON_GREEN : "#a1a1aa",
+                  border: activeMainTab === "LOCKER" ? `1px solid ${NEON_GREEN}` : "1px solid transparent",
+                  borderRadius: "10px",
+                  padding: "8px 4px",
+                  cursor: "pointer",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "2px",
+                  fontWeight: "900",
+                  fontSize: "10px",
+                  textTransform: "uppercase",
+                }}
+              >
+                <span style={{ fontSize: "15px" }}>👤</span>
+                <span>My Locker {hasProfile ? "✓" : ""}</span>
+              </button>
+            </>
+          )}
         </div>
       </nav>
-
-      {/* 100 $SLUG MEMBERSHIP KEY CLAIM MODAL */}
-      {showClaimPromptModal && account && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.9)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1200, padding: "16px" }}>
-          <div style={{ backgroundColor: "#0c0c10", border: `2px solid ${NEON_GREEN}`, borderRadius: "22px", width: "100%", maxWidth: "460px", padding: "26px 22px", textAlign: "center", boxShadow: "0 0 45px rgba(166, 255, 0, 0.2)" }}>
-            <div style={{ fontSize: "34px", marginBottom: "6px" }}>🔑</div>
-            <span style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>
-              Final Step • 100% Free
-            </span>
-            <h3 style={{ margin: "6px 0 10px 0", fontSize: "21px", fontWeight: "950", textTransform: "uppercase", color: "#ffffff" }}>
-              Activate Your 100 $SLUG Key
-            </h3>
-            <p style={{ fontSize: "13px", color: "#d4d4d8", lineHeight: "1.5", margin: "0 0 18px 0" }}>
-              Your player profile is saved! Tap below to claim your free <strong style={{ color: "#ffffff" }}>100 $SLUG membership key</strong> to unlock upcoming member giveaways, your 20% off TAG Sports code, and Direct Brand Intros.
-            </p>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              <TransactionButton
-                transaction={() =>
-                  claimTo({
-                    contract: sluggerContract,
-                    to: account.address,
-                    quantity: "100",
-                  })
-                }
-                onTransactionConfirmed={() => {
-                  setJustClaimed(true);
-                  refetchBalance();
-                  refetchSupply();
-                  setShowClaimPromptModal(false);
-                }}
-                onError={(err) => alert(`Claim error: ${err.message}`)}
-                style={{ width: "100%", backgroundColor: NEON_GREEN, color: "#000000", fontWeight: "950", textTransform: "uppercase", letterSpacing: "1px", padding: "14px", borderRadius: "10px", border: "none", cursor: "pointer", fontSize: "13px" }}
-              >
-                🔑 Claim 100 Free $SLUG Now
-              </TransactionButton>
-
-              <button
-                onClick={() => setShowClaimPromptModal(false)}
-                style={{ width: "100%", backgroundColor: "transparent", border: "1px solid #33333d", color: "#a1a1aa", fontWeight: "800", padding: "10px", borderRadius: "10px", cursor: "pointer", fontSize: "11px", textTransform: "uppercase" }}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* PRE-SEND PROFILE VERIFICATION MODAL (ALL DIRECT INTROS) */}
-      {pendingIntroBrand && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.9)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1150, padding: "16px" }}>
-          <div style={{ backgroundColor: "#0c0c10", border: `2px solid ${NEON_GREEN}`, borderRadius: "22px", width: "100%", maxWidth: "540px", padding: "24px", boxShadow: "0 0 45px rgba(166, 255, 0, 0.2)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
-              <div>
-                <span style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>
-                  Verify Your Dossier
-                </span>
-                <h3 style={{ margin: "4px 0 0 0", fontSize: "20px", fontWeight: "950", textTransform: "uppercase", color: "#ffffff" }}>
-                  Send Intro to {pendingIntroBrand.name}?
-                </h3>
-              </div>
-              <button
-                onClick={() => setPendingIntroBrand(null)}
-                style={{ background: "none", border: "none", color: "#ffffff", fontSize: "20px", cursor: "pointer" }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <p style={{ fontSize: "13px", color: "#d4d4d8", lineHeight: "1.5", margin: "0 0 14px 0" }}>
-              We will email your player profile directly to <strong style={{ color: "#ffffff" }}>{pendingIntroBrand.brandRepName || pendingIntroBrand.name}</strong> and CC you so you can connect directly.
-            </p>
-
-            <div style={{ backgroundColor: "#07070a", border: "1px solid #262632", borderRadius: "14px", padding: "14px", marginBottom: "18px", display: "flex", flexDirection: "column", gap: "8px", fontSize: "12px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "#a1a1aa", fontWeight: "700" }}>Athlete & School:</span>
-                <span style={{ color: "#ffffff", fontWeight: "900" }}>{profile.fullName} • <span style={{ color: NEON_GREEN }}>{profile.college || "Undeclared"}</span></span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "#a1a1aa", fontWeight: "700" }}>Position / Class:</span>
-                <span style={{ color: "#ffffff", fontWeight: "800" }}>{profile.position || "ATH"} ({profile.primaryRole}) • {profile.collegeYear}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "#a1a1aa", fontWeight: "700" }}>Contact:</span>
-                <span style={{ color: "#ffffff", fontWeight: "800" }}>{profile.email} {profile.phone ? `• ${profile.phone}` : ""}</span>
-              </div>
-            </div>
-
-            <div style={{ display: "flex", gap: "10px" }}>
-              <button
-                type="button"
-                onClick={() => {
-                  setPendingIntroBrand(null);
-                  setActiveMainTab("LOCKER");
-                }}
-                style={{
-                  flex: 1,
-                  backgroundColor: "#181820",
-                  color: "#ffffff",
-                  border: "1px solid #3f3f4e",
-                  fontWeight: "900",
-                  textTransform: "uppercase",
-                  padding: "13px",
-                  borderRadius: "10px",
-                  cursor: "pointer",
-                  fontSize: "11px"
-                }}
-              >
-                Edit Locker First ⚙️
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmAndSendIntro}
-                style={{
-                  flex: 1.4,
-                  backgroundColor: NEON_GREEN,
-                  color: "#000000",
-                  border: "none",
-                  fontWeight: "950",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.8px",
-                  padding: "13px",
-                  borderRadius: "10px",
-                  cursor: "pointer",
-                  fontSize: "12px"
-                }}
-              >
-                Confirm & Send Intro ⚡
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 60-DAY LOCKOUT NOTIFICATION MODAL */}
-      {dispatchedBrand && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.88)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1100, padding: "16px" }}>
-          <div style={{ backgroundColor: "#0d0d12", border: `2px solid ${isLockoutModal ? "#eab308" : NEON_GREEN}`, borderRadius: "24px", width: "100%", maxWidth: "500px", padding: "26px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-              <span style={{ fontSize: "28px" }}>{isLockoutModal ? "⏳" : "⚡"}</span>
-              <div>
-                <span style={{ fontSize: "11px", fontWeight: "900", color: isLockoutModal ? "#eab308" : NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>
-                  {isLockoutModal ? "Direct Intro Already Active" : "Direct Intro Dispatched"}
-                </span>
-                <h3 style={{ margin: "2px 0 0 0", fontSize: "22px", fontWeight: "900", textTransform: "uppercase", color: "#ffffff" }}>
-                  {dispatchedBrand.name}
-                </h3>
-              </div>
-            </div>
-
-            <p style={{ fontSize: "13px", color: "#d4d4d8", lineHeight: "1.5", margin: "12px 0 18px 0" }}>
-              {isLockoutModal 
-                ? `You already sent an intro to ${dispatchedBrand.name}. Check your email inbox for your CC'd introduction thread (~${getDaysRemaining(dispatchedBrand.name)} days left in current window).`
-                : `Your verified player dossier has been emailed directly to ${dispatchedBrand.name} with you CC'd on the thread!`}
-            </p>
-
-            <button
-              onClick={() => {
-                setDispatchedBrand(null);
-                setIsLockoutModal(false);
-              }}
-              style={{
-                width: "100%",
-                backgroundColor: isLockoutModal ? "#262626" : NEON_GREEN,
-                color: isLockoutModal ? "#ffffff" : "#000000",
-                fontWeight: "900",
-                textTransform: "uppercase",
-                letterSpacing: "1px",
-                padding: "13px",
-                borderRadius: "10px",
-                border: "none",
-                cursor: "pointer",
-                fontSize: "12px"
-              }}
-            >
-              Done ➔
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
