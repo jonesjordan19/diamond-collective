@@ -301,6 +301,9 @@ function AppContent() {
 
   const handleOpenLogin = (roleTarget: "ATHLETE" | "SCOUT") => {
     setIntendedRole(roleTarget);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("pending_login_role", roleTarget);
+    }
     connect({
       client, wallets: supportedWallets,
       accountAbstraction: { chain: base, sponsorGas: true },
@@ -379,8 +382,20 @@ function AppContent() {
       const localScoutKey = `scout_profile_${lowerWallet}`;
       const acctEmail = (account as any)?.email || "";
       
+      const pendingRole = localStorage.getItem("pending_login_role");
       const savedRole = localStorage.getItem(localRoleKey);
-      if (savedRole === "SCOUT" || intendedRole === "SCOUT") {
+      
+      let finalRole = "ATHLETE";
+      if (pendingRole) {
+        finalRole = pendingRole;
+        localStorage.removeItem("pending_login_role"); 
+      } else if (savedRole) {
+        finalRole = savedRole;
+      } else if (intendedRole) {
+        finalRole = intendedRole;
+      }
+
+      if (finalRole === "SCOUT") {
         setUserRole("SCOUT");
         localStorage.setItem(localRoleKey, "SCOUT");
         const savedScout = localStorage.getItem(localScoutKey);
@@ -430,7 +445,6 @@ function AppContent() {
     
     const payload = { action: "saveScout", walletAddress: lowerWallet, fullName: scoutProfile.fullName, organization: scoutProfile.organization, jobTitle: scoutProfile.jobTitle, email: scoutProfile.email, verificationLink: scoutProfile.verificationLink };
     
-    // Explicitly update status to Pending on save
     const newScoutState = { ...scoutProfile, verificationStatus: "Pending" };
     setScoutProfile(newScoutState);
     localStorage.setItem(`scout_profile_${lowerWallet}`, JSON.stringify(newScoutState));
