@@ -51,12 +51,39 @@ const MARKET_SECTIONS: MarketCategory[] = [
     ],
   },
   {
+    title: "Eyewear & Vision", emoji: "🕶️",
+    brands: [
+      { name: "Vision X Sports", tagline: "Cognitive, Visual & Reaction Training", description: "13-level performance series connecting eye tracking and depth perception.", buttonText: "Request Direct Intro ⚡", type: "email_intro", brandRepEmail: "r.curry@visionxsports.com", brandRepName: "R. Curry (Vision X Sports)", isPrimary: true },
+    ],
+  },
+  {
     title: "Clothing & Apparel", emoji: "🧢",
     brands: [
       { name: "Baseballism", tagline: "Premium Baseball Lifestyle & Streetwear", description: "The premier lifestyle brand honoring the game's culture.", buttonText: "Open Collaboration Form ↗", type: "affiliate_link", link: "https://www.baseballism.com/pages/collabs-1?srsltid=AfmBOoqEktT0nGezfmx_xgwZmPpmD3k9pAy5xaq4E8D4suS0UqhDCmVD" },
       { name: "Vuori", tagline: "V1 Community Pro Network", description: "A network of athletes united by movement.", buttonText: "Join V1 Community ↗", type: "affiliate_link", link: "https://vuoriclothing.com/pages/v1-community-program" },
     ],
-  }
+  },
+  {
+    title: "Footwear", emoji: "👟",
+    brands: [
+      { name: "Nike", tagline: "Official Nike Affiliate Network", description: "Earn competitive commissions promoting Nike cleats and gear.", buttonText: "Open Nike Publisher App ↗", type: "affiliate_link", link: "https://public.cj.com/signup/publisher?advertiserId=4942550#/branded" },
+      { name: "Mizuno", tagline: "The Mizuno Movement Athlete Program", description: "Gain access to exclusive high-performance diamond footwear.", buttonText: "Join Mizuno Movement ↗", type: "affiliate_link", link: "https://usa.mizuno.com/mizuno-movement/" },
+      { name: "Under Armour", tagline: "Under Armour Athlete Partner Program", description: "Earn commissions on referred clickthrough sales.", buttonText: "Open UA Partner Program ↗", type: "affiliate_link", link: "https://www.underarmour.com/en-us/t/ua-affiliate-program/" },
+    ],
+  },
+  {
+    title: "Nutrition", emoji: "⚡",
+    brands: [
+      { name: "Just Ingredients", tagline: "Clean Supplements, Hydration & Electrolytes", description: "Turn your passion into creator commissions.", buttonText: "Open Creator Portal ↗", type: "affiliate_link", link: "https://justingredients.com/pages/creator-program?srsltid=AfmBOoq02ujUzQv9eCCYLpLz1rYNSsFxQed5F2KxhsN-qNQNTshataQw" },
+      { name: "King of the Jungle", tagline: "Elite Pre-Workout & Nootropic Performance", description: "Scientifically dosed Nitric Oxide activators and hydration electrolytes.", buttonText: "Join Ambassador Program ↗", type: "affiliate_link", link: "https://kingofthejungle.com/pages/brand-ambassador" },
+    ],
+  },
+  {
+    title: "Player Services", emoji: "🤝",
+    brands: [
+      { name: "Baseball Players of the World", tagline: "Global Playing Opportunities & Media", description: "Helping baseball players maximize the value of their careers.", buttonText: "Submit Player Dossier ↗", type: "affiliate_link", link: "https://docs.google.com/forms/d/e/1FAIpQLSdqJDUk_maSDgFXyYHG0V5VZy7AgT_kBtPHRaSojhqkTyiYDw/viewform" },
+    ],
+  },
 ];
 
 const FAQS = [
@@ -93,7 +120,7 @@ const emptyProfile: AthleteProfile = {
   inducedVertBreak: "", horizontalBreak: "", vertApproachAngle: "", releaseExtension: "", releaseHeight: "", kPercentage: "", bbPercentage: "", kMinusBbPercentage: "",
 };
 
-const emptyScout: ScoutProfile = { fullName: "", organization: "", jobTitle: "", email: "", verificationLink: "", verificationStatus: "Pending" };
+const emptyScout: ScoutProfile = { fullName: "", organization: "", jobTitle: "", email: "", verificationLink: "", verificationStatus: "UNREGISTERED" };
 
 function MetricBar({ label, valueStr, unit, min, max, eliteThreshold, invert = false, subLabel }: { label: string; valueStr?: string; unit: string; min: number; max: number; eliteThreshold: number; invert?: boolean; subLabel?: string; }) {
   const num = parseFloat(valueStr || "");
@@ -294,7 +321,7 @@ function AppContent() {
   const hasProfile = Boolean(profile.fullName && profile.email);
   const isFullyOnboardedAthlete = Boolean(account && hasProfile && isUnlocked && userRole === "ATHLETE");
 
-  const isScoutOnboarded = Boolean(scoutProfile.fullName && scoutProfile.organization && scoutProfile.verificationLink);
+  const isScoutOnboarded = scoutProfile.verificationStatus !== "UNREGISTERED";
   const isScoutApproved = scoutProfile.verificationStatus === "Approved";
 
   const handleCopyCode = () => { navigator.clipboard.writeText("DIAMONDCOLLECTIVE"); setCopiedCode(true); setTimeout(() => setCopiedCode(false), 2500); };
@@ -376,7 +403,6 @@ function AppContent() {
           localStorage.setItem(localScoutKey, JSON.stringify(data.scoutProfile));
           if (data.scoutProfile.verificationStatus === "Pending") setShowScoutPendingModal(true);
         } else if (userRole === "SCOUT" && (!data || !data.scoutProfile)) {
-          // If backend returns nothing but local storage thought we were a scout, clear it to unstick the UI.
           setScoutProfile({ ...emptyScout, email: acctEmail });
           localStorage.removeItem(localScoutKey);
         } else if (data && data.profile && data.profile.fullName) {
@@ -403,6 +429,8 @@ function AppContent() {
     const lowerWallet = account.address.toLowerCase();
     
     const payload = { action: "saveScout", walletAddress: lowerWallet, fullName: scoutProfile.fullName, organization: scoutProfile.organization, jobTitle: scoutProfile.jobTitle, email: scoutProfile.email, verificationLink: scoutProfile.verificationLink };
+    
+    // Explicitly update status to Pending on save
     const newScoutState = { ...scoutProfile, verificationStatus: "Pending" };
     setScoutProfile(newScoutState);
     localStorage.setItem(`scout_profile_${lowerWallet}`, JSON.stringify(newScoutState));
@@ -562,7 +590,7 @@ function AppContent() {
           <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
             {account ? (
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                {userRole === "SCOUT" && (
+                {userRole === "SCOUT" && isScoutOnboarded && (
                    <span onClick={() => { if (!isScoutApproved) setShowScoutPendingModal(true); }} style={{ backgroundColor: isScoutApproved ? "rgba(166, 255, 0, 0.12)" : "rgba(255, 184, 0, 0.12)", border: `1px solid ${isScoutApproved ? NEON_GREEN : "#ffb800"}`, color: isScoutApproved ? NEON_GREEN : "#ffb800", fontSize: "10px", fontWeight: "900", padding: "7px 10px", borderRadius: "8px", textTransform: "uppercase", cursor: isScoutApproved ? "default" : "pointer" }}>
                      {isScoutApproved ? "Verified Pro" : "Pro Review Pending"}
                    </span>
@@ -885,7 +913,10 @@ function AppContent() {
                       <div><label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "3px" }}>VAA (°)</label><input type="number" step="0.1" placeholder="-4.6" value={profile.vertApproachAngle || ""} onChange={(e) => setProfile({ ...profile, vertApproachAngle: e.target.value })} style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "8px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }} /></div>
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px" }}>
-                      <div><label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "3px" }}>OFF-SPEED</label><select value={profile.offSpeedType || "Slider"} onChange={(e) => setProfile({ ...profile, offSpeedType: e.target.value })} style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "8px 4px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}><option value="Slider">Slider</option><option value="Sweeper">Sweeper</option><option value="Curveball">Curveball</option><option value="Changeup">Changeup</option><option value="Cutter">Cutter</option><option value="Splitter">Splitter</option></select></div>
+                      <div>
+                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "3px" }}>OFF-SPEED</label>
+                        <select value={profile.offSpeedType || "Slider"} onChange={(e) => setProfile({ ...profile, offSpeedType: e.target.value })} style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "8px 4px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}><option value="Slider">Slider</option><option value="Sweeper">Sweeper</option><option value="Curveball">Curveball</option><option value="Changeup">Changeup</option><option value="Cutter">Cutter</option><option value="Splitter">Splitter</option></select>
+                      </div>
                       <div><label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "3px" }}>OS VELO</label><input type="number" step="0.1" placeholder="83.4" value={profile.offSpeedVelo || ""} onChange={(e) => setProfile({ ...profile, offSpeedVelo: e.target.value })} style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "8px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }} /></div>
                       <div><label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "3px" }}>K%</label><input type="number" step="0.1" placeholder="30" value={profile.kPercentage || ""} onChange={(e) => setProfile({ ...profile, kPercentage: e.target.value })} style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "8px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }} /></div>
                       <div><label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "3px" }}>BB%</label><input type="number" step="0.1" placeholder="6" value={profile.bbPercentage || ""} onChange={(e) => setProfile({ ...profile, bbPercentage: e.target.value })} style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "8px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }} /></div>
