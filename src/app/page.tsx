@@ -3,14 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { createThirdwebClient, getContract } from "thirdweb";
 import { base } from "thirdweb/chains";
-import { 
-  ThirdwebProvider, 
-  ConnectButton, 
-  TransactionButton, 
-  useActiveAccount, 
-  useReadContract,
-  useConnectModal
-} from "thirdweb/react";
+import { ThirdwebProvider, ConnectButton, TransactionButton, useActiveAccount, useReadContract, useConnectModal } from "thirdweb/react";
 import { inAppWallet } from "thirdweb/wallets";
 import { getBalance, claimTo, totalSupply } from "thirdweb/extensions/erc20";
 
@@ -21,70 +14,34 @@ const NEON_GREEN = "#a6ff00";
 const FOUNDERS_POOL_TOTAL = 100000;
 const SIXTY_DAYS_MS = 60 * 24 * 60 * 60 * 1000;
 
-const client = createThirdwebClient({
-  clientId: "770a552ed494b40543a6696298d41606",
-});
+const client = createThirdwebClient({ clientId: "770a552ed494b40543a6696298d41606" });
+const sluggerContract = getContract({ client, chain: base, address: "0xF3f6D32ABCf2fDeAB3c6D0b440230714166Cc4A1" });
+const supportedWallets = [inAppWallet({ auth: { options: ["google", "apple", "phone"] }, smartAccount: { chain: base, sponsorGas: true } })];
 
-const sluggerContract = getContract({
-  client,
-  chain: base,
-  address: "0xF3f6D32ABCf2fDeAB3c6D0b440230714166Cc4A1",
-});
-
-const supportedWallets = [
-  inAppWallet({
-    auth: {
-      options: ["google", "apple", "phone"],
-    },
-    smartAccount: {
-      chain: base,
-      sponsorGas: true,
-    },
-  }),
-];
-
-// --- BRAND MARKETPLACE DATA ---
 interface BrandItem {
-  name: string;
-  tagline: string;
-  description: string;
-  buttonText: string;
-  type: "email_intro" | "affiliate_link";
-  link?: string;
-  brandRepEmail?: string;
-  brandRepName?: string;
-  isPrimary?: boolean;
-  couponCode?: string;
-  couponLabel?: string;
-  categoryTag?: string;
+  name: string; tagline: string; description: string; buttonText: string; type: "email_intro" | "affiliate_link";
+  link?: string; brandRepEmail?: string; brandRepName?: string; isPrimary?: boolean; couponCode?: string; couponLabel?: string; categoryTag?: string;
 }
 
-interface MarketCategory {
-  title: string;
-  emoji: string;
-  brands: BrandItem[];
-}
+interface MarketCategory { title: string; emoji: string; brands: BrandItem[]; }
 
 const MARKET_SECTIONS: MarketCategory[] = [
   {
-    title: "Technology",
-    emoji: "📱",
+    title: "Technology", emoji: "📱",
     brands: [
       { name: "TAG Sports", tagline: "Smart Sports Radar & AiCE Coaching", description: "Aerospace-precision velocity tracking with zero subscription fees.", buttonText: "Request Direct Intro ⚡", type: "email_intro", brandRepEmail: "clucas@tagsports.ai", brandRepName: "C. Lucas (TAG Sports)", link: "https://tagsports.ai", couponCode: "DIAMONDCOLLECTIVE", couponLabel: "20% Off Member Code", isPrimary: true },
       { name: "Pocket Radar", tagline: "Smart Coach Velocity & Data Tracking", description: "Quantify throw and exit velocity on every swing, pitch, and throw.", buttonText: "Register Ambassador Unit ↗", type: "affiliate_link", link: "https://af.uppromote.com/pocket-radar-inc/register" },
     ],
   },
   {
-    title: "Hitting",
-    emoji: "💥",
+    title: "Hitting", emoji: "💥",
     brands: [
       { name: "Frost Gear", tagline: "Cold-Weather Performance Batting Gear", description: "Engineered with advanced thermal materials to keep hands warm, responsive, and game-ready.", buttonText: "Request Direct Intro ⚡", type: "email_intro", brandRepEmail: "parker@maxbp.com", brandRepName: "Parker (MaxBP & Frost Gear)", isPrimary: true },
       { name: "Soldier Sports", tagline: "Team Soldier TANK Ambassador Program", description: "Apply to join the Team Soldier TANK Ambassador Program.", buttonText: "Open Ambassador Application ↗", type: "affiliate_link", link: "https://soldiersports.us/pages/ambassador" },
     ],
   },
   {
-    title: "Equipment",
-    emoji: "⚾",
+    title: "Equipment", emoji: "⚾",
     brands: [
       { name: "MaxBP", tagline: "High-Velocity Reaction & Vision Training", description: "Train fast with the premier small-ball reaction and hitting machines.", buttonText: "Request Direct Intro ⚡", type: "email_intro", brandRepEmail: "parker@maxbp.com", brandRepName: "Parker (MaxBP)", isPrimary: true },
       { name: "Yardley Sports", tagline: "Handcrafted Custom Leather Gloves", description: "Premium handcrafted baseball gloves built with pro patterns.", buttonText: "Request Direct Intro ⚡", type: "email_intro", brandRepEmail: "braden@yardleysports.com", brandRepName: "Braden (Yardley Sports)", isPrimary: true },
@@ -94,44 +51,12 @@ const MARKET_SECTIONS: MarketCategory[] = [
     ],
   },
   {
-    title: "Eyewear & Vision",
-    emoji: "🕶️",
-    brands: [
-      { name: "Vision X Sports", tagline: "Cognitive, Visual & Reaction Training", description: "13-level performance series connecting eye tracking and depth perception.", buttonText: "Request Direct Intro ⚡", type: "email_intro", brandRepEmail: "r.curry@visionxsports.com", brandRepName: "R. Curry (Vision X Sports)", isPrimary: true },
-    ],
-  },
-  {
-    title: "Clothing & Apparel",
-    emoji: "🧢",
+    title: "Clothing & Apparel", emoji: "🧢",
     brands: [
       { name: "Baseballism", tagline: "Premium Baseball Lifestyle & Streetwear", description: "The premier lifestyle brand honoring the game's culture.", buttonText: "Open Collaboration Form ↗", type: "affiliate_link", link: "https://www.baseballism.com/pages/collabs-1?srsltid=AfmBOoqEktT0nGezfmx_xgwZmPpmD3k9pAy5xaq4E8D4suS0UqhDCmVD" },
       { name: "Vuori", tagline: "V1 Community Pro Network", description: "A network of athletes united by movement.", buttonText: "Join V1 Community ↗", type: "affiliate_link", link: "https://vuoriclothing.com/pages/v1-community-program" },
     ],
-  },
-  {
-    title: "Footwear",
-    emoji: "👟",
-    brands: [
-      { name: "Nike", tagline: "Official Nike Affiliate Network", description: "Earn competitive commissions promoting Nike cleats and gear.", buttonText: "Open Nike Publisher App ↗", type: "affiliate_link", link: "https://public.cj.com/signup/publisher?advertiserId=4942550#/branded" },
-      { name: "Mizuno", tagline: "The Mizuno Movement Athlete Program", description: "Gain access to exclusive high-performance diamond footwear.", buttonText: "Join Mizuno Movement ↗", type: "affiliate_link", link: "https://usa.mizuno.com/mizuno-movement/" },
-      { name: "Under Armour", tagline: "Under Armour Athlete Partner Program", description: "Earn commissions on referred clickthrough sales.", buttonText: "Open UA Partner Program ↗", type: "affiliate_link", link: "https://www.underarmour.com/en-us/t/ua-affiliate-program/" },
-    ],
-  },
-  {
-    title: "Nutrition",
-    emoji: "⚡",
-    brands: [
-      { name: "Just Ingredients", tagline: "Clean Supplements, Hydration & Electrolytes", description: "Turn your passion into creator commissions.", buttonText: "Open Creator Portal ↗", type: "affiliate_link", link: "https://justingredients.com/pages/creator-program?srsltid=AfmBOoq02ujUzQv9eCCYLpLz1rYNSsFxQed5F2KxhsN-qNQNTshataQw" },
-      { name: "King of the Jungle", tagline: "Elite Pre-Workout & Nootropic Performance", description: "Scientifically dosed Nitric Oxide activators and hydration electrolytes.", buttonText: "Join Ambassador Program ↗", type: "affiliate_link", link: "https://kingofthejungle.com/pages/brand-ambassador" },
-    ],
-  },
-  {
-    title: "Player Services",
-    emoji: "🤝",
-    brands: [
-      { name: "Baseball Players of the World", tagline: "Global Playing Opportunities & Media", description: "Helping baseball players maximize the value of their careers.", buttonText: "Submit Player Dossier ↗", type: "affiliate_link", link: "https://docs.google.com/forms/d/e/1FAIpQLSdqJDUk_maSDgFXyYHG0V5VZy7AgT_kBtPHRaSojhqkTyiYDw/viewform" },
-    ],
-  },
+  }
 ];
 
 const FAQS = [
@@ -141,7 +66,6 @@ const FAQS = [
   { q: "I'm a Scout or Coach. How do I view player contact info?", a: "Click 'Scout & Pro Access' in the header to log in. Once you complete your brief Pro Credential profile and are approved by our team, you will unlock full access to the athletes' cell phones, emails, and TrackMan video links directly on their Scoreboard cards." },
 ];
 
-// --- REGION / STATE MAPPING FOR SCOUTS ---
 const REGIONS: Record<string, string[]> = {
   "West": ["UT", "AZ", "CA", "NV", "ID", "WA", "OR", "CO", "NM", "MT", "WY", "HI"],
   "Midwest": ["ND", "SD", "NE", "KS", "MN", "IA", "MO", "WI", "IL", "MI", "IN", "OH"],
@@ -150,98 +74,40 @@ const REGIONS: Record<string, string[]> = {
 };
 
 export interface AthleteProfile {
-  verificationStatus?: string;
-  fullName: string;
-  email: string;
-  phone: string;
-  college: string;
-  state?: string;
-  position: string;
-  collegeYear: string;
-  playerStatus: string;
-  verificationLink: string;
-  height?: string;
-  weight?: string;
-  primaryRole: "HITTER" | "PITCHER" | "TWP";
-  isProfileVisible: boolean;
-  walletAddress?: string;
-  social1_Type?: string;
-  social1_Url?: string;
-  social2_Type?: string;
-  social2_Url?: string;
-  maxExitVelo?: string;
-  ninetyEV?: string;
-  batSpeed?: string;
-  sixtyTime?: string;
-  recordedDateHitting?: string;
-  peakFB?: string;
-  sittingFB?: string;
-  offSpeedVelo?: string;
-  offSpeedType?: string;
-  fbSpinRate?: string;
-  offSpeedSpinRate?: string;
-  firstPitchStrike?: string;
-  recordedDatePitching?: string;
-  stuffPlus?: string;
-  locationPlus?: string;
-  pitchingPlus?: string;
-  inducedVertBreak?: string;
-  horizontalBreak?: string;
-  vertApproachAngle?: string;
-  releaseExtension?: string;
-  releaseHeight?: string;
-  kPercentage?: string;
-  bbPercentage?: string;
-  kMinusBbPercentage?: string;
+  verificationStatus?: string; fullName: string; email: string; phone: string; college: string; state?: string; position: string; collegeYear: string; playerStatus: string; verificationLink: string;
+  height?: string; weight?: string; primaryRole: "HITTER" | "PITCHER" | "TWP"; isProfileVisible: boolean; walletAddress?: string; social1_Type?: string; social1_Url?: string; social2_Type?: string; social2_Url?: string;
+  maxExitVelo?: string; ninetyEV?: string; batSpeed?: string; sixtyTime?: string; recordedDateHitting?: string; peakFB?: string; sittingFB?: string; offSpeedVelo?: string; offSpeedType?: string;
+  fbSpinRate?: string; offSpeedSpinRate?: string; firstPitchStrike?: string; recordedDatePitching?: string; stuffPlus?: string; locationPlus?: string; pitchingPlus?: string;
+  inducedVertBreak?: string; horizontalBreak?: string; vertApproachAngle?: string; releaseExtension?: string; releaseHeight?: string; kPercentage?: string; bbPercentage?: string; kMinusBbPercentage?: string;
 }
 
 export interface ScoutProfile {
-  fullName: string;
-  organization: string;
-  jobTitle: string;
-  email: string;
-  verificationLink: string;
-  verificationStatus?: string;
-  walletAddress?: string;
+  fullName: string; organization: string; jobTitle: string; email: string; verificationLink: string; verificationStatus?: string; walletAddress?: string;
 }
 
 const emptyProfile: AthleteProfile = {
-  verificationStatus: "Pending",
-  fullName: "", email: "", phone: "", college: "", state: "UT", position: "",
-  collegeYear: "Freshman", playerStatus: "Incoming Freshman", verificationLink: "",
-  height: "", weight: "", primaryRole: "HITTER", isProfileVisible: true, walletAddress: "",
-  social1_Type: "X", social1_Url: "", social2_Type: "IG", social2_Url: "",
-  maxExitVelo: "", ninetyEV: "", batSpeed: "", sixtyTime: "", recordedDateHitting: "",
-  peakFB: "", sittingFB: "", offSpeedVelo: "", offSpeedType: "Slider", fbSpinRate: "",
-  offSpeedSpinRate: "", firstPitchStrike: "", recordedDatePitching: "", stuffPlus: "",
-  locationPlus: "", pitchingPlus: "", inducedVertBreak: "", horizontalBreak: "",
-  vertApproachAngle: "", releaseExtension: "", releaseHeight: "", kPercentage: "",
-  bbPercentage: "", kMinusBbPercentage: "",
+  verificationStatus: "Pending", fullName: "", email: "", phone: "", college: "", state: "UT", position: "", collegeYear: "Freshman", playerStatus: "Incoming Freshman", verificationLink: "",
+  height: "", weight: "", primaryRole: "HITTER", isProfileVisible: true, walletAddress: "", social1_Type: "X", social1_Url: "", social2_Type: "IG", social2_Url: "",
+  maxExitVelo: "", ninetyEV: "", batSpeed: "", sixtyTime: "", recordedDateHitting: "", peakFB: "", sittingFB: "", offSpeedVelo: "", offSpeedType: "Slider",
+  fbSpinRate: "", offSpeedSpinRate: "", firstPitchStrike: "", recordedDatePitching: "", stuffPlus: "", locationPlus: "", pitchingPlus: "",
+  inducedVertBreak: "", horizontalBreak: "", vertApproachAngle: "", releaseExtension: "", releaseHeight: "", kPercentage: "", bbPercentage: "", kMinusBbPercentage: "",
 };
 
-const emptyScout: ScoutProfile = {
-  fullName: "", organization: "", jobTitle: "", email: "", verificationLink: "", verificationStatus: "Pending"
-};
+const emptyScout: ScoutProfile = { fullName: "", organization: "", jobTitle: "", email: "", verificationLink: "", verificationStatus: "Pending" };
 
 function MetricBar({ label, valueStr, unit, min, max, eliteThreshold, invert = false, subLabel }: { label: string; valueStr?: string; unit: string; min: number; max: number; eliteThreshold: number; invert?: boolean; subLabel?: string; }) {
   const num = parseFloat(valueStr || "");
   if (isNaN(num)) return null;
-
   const isElite = invert ? num <= eliteThreshold : num >= eliteThreshold;
   let pct = invert ? ((max - num) / (max - min)) * 100 : ((num - min) / (max - min)) * 100;
   pct = Math.max(10, Math.min(100, Math.round(pct)));
-
   const barColor = isElite ? "#ffb800" : NEON_GREEN;
 
   return (
     <div style={{ marginBottom: "10px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px", marginBottom: "4px", fontFamily: "monospace" }}>
-        <span style={{ color: "#d4d4d8", fontWeight: "800" }}>
-          {label} {subLabel && <span style={{ color: "#71717a", fontWeight: "600" }}>({subLabel})</span>}
-        </span>
-        <span style={{ color: isElite ? "#ffb800" : "#ffffff", fontWeight: "950", fontSize: "12px" }}>
-          {isElite ? "🔥 " : ""}{valueStr}{unit}
-        </span>
+        <span style={{ color: "#d4d4d8", fontWeight: "800" }}>{label} {subLabel && <span style={{ color: "#71717a", fontWeight: "600" }}>({subLabel})</span>}</span>
+        <span style={{ color: isElite ? "#ffb800" : "#ffffff", fontWeight: "950", fontSize: "12px" }}>{isElite ? "🔥 " : ""}{valueStr}{unit}</span>
       </div>
       <div style={{ width: "100%", height: "7px", backgroundColor: "#16161f", borderRadius: "999px", overflow: "hidden", border: "1px solid #262632" }}>
         <div style={{ width: `${pct}%`, height: "100%", backgroundColor: barColor, borderRadius: "999px", boxShadow: isElite ? "0 0 10px rgba(255, 184, 0, 0.5)" : "0 0 8px rgba(166, 255, 0, 0.35)", transition: "width 0.35s ease" }} />
@@ -256,290 +122,84 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   if (!ctx) return;
   canvas.width = 1080;
   canvas.height = 1350;
+  ctx.fillStyle = "#080808"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = "#1a1a1a"; ctx.lineWidth = 14; ctx.strokeRect(34, 34, canvas.width - 68, canvas.height - 68);
 
-  ctx.fillStyle = "#080808";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.strokeStyle = "#1a1a1a";
-  ctx.lineWidth = 14;
-  ctx.strokeRect(34, 34, canvas.width - 68, canvas.height - 68);
-
-  ctx.fillStyle = "rgba(166, 255, 0, 0.08)";
-  ctx.fillRect(80, 80, 440, 52);
-  ctx.strokeStyle = "#a6ff00";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(80, 80, 440, 52);
-  ctx.fillStyle = "#a6ff00";
-  ctx.font = "900 20px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText("THE DIAMOND COLLECTIVE", 100, 113);
+  ctx.fillStyle = "rgba(166, 255, 0, 0.08)"; ctx.fillRect(80, 80, 440, 52);
+  ctx.strokeStyle = "#a6ff00"; ctx.lineWidth = 2; ctx.strokeRect(80, 80, 440, 52);
+  ctx.fillStyle = "#a6ff00"; ctx.font = "900 20px -apple-system, BlinkMacSystemFont, sans-serif"; ctx.fillText("THE DIAMOND COLLECTIVE", 100, 113);
 
   const isTWP = athlete.primaryRole === "TWP";
   const isPitcher = athlete.primaryRole === "PITCHER" || isTWP;
   const isHitter = athlete.primaryRole === "HITTER" || isTWP;
 
-  ctx.fillStyle = isTWP ? "#a6ff00" : "#ffffff";
-  ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.textAlign = "right";
-  ctx.fillText(isTWP ? "⚡ VERIFIED TWO-WAY SCOUT CARD" : "VERIFIED SCOUT CARD", canvas.width - 80, 115);
-  ctx.textAlign = "left";
+  ctx.fillStyle = isTWP ? "#a6ff00" : "#ffffff"; ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.textAlign = "right"; ctx.fillText(isTWP ? "⚡ VERIFIED TWO-WAY SCOUT CARD" : "VERIFIED SCOUT CARD", canvas.width - 80, 115); ctx.textAlign = "left";
 
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "900 66px -apple-system, BlinkMacSystemFont, sans-serif";
-  const name = (athlete.fullName || "MEMBER ATHLETE").toUpperCase();
-  ctx.fillText(name, 80, 230);
-
-  ctx.fillStyle = "#a6ff00";
-  ctx.font = "bold 34px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText(`🏛️ ${athlete.college || "Undeclared College"} ${athlete.state ? `(${athlete.state})` : ""}`, 80, 285);
-
+  ctx.fillStyle = "#ffffff"; ctx.font = "900 66px -apple-system, BlinkMacSystemFont, sans-serif"; ctx.fillText((athlete.fullName || "MEMBER ATHLETE").toUpperCase(), 80, 230);
+  ctx.fillStyle = "#a6ff00"; ctx.font = "bold 34px -apple-system, BlinkMacSystemFont, sans-serif"; ctx.fillText(`🏛️ ${athlete.college || "Undeclared College"} ${athlete.state ? `(${athlete.state})` : ""}`, 80, 285);
+  
   const physicalTag = athlete.height && athlete.weight ? ` • ${athlete.height} / ${athlete.weight} lbs` : (athlete.height ? ` • ${athlete.height}` : "");
-  ctx.fillStyle = "#d4d4d8";
-  ctx.font = "600 26px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText(`${athlete.position || "ATH"}${physicalTag} • ${athlete.playerStatus || "Active Roster"}`, 80, 330);
+  ctx.fillStyle = "#d4d4d8"; ctx.font = "600 26px -apple-system, BlinkMacSystemFont, sans-serif"; ctx.fillText(`${athlete.position || "ATH"}${physicalTag} • ${athlete.playerStatus || "Active Roster"}`, 80, 330);
 
-  ctx.strokeStyle = "#27272a";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(80, 365);
-  ctx.lineTo(canvas.width - 80, 365);
-  ctx.stroke();
+  ctx.strokeStyle = "#27272a"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(80, 365); ctx.lineTo(canvas.width - 80, 365); ctx.stroke();
 
-  if (isTWP) {
-    ctx.fillStyle = "#a6ff00";
-    ctx.font = "900 16px -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.fillText("⚾ MOUND TELEMETRY", 80, 400);
+  if (isTWP || isPitcher) {
+    ctx.fillStyle = "#a6ff00"; ctx.font = "900 16px -apple-system, BlinkMacSystemFont, sans-serif"; ctx.fillText("⚾ MOUND TELEMETRY", 80, 400);
+    const pMetrics = [];
+    if (athlete.peakFB) pMetrics.push({ label: "PEAK FASTBALL", val: `${athlete.peakFB} MPH`, sub: athlete.sittingFB ? `Sitting ${athlete.sittingFB}` : undefined });
+    if (athlete.stuffPlus) pMetrics.push({ label: "STUFF+ GRADE", val: athlete.stuffPlus, sub: "100 = Avg" });
+    if (athlete.inducedVertBreak) pMetrics.push({ label: "INDUCED VERT BREAK", val: `${athlete.inducedVertBreak}"`, sub: "Carry & Rise" });
+    if (athlete.fbSpinRate) pMetrics.push({ label: "FB SPIN RATE", val: `${athlete.fbSpinRate} RPM` });
+    
+    while (pMetrics.length < 4) pMetrics.push({ label: "METRIC", val: "---" });
 
-    const pitchMetrics: { label: string; val: string; sub?: string }[] = [];
-    if (athlete.peakFB) pitchMetrics.push({ label: "PEAK FASTBALL", val: `${athlete.peakFB} MPH`, sub: athlete.sittingFB ? `Sitting ${athlete.sittingFB}` : undefined });
-    if (athlete.stuffPlus) pitchMetrics.push({ label: "STUFF+ GRADE", val: athlete.stuffPlus, sub: "100 = Avg" });
-    if (athlete.inducedVertBreak) pitchMetrics.push({ label: "INDUCED VERT BREAK", val: `${athlete.inducedVertBreak}"`, sub: "Carry & Rise" });
-    if (athlete.offSpeedVelo) {
-      pitchMetrics.push({ label: `${(athlete.offSpeedType || "SLIDER").toUpperCase()} VELO`, val: `${athlete.offSpeedVelo} MPH`, sub: athlete.offSpeedSpinRate ? `${athlete.offSpeedSpinRate} RPM` : undefined });
-    } else if (athlete.fbSpinRate) {
-      pitchMetrics.push({ label: "FB SPIN RATE", val: `${athlete.fbSpinRate} RPM` });
-    }
-
-    while (pitchMetrics.length < 4) {
-      if (!pitchMetrics.some(m => m.label === "PEAK FASTBALL")) pitchMetrics.push({ label: "PEAK FASTBALL", val: "---", sub: "Mound" });
-      else if (!pitchMetrics.some(m => m.label === "STUFF+ GRADE")) pitchMetrics.push({ label: "STUFF+ GRADE", val: "---", sub: "100 = Avg" });
-      else if (!pitchMetrics.some(m => m.label === "INDUCED VERT BREAK")) pitchMetrics.push({ label: "INDUCED VERT BREAK", val: "---", sub: "Carry" });
-      else pitchMetrics.push({ label: "COMMAND & ARSENAL", val: "---", sub: "Loc+" });
-    }
-
-    const startYP = 415;
-    const boxW = 440;
-    const boxH = 92;
-    const gapX = 40;
-    const gapY = 12;
-
-    pitchMetrics.slice(0, 4).forEach((m, idx) => {
-      const col = idx % 2;
-      const row = Math.floor(idx / 2);
-      const x = 80 + col * (boxW + gapX);
-      const y = startYP + row * (boxH + gapY);
-
-      ctx.fillStyle = "#121214";
-      ctx.fillRect(x, y, boxW, boxH);
-      ctx.strokeStyle = "#27272a";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x, y, boxW, boxH);
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, sans-serif";
-      ctx.fillText(m.label, x + 18, y + 26);
-      ctx.fillStyle = "#a6ff00";
-      ctx.font = "900 32px -apple-system, BlinkMacSystemFont, sans-serif";
-      ctx.fillText(m.val, x + 18, y + 68);
-
-      if (m.sub) {
-        ctx.fillStyle = "#d4d4d8";
-        ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, sans-serif";
-        ctx.textAlign = "right";
-        ctx.fillText(m.sub, x + boxW - 18, y + 68);
-        ctx.textAlign = "left";
-      }
+    pMetrics.slice(0, 4).forEach((m, idx) => {
+      const x = 80 + (idx % 2) * 480; const y = 415 + Math.floor(idx / 2) * 104;
+      ctx.fillStyle = "#121214"; ctx.fillRect(x, y, 440, 92);
+      ctx.strokeStyle = "#27272a"; ctx.lineWidth = 2; ctx.strokeRect(x, y, 440, 92);
+      ctx.fillStyle = "#ffffff"; ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, sans-serif"; ctx.fillText(m.label, x + 18, y + 26);
+      ctx.fillStyle = "#a6ff00"; ctx.font = "900 32px -apple-system, BlinkMacSystemFont, sans-serif"; ctx.fillText(m.val, x + 18, y + 68);
     });
-
-    const startYH_Label = startYP + 2 * (boxH + gapY) + 18;
-    ctx.fillStyle = "#a6ff00";
-    ctx.font = "900 16px -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.fillText("💥 BATTER'S BOX TELEMETRY", 80, startYH_Label);
-
-    const hitMetrics: { label: string; val: string; sub?: string }[] = [];
-    if (athlete.maxExitVelo) hitMetrics.push({ label: "MAX EXIT VELO", val: `${athlete.maxExitVelo} MPH` });
-    if (athlete.ninetyEV) hitMetrics.push({ label: "90TH% EXIT VELO", val: `${athlete.ninetyEV} MPH`, sub: "Hard-Hit" });
-    if (athlete.batSpeed) hitMetrics.push({ label: "BAT SPEED", val: `${athlete.batSpeed} MPH`, sub: "Blast" });
-    if (athlete.sixtyTime) hitMetrics.push({ label: "60-YARD DASH", val: `${athlete.sixtyTime}s`, sub: "Laser" });
-
-    while (hitMetrics.length < 4) {
-      if (!hitMetrics.some(m => m.label === "MAX EXIT VELO")) hitMetrics.push({ label: "MAX EXIT VELO", val: "---" });
-      else if (!hitMetrics.some(m => m.label === "90TH% EXIT VELO")) hitMetrics.push({ label: "90TH% EXIT VELO", val: "---" });
-      else if (!hitMetrics.some(m => m.label === "BAT SPEED")) hitMetrics.push({ label: "BAT SPEED", val: "---" });
-      else hitMetrics.push({ label: "60-YARD DASH", val: "---" });
-    }
-
-    const startYH = startYH_Label + 14;
-    hitMetrics.slice(0, 4).forEach((m, idx) => {
-      const col = idx % 2;
-      const row = Math.floor(idx / 2);
-      const x = 80 + col * (boxW + gapX);
-      const y = startYH + row * (boxH + gapY);
-
-      ctx.fillStyle = "#121214";
-      ctx.fillRect(x, y, boxW, boxH);
-      ctx.strokeStyle = "#27272a";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x, y, boxW, boxH);
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, sans-serif";
-      ctx.fillText(m.label, x + 18, y + 26);
-      ctx.fillStyle = "#a6ff00";
-      ctx.font = "900 32px -apple-system, BlinkMacSystemFont, sans-serif";
-      ctx.fillText(m.val, x + 18, y + 68);
-
-      if (m.sub) {
-        ctx.fillStyle = "#d4d4d8";
-        ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, sans-serif";
-        ctx.textAlign = "right";
-        ctx.fillText(m.sub, x + boxW - 18, y + 68);
-        ctx.textAlign = "left";
-      }
-    });
-
-    const stripY = startYH + 2 * (boxH + gapY) + 12;
-    if (athlete.releaseExtension || athlete.releaseHeight || athlete.vertApproachAngle) {
-      ctx.fillStyle = "rgba(166, 255, 0, 0.06)";
-      ctx.fillRect(80, stripY, canvas.width - 160, 44);
-      ctx.strokeStyle = "#3f3f46";
-      ctx.strokeRect(80, stripY, canvas.width - 160, 44);
-
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 14px monospace";
-      let biomechText = "";
-      if (athlete.releaseExtension) biomechText += `EXTENSION: ${athlete.releaseExtension} FT   `;
-      if (athlete.releaseHeight) biomechText += `REL HEIGHT: ${athlete.releaseHeight} FT   `;
-      if (athlete.vertApproachAngle) biomechText += `VAA: ${athlete.vertApproachAngle}°`;
-      ctx.fillText(biomechText.trim(), 105, stripY + 28);
-    }
-
-  } else {
-    const metrics: { label: string; val: string; sub?: string }[] = [];
-
-    if (isPitcher) {
-      if (athlete.peakFB) metrics.push({ label: "PEAK FASTBALL", val: `${athlete.peakFB} MPH`, sub: athlete.sittingFB ? `Sitting ${athlete.sittingFB}` : undefined });
-      if (athlete.stuffPlus) metrics.push({ label: "STUFF+ GRADE", val: athlete.stuffPlus, sub: "100 = Avg" });
-      if (athlete.inducedVertBreak) metrics.push({ label: "INDUCED VERT BREAK", val: `${athlete.inducedVertBreak}"`, sub: "Carry & Rise" });
-      if (athlete.horizontalBreak) metrics.push({ label: "HORIZONTAL BREAK", val: `${athlete.horizontalBreak}"`, sub: "Arm Run" });
-      if (athlete.fbSpinRate) metrics.push({ label: "FB SPIN RATE", val: `${athlete.fbSpinRate} RPM` });
-      if (athlete.offSpeedVelo) {
-        metrics.push({ label: `${(athlete.offSpeedType || "SLIDER").toUpperCase()} VELO`, val: `${athlete.offSpeedVelo} MPH`, sub: athlete.offSpeedSpinRate ? `${athlete.offSpeedSpinRate} RPM` : undefined });
-      }
-      if (athlete.kMinusBbPercentage) {
-        metrics.push({ label: "K - BB COMMAND %", val: `${athlete.kMinusBbPercentage}%`, sub: athlete.kPercentage ? `${athlete.kPercentage}% K%` : undefined });
-      } else if (athlete.firstPitchStrike) {
-        metrics.push({ label: "1ST PITCH STRIKE", val: `${athlete.firstPitchStrike}%` });
-      }
-      if (athlete.pitchingPlus) metrics.push({ label: "PITCHING+ ARSENAL", val: athlete.pitchingPlus, sub: "Stuff + Loc" });
-    }
-
-    if (isHitter) {
-      if (athlete.maxExitVelo) metrics.push({ label: "MAX EXIT VELO", val: `${athlete.maxExitVelo} MPH` });
-      if (athlete.ninetyEV) metrics.push({ label: "90TH% EXIT VELO", val: `${athlete.ninetyEV} MPH`, sub: "Consistency" });
-      if (athlete.batSpeed) metrics.push({ label: "BAT SPEED", val: `${athlete.batSpeed} MPH`, sub: "Blast Motion" });
-      if (athlete.sixtyTime) metrics.push({ label: "60-YARD DASH", val: `${athlete.sixtyTime}s`, sub: "Laser Timed" });
-    }
-
-    const displayList = metrics.slice(0, 8);
-    const startY = 395;
-    const boxW = 440;
-    const boxH = displayList.length > 4 ? 105 : 135;
-    const gapX = 40;
-    const gapY = 16;
-
-    displayList.forEach((m, idx) => {
-      const col = idx % 2;
-      const row = Math.floor(idx / 2);
-      const x = 80 + col * (boxW + gapX);
-      const y = startY + row * (boxH + gapY);
-
-      ctx.fillStyle = "#121214";
-      ctx.fillRect(x, y, boxW, boxH);
-      ctx.strokeStyle = "#27272a";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x, y, boxW, boxH);
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 15px -apple-system, BlinkMacSystemFont, sans-serif";
-      ctx.fillText(m.label, x + 20, y + (displayList.length > 4 ? 30 : 38));
-      ctx.fillStyle = "#a6ff00";
-      ctx.font = `900 ${displayList.length > 4 ? "36px" : "44px"} -apple-system, BlinkMacSystemFont, sans-serif`;
-      ctx.fillText(m.val, x + 20, y + (displayList.length > 4 ? 76 : 94));
-
-      if (m.sub) {
-        ctx.fillStyle = "#d4d4d8";
-        ctx.font = "bold 15px -apple-system, BlinkMacSystemFont, sans-serif";
-        ctx.textAlign = "right";
-        ctx.fillText(m.sub, x + boxW - 20, y + (displayList.length > 4 ? 76 : 94));
-        ctx.textAlign = "left";
-      }
-    });
-
-    const stripY = startY + Math.ceil(displayList.length / 2) * (boxH + gapY) + 4;
-    if (isPitcher && (athlete.releaseExtension || athlete.releaseHeight || athlete.vertApproachAngle)) {
-      ctx.fillStyle = "rgba(166, 255, 0, 0.06)";
-      ctx.fillRect(80, stripY, canvas.width - 160, 48);
-      ctx.strokeStyle = "#3f3f46";
-      ctx.strokeRect(80, stripY, canvas.width - 160, 48);
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 15px monospace";
-      let biomechText = "";
-      if (athlete.releaseExtension) biomechText += `EXTENSION: ${athlete.releaseExtension} FT   `;
-      if (athlete.releaseHeight) biomechText += `REL HEIGHT: ${athlete.releaseHeight} FT   `;
-      if (athlete.vertApproachAngle) biomechText += `VAA: ${athlete.vertApproachAngle}°`;
-      ctx.fillText(biomechText.trim(), 105, stripY + 30);
-    }
   }
 
-  const registryY = 960;
-  ctx.fillStyle = "#121214";
-  ctx.fillRect(80, registryY, canvas.width - 160, 200);
-  ctx.strokeStyle = "#27272a";
-  ctx.strokeRect(80, registryY, canvas.width - 160, 200);
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 22px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText("HONOR-CODE VERIFIED DATA REGISTRY", 120, registryY + 48);
-  ctx.fillStyle = "#d4d4d8";
-  ctx.font = "400 19px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText("TrackMan, Hawkeye, and verified metrics published on National Scoreboard.", 120, registryY + 86);
-  ctx.fillText("Direct scout verification & NIL access powered by Slugger Coin ($SLUG).", 120, registryY + 118);
+  if (isTWP || isHitter) {
+    const startYH = isTWP ? 650 : 400;
+    ctx.fillStyle = "#a6ff00"; ctx.font = "900 16px -apple-system, BlinkMacSystemFont, sans-serif"; ctx.fillText("💥 BATTER'S BOX TELEMETRY", 80, startYH - 15);
+    const hMetrics = [];
+    if (athlete.maxExitVelo) hMetrics.push({ label: "MAX EXIT VELO", val: `${athlete.maxExitVelo} MPH` });
+    if (athlete.ninetyEV) hMetrics.push({ label: "90TH% EXIT VELO", val: `${athlete.ninetyEV} MPH`, sub: "Hard-Hit" });
+    if (athlete.batSpeed) hMetrics.push({ label: "BAT SPEED", val: `${athlete.batSpeed} MPH`, sub: "Blast" });
+    if (athlete.sixtyTime) hMetrics.push({ label: "60-YARD DASH", val: `${athlete.sixtyTime}s`, sub: "Laser" });
+    
+    while (hMetrics.length < 4) hMetrics.push({ label: "METRIC", val: "---" });
 
-  if (athlete.social1_Url || athlete.social2_Url) {
-    ctx.fillStyle = "#a6ff00";
-    ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, sans-serif";
-    ctx.fillText(`Scout Gateway: ${athlete.social1_Url || athlete.social2_Url}`, 120, registryY + 168);
+    hMetrics.slice(0, 4).forEach((m, idx) => {
+      const x = 80 + (idx % 2) * 480; const y = startYH + Math.floor(idx / 2) * 104;
+      ctx.fillStyle = "#121214"; ctx.fillRect(x, y, 440, 92);
+      ctx.strokeStyle = "#27272a"; ctx.lineWidth = 2; ctx.strokeRect(x, y, 440, 92);
+      ctx.fillStyle = "#ffffff"; ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, sans-serif"; ctx.fillText(m.label, x + 18, y + 26);
+      ctx.fillStyle = "#a6ff00"; ctx.font = "900 32px -apple-system, BlinkMacSystemFont, sans-serif"; ctx.fillText(m.val, x + 18, y + 68);
+    });
   }
 
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "900 24px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText("SLUGGERCOIN.COM/SCOREBOARD", canvas.width / 2, 1260);
-  ctx.fillStyle = "#888888";
-  ctx.font = "600 16px -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText("THE DIAMOND COLLECTIVE • ALL RIGHTS RESERVED", canvas.width / 2, 1295);
+  ctx.fillStyle = "#121214"; ctx.fillRect(80, 960, 920, 200); ctx.strokeStyle = "#27272a"; ctx.strokeRect(80, 960, 920, 200);
+  ctx.fillStyle = "#ffffff"; ctx.font = "bold 22px -apple-system, BlinkMacSystemFont, sans-serif"; ctx.fillText("HONOR-CODE VERIFIED DATA REGISTRY", 120, 1008);
+  ctx.fillStyle = "#d4d4d8"; ctx.font = "400 19px -apple-system, BlinkMacSystemFont, sans-serif"; 
+  ctx.fillText("TrackMan, Hawkeye, and verified metrics published on National Scoreboard.", 120, 1046);
+  ctx.fillText("Direct scout verification & NIL access powered by Slugger Coin ($SLUG).", 120, 1078);
+
+  ctx.fillStyle = "#ffffff"; ctx.font = "900 24px -apple-system, BlinkMacSystemFont, sans-serif"; ctx.textAlign = "center"; ctx.fillText("SLUGGERCOIN.COM/SCOREBOARD", 540, 1260);
+  ctx.fillStyle = "#888888"; ctx.font = "600 16px -apple-system, BlinkMacSystemFont, sans-serif"; ctx.fillText("THE DIAMOND COLLECTIVE • ALL RIGHTS RESERVED", 540, 1295);
 
   canvas.toBlob(async (blob) => {
     if (!blob) return;
-    const cleanName = (athlete.fullName || "athlete").replace(/\s+/g, "_");
-    const fileName = `${cleanName}_ScoutCard.png`;
+    const fileName = `${(athlete.fullName || "athlete").replace(/\s+/g, "_")}_ScoutCard.png`;
     const file = new File([blob], fileName, { type: "image/png" });
-
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({ files: [file], title: `${athlete.fullName} Scout Card`, text: `Check out my verified pitching & scouting metrics on The Diamond Collective Scoreboard!` });
-        return;
-      } catch { return; }
+      try { await navigator.share({ files: [file], title: `${athlete.fullName} Scout Card`, text: `Check out my verified scouting metrics!` }); return; } catch {}
     }
-    const link = document.createElement("a");
-    link.download = fileName;
-    link.href = URL.createObjectURL(blob);
-    link.click();
+    const link = document.createElement("a"); link.download = fileName; link.href = URL.createObjectURL(blob); link.click();
   }, "image/png");
 }
 
@@ -553,11 +213,9 @@ function AppContent() {
   const [intendedRole, setIntendedRole] = useState<"ATHLETE" | "SCOUT" | null>(null);
   const [userRole, setUserRole] = useState<"GUEST" | "ATHLETE" | "SCOUT">("GUEST");
 
-  // 3-TAB PRIMARY NAVIGATION
+  // Nav & Filters
   const [activeMainTab, setActiveMainTab] = useState<"SCOREBOARD" | "EXCHANGE" | "LOCKER">("SCOREBOARD");
   const [brandCategoryFilter, setBrandCategoryFilter] = useState<"ALL" | "DIRECT" | "PERKS" | "GEAR" | "APPAREL">("ALL");
-
-  // Scoreboard Filters
   const [roleFilter, setRoleFilter] = useState<"ALL" | "HITTER" | "PITCHER" | "TWP">("ALL");
   const [positionFilter, setPositionFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
@@ -572,7 +230,7 @@ function AppContent() {
   const [leaderboardRows, setLeaderboardRows] = useState<AthleteProfile[]>([]);
   const [loadingScoreboard, setLoadingScoreboard] = useState(false);
 
-  // Forms & Profiles
+  // Forms & Modals
   const [activeMatrixTab, setActiveMatrixTab] = useState<"BIO" | "HITTING" | "PITCHING">("BIO");
   const [pendingIntroBrand, setPendingIntroBrand] = useState<BrandItem | null>(null);
   const [dispatchedBrand, setDispatchedBrand] = useState<BrandItem | null>(null);
@@ -617,108 +275,72 @@ function AppContent() {
   const handleOpenLogin = (roleTarget: "ATHLETE" | "SCOUT") => {
     setIntendedRole(roleTarget);
     connect({
-      client,
-      wallets: supportedWallets,
+      client, wallets: supportedWallets,
       accountAbstraction: { chain: base, sponsorGas: true },
-      chain: base,
-      theme: "dark",
+      chain: base, theme: "dark",
     });
   };
 
-  const { data: balanceData, refetch: refetchBalance } = useReadContract(getBalance, {
-    contract: sluggerContract,
-    address: account?.address || "",
-  });
-  const { data: totalSupplyData, refetch: refetchSupply } = useReadContract(totalSupply, {
-    contract: sluggerContract,
-  });
-
+  const { data: balanceData, refetch: refetchBalance } = useReadContract(getBalance, { contract: sluggerContract, address: account?.address || "" });
+  const { data: totalSupplyData, refetch: refetchSupply } = useReadContract(totalSupply, { contract: sluggerContract });
+  
   const totalMinted = totalSupplyData ? Number(totalSupplyData) / 1e18 : 0;
-  const rawRemaining = ((FOUNDERS_POOL_TOTAL - totalMinted) / FOUNDERS_POOL_TOTAL) * 100;
-  const remainingPercentage = Math.max(0, Math.min(100, Math.round(rawRemaining)));
-
-  // Role & Gating Validations
-  const isAdmin = useMemo(() => account?.address?.toLowerCase() === "0x46cbd713d7440692156e1219153622c45b04d3a", [account?.address]);
+  const remainingPercentage = Math.max(0, Math.min(100, Math.round(((FOUNDERS_POOL_TOTAL - totalMinted) / FOUNDERS_POOL_TOTAL) * 100)));
   const balance = balanceData ? Math.min(100, Number(balanceData.displayValue)) : 0;
+  
+  const isAdmin = useMemo(() => account?.address?.toLowerCase() === "0x46cbd713d7440692156e1219153622c45b04d3a", [account?.address]);
   const isUnlocked = balance >= 100 || justClaimed;
   
   const hasProfile = Boolean(profile.fullName && profile.email);
   const isFullyOnboardedAthlete = Boolean(account && hasProfile && isUnlocked && userRole === "ATHLETE");
 
-  const isScoutOnboarded = Boolean(scoutProfile.fullName && scoutProfile.organization);
+  const isScoutOnboarded = Boolean(scoutProfile.fullName && scoutProfile.organization && scoutProfile.verificationLink);
   const isScoutApproved = scoutProfile.verificationStatus === "Approved";
 
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText("DIAMONDCOLLECTIVE");
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2500);
-  };
-
-  const isIntroActive = (brandName: string): boolean => {
-    const timestamp = introTimestamps[brandName];
-    if (!timestamp) return false;
-    return Date.now() - timestamp < SIXTY_DAYS_MS;
-  };
-  const getDaysRemaining = (brandName: string): number => {
-    const timestamp = introTimestamps[brandName];
-    if (!timestamp) return 0;
-    const remainingMs = SIXTY_DAYS_MS - (Date.now() - timestamp);
-    return Math.max(1, Math.ceil(remainingMs / (24 * 60 * 60 * 1000)));
-  };
-  const activeIntroList = useMemo(() => Object.keys(introTimestamps).filter((bName) => isIntroActive(bName)), [introTimestamps]);
+  const handleCopyCode = () => { navigator.clipboard.writeText("DIAMONDCOLLECTIVE"); setCopiedCode(true); setTimeout(() => setCopiedCode(false), 2500); };
+  const isIntroActive = (bName: string) => introTimestamps[bName] ? Date.now() - introTimestamps[bName] < SIXTY_DAYS_MS : false;
+  const getDaysRemaining = (bName: string) => Math.max(1, Math.ceil((SIXTY_DAYS_MS - (Date.now() - (introTimestamps[bName] || 0))) / 86400000));
+  const activeIntroList = useMemo(() => Object.keys(introTimestamps).filter(isIntroActive), [introTimestamps]);
 
   useEffect(() => {
     const sheetUrl = process.env.NEXT_PUBLIC_SCOUTING_SHEET_URL || "https://script.google.com/macros/s/AKfycbwe5YJxF93X4fJXpODhAGbJQ-1Xs3FiRHuLC2umjkGLGtsJTqj4VjO-0Ai0_hBqZMojdw/exec";
     if (sheetUrl) {
       setLoadingScoreboard(true);
-      fetch(sheetUrl)
-        .then((res) => res.json())
-        .then((data: any[]) => {
-          if (Array.isArray(data) && data.length > 0) {
-            const mapped: AthleteProfile[] = data.map((item) => {
-              const nameFromEmail = item.athleteEmail ? item.athleteEmail.split("@")[0] : "Member Athlete";
-              const rawRole = (item.primaryRole || "HITTER").toUpperCase();
-              const validRole = rawRole === "PITCHER" || rawRole === "TWP" ? rawRole : "HITTER";
-              return {
-                ...emptyProfile,
-                fullName: item.fullName && item.fullName.trim() !== "" ? item.fullName : nameFromEmail,
-                email: item.athleteEmail || item.email || "",
-                phone: item.phone ? String(item.phone) : "",
-                walletAddress: item.walletAddress ? String(item.walletAddress) : "",
-                college: item.currentCollege || item.college || "Undeclared",
-                state: item.state || "",
-                position: item.position || validRole,
-                primaryRole: validRole as "HITTER" | "PITCHER" | "TWP",
-                playerStatus: item.portalStatus || item.playerStatus || "Active",
-                isProfileVisible: String(item.isProfileVisible).toUpperCase() !== "FALSE",
-                verificationLink: item.verificationLink && item.verificationLink !== "HALLOWEEN_RADAR_ENTRY" ? String(item.verificationLink) : "",
-                height: item.height ? String(item.height) : "", weight: item.weight ? String(item.weight) : "",
-                maxExitVelo: item.maxExitVelo ? String(item.maxExitVelo) : "", ninetyEV: item.ninetyEV ? String(item.ninetyEV) : "",
-                batSpeed: item.batSpeed ? String(item.batSpeed) : "", sixtyTime: item.sixtyTime ? String(item.sixtyTime) : "",
-                peakFB: item.peakFB ? String(item.peakFB) : "", sittingFB: item.sittingFB ? String(item.sittingFB) : "",
-                offSpeedVelo: item.offSpeedVelo ? String(item.offSpeedVelo) : "", offSpeedType: item.offSpeedType || "Slider",
-                fbSpinRate: item.fbSpinRate ? String(item.fbSpinRate) : "", offSpeedSpinRate: item.offSpeedSpinRate ? String(item.offSpeedSpinRate) : "",
-                firstPitchStrike: item.firstPitchStrike ? String(item.firstPitchStrike) : "", recordedDateHitting: item.recordedDateHitting || "",
-                recordedDatePitching: item.recordedDatePitching || "", stuffPlus: item.stuffPlus ? String(item.stuffPlus) : "",
-                locationPlus: item.locationPlus ? String(item.locationPlus) : "", pitchingPlus: item.pitchingPlus ? String(item.pitchingPlus) : "",
-                inducedVertBreak: item.inducedVertBreak ? String(item.inducedVertBreak) : "", horizontalBreak: item.horizontalBreak ? String(item.horizontalBreak) : "",
-                vertApproachAngle: item.vertApproachAngle ? String(item.vertApproachAngle) : "", releaseExtension: item.releaseExtension ? String(item.releaseExtension) : "",
-                releaseHeight: item.releaseHeight ? String(item.releaseHeight) : "", kPercentage: item.kPercentage ? String(item.kPercentage) : "",
-                bbPercentage: item.bbPercentage ? String(item.bbPercentage) : "", kMinusBbPercentage: item.kMinusBbPercentage ? String(item.kMinusBbPercentage) : "",
-                social1_Type: item.social1_Type || "X", social1_Url: item.social1_Url || "",
-                social2_Type: item.social2_Type || "IG", social2_Url: item.social2_Url || "",
-              };
-            });
-            const uniqueMap = new Map();
-            mapped.forEach((item) => {
-              const key = (item.email || item.fullName).toLowerCase().trim();
-              uniqueMap.set(key, item);
-            });
-            setLeaderboardRows(Array.from(uniqueMap.values()));
-          }
-          setLoadingScoreboard(false);
-        })
-        .catch(() => setLoadingScoreboard(false));
+      fetch(sheetUrl).then((res) => res.json()).then((data: any[]) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped: AthleteProfile[] = data.map((item) => {
+            const rawRole = (item.primaryRole || "HITTER").toUpperCase();
+            return {
+              ...emptyProfile,
+              fullName: item.fullName || (item.athleteEmail ? item.athleteEmail.split("@")[0] : "Member Athlete"),
+              email: item.athleteEmail || item.email || "", phone: item.phone ? String(item.phone) : "",
+              walletAddress: item.walletAddress ? String(item.walletAddress) : "", college: item.currentCollege || item.college || "Undeclared",
+              state: item.state || "", position: item.position || (rawRole === "PITCHER" || rawRole === "TWP" ? rawRole : "HITTER"),
+              primaryRole: (rawRole === "PITCHER" || rawRole === "TWP" ? rawRole : "HITTER") as any,
+              playerStatus: item.portalStatus || item.playerStatus || "Active", isProfileVisible: String(item.isProfileVisible).toUpperCase() !== "FALSE",
+              verificationLink: item.verificationLink && item.verificationLink !== "HALLOWEEN_RADAR_ENTRY" ? String(item.verificationLink) : "",
+              height: item.height ? String(item.height) : "", weight: item.weight ? String(item.weight) : "",
+              maxExitVelo: item.maxExitVelo ? String(item.maxExitVelo) : "", ninetyEV: item.ninetyEV ? String(item.ninetyEV) : "",
+              batSpeed: item.batSpeed ? String(item.batSpeed) : "", sixtyTime: item.sixtyTime ? String(item.sixtyTime) : "",
+              peakFB: item.peakFB ? String(item.peakFB) : "", sittingFB: item.sittingFB ? String(item.sittingFB) : "",
+              offSpeedVelo: item.offSpeedVelo ? String(item.offSpeedVelo) : "", offSpeedType: item.offSpeedType || "Slider",
+              fbSpinRate: item.fbSpinRate ? String(item.fbSpinRate) : "", offSpeedSpinRate: item.offSpeedSpinRate ? String(item.offSpeedSpinRate) : "",
+              firstPitchStrike: item.firstPitchStrike ? String(item.firstPitchStrike) : "", recordedDateHitting: item.recordedDateHitting || "",
+              recordedDatePitching: item.recordedDatePitching || "", stuffPlus: item.stuffPlus ? String(item.stuffPlus) : "",
+              locationPlus: item.locationPlus ? String(item.locationPlus) : "", pitchingPlus: item.pitchingPlus ? String(item.pitchingPlus) : "",
+              inducedVertBreak: item.inducedVertBreak ? String(item.inducedVertBreak) : "", horizontalBreak: item.horizontalBreak ? String(item.horizontalBreak) : "",
+              vertApproachAngle: item.vertApproachAngle ? String(item.vertApproachAngle) : "", releaseExtension: item.releaseExtension ? String(item.releaseExtension) : "",
+              releaseHeight: item.releaseHeight ? String(item.releaseHeight) : "", kPercentage: item.kPercentage ? String(item.kPercentage) : "",
+              bbPercentage: item.bbPercentage ? String(item.bbPercentage) : "", kMinusBbPercentage: item.kMinusBbPercentage ? String(item.kMinusBbPercentage) : "",
+              social1_Type: item.social1_Type || "X", social1_Url: item.social1_Url || "", social2_Type: item.social2_Type || "IG", social2_Url: item.social2_Url || "",
+            };
+          });
+          const uniqueMap = new Map();
+          mapped.forEach((item) => uniqueMap.set((item.email || item.fullName).toLowerCase().trim(), item));
+          setLeaderboardRows(Array.from(uniqueMap.values()));
+        }
+        setLoadingScoreboard(false);
+      }).catch(() => setLoadingScoreboard(false));
     }
   }, []);
 
@@ -728,46 +350,23 @@ function AppContent() {
       const localRoleKey = `app_role_${lowerWallet}`;
       const localProfileKey = `athlete_profile_${lowerWallet}`;
       const localScoutKey = `scout_profile_${lowerWallet}`;
-      const localIntroKey = `athlete_intros_${lowerWallet}`;
       const acctEmail = (account as any)?.email || "";
       
       const savedRole = localStorage.getItem(localRoleKey);
       if (savedRole === "SCOUT" || intendedRole === "SCOUT") {
         setUserRole("SCOUT");
         localStorage.setItem(localRoleKey, "SCOUT");
-        
         const savedScout = localStorage.getItem(localScoutKey);
         if (savedScout) {
-          try {
-            const parsed = JSON.parse(savedScout);
-            setScoutProfile({ ...emptyScout, ...parsed, email: parsed.email || acctEmail });
-          } catch {}
-        } else {
-          setScoutProfile({ ...emptyScout, email: acctEmail });
-        }
+          try { setScoutProfile({ ...emptyScout, ...JSON.parse(savedScout), email: JSON.parse(savedScout).email || acctEmail }); } catch {}
+        } else { setScoutProfile({ ...emptyScout, email: acctEmail }); }
       } else {
         setUserRole("ATHLETE");
         localStorage.setItem(localRoleKey, "ATHLETE");
-        
         const savedLocal = localStorage.getItem(localProfileKey);
         if (savedLocal) {
-          try {
-            const parsed = JSON.parse(savedLocal);
-            if (parsed.fullName) setProfile((prev) => ({ ...prev, ...parsed, email: parsed.email || acctEmail || prev.email || "", college: parsed.college || parsed.currentCollege || prev.college || "" }));
-          } catch {}
-        } else if (acctEmail) {
-          setProfile((prev) => ({ ...prev, email: acctEmail || prev.email || "" }));
-        }
-
-        const savedIntros = localStorage.getItem(localIntroKey);
-        if (savedIntros) {
-          try {
-            const parsed = JSON.parse(savedIntros);
-            const formatted: { [bName: string]: number } = {};
-            Object.keys(parsed).forEach((k) => formatted[k] = typeof parsed[k] === "number" ? parsed[k] : Date.now());
-            setIntroTimestamps(formatted);
-          } catch {}
-        }
+          try { const p = JSON.parse(savedLocal); if (p.fullName) setProfile((prev) => ({ ...prev, ...p, email: p.email || acctEmail })); } catch {}
+        } else if (acctEmail) { setProfile((prev) => ({ ...prev, email: acctEmail })); }
       }
 
       const callbackName = `cb_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
@@ -776,26 +375,18 @@ function AppContent() {
           setScoutProfile((prev) => ({ ...prev, ...data.scoutProfile }));
           localStorage.setItem(localScoutKey, JSON.stringify(data.scoutProfile));
           if (data.scoutProfile.verificationStatus === "Pending") setShowScoutPendingModal(true);
+        } else if (userRole === "SCOUT" && (!data || !data.scoutProfile)) {
+          // If backend returns nothing but local storage thought we were a scout, clear it to unstick the UI.
+          setScoutProfile({ ...emptyScout, email: acctEmail });
+          localStorage.removeItem(localScoutKey);
         } else if (data && data.profile && data.profile.fullName) {
-          setProfile((prev) => ({ ...prev, ...data.profile, email: data.profile.email || data.profile.athleteEmail || acctEmail || prev.email || "", college: data.profile.college || data.profile.currentCollege || prev.college || "" }));
+          setProfile((prev) => ({ ...prev, ...data.profile }));
           localStorage.setItem(localProfileKey, JSON.stringify(data.profile));
         }
-
-        if (data && data.existingIntros) {
-          const introsMap: { [brandName: string]: number } = {};
-          Object.keys(data.existingIntros).forEach((bName: string) => introsMap[bName] = Number(data.existingIntros[bName]));
-          setIntroTimestamps((prev) => {
-            const updated = { ...prev, ...introsMap };
-            localStorage.setItem(localIntroKey, JSON.stringify(updated));
-            return updated;
-          });
-        }
-        try { delete (window as any)[callbackName]; const elem = document.getElementById(callbackName); if (elem) elem.remove(); } catch {}
+        try { delete (window as any)[callbackName]; const el = document.getElementById(callbackName); if (el) el.remove(); } catch {}
       };
-
       const script = document.createElement("script");
-      script.id = callbackName;
-      script.src = `${GOOGLE_SCRIPT_URL}?walletAddress=${encodeURIComponent(lowerWallet)}&callback=${callbackName}&_t=${Date.now()}`;
+      script.id = callbackName; script.src = `${GOOGLE_SCRIPT_URL}?walletAddress=${encodeURIComponent(lowerWallet)}&callback=${callbackName}&_t=${Date.now()}`;
       document.body.appendChild(script);
     } else {
       setUserRole("GUEST");
@@ -808,83 +399,35 @@ function AppContent() {
       alert("Please complete all required fields including your verification link to proceed.");
       return;
     }
-
     setIsSavingScout(true);
     const lowerWallet = account.address.toLowerCase();
     
-    const payload = {
-      action: "saveScout",
-      walletAddress: lowerWallet,
-      fullName: scoutProfile.fullName,
-      organization: scoutProfile.organization,
-      jobTitle: scoutProfile.jobTitle,
-      email: scoutProfile.email,
-      verificationLink: scoutProfile.verificationLink
-    };
-
+    const payload = { action: "saveScout", walletAddress: lowerWallet, fullName: scoutProfile.fullName, organization: scoutProfile.organization, jobTitle: scoutProfile.jobTitle, email: scoutProfile.email, verificationLink: scoutProfile.verificationLink };
     const newScoutState = { ...scoutProfile, verificationStatus: "Pending" };
     setScoutProfile(newScoutState);
     localStorage.setItem(`scout_profile_${lowerWallet}`, JSON.stringify(newScoutState));
     setUserRole("SCOUT");
 
     try {
-      await fetch(GOOGLE_SCRIPT_URL, {
-        method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload),
-      });
+      await fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
       setIsSavingScout(false);
       setShowScoutPendingModal(true);
-    } catch (err: any) {
-      setIsSavingScout(false);
-      alert("Error saving scout profile.");
-    }
+    } catch (err) { setIsSavingScout(false); alert("Error saving scout profile."); }
   };
 
   const handleSaveProfile = async () => {
     if (!account?.address) return;
-    if (!profile.fullName || !profile.email) {
-      alert("Please fill in your Full Name and Email in Step 1 (Bio & Roster).");
-      setActiveMatrixTab("BIO");
-      return;
-    }
-
+    if (!profile.fullName || !profile.email) { alert("Please fill in your Full Name and Email."); setActiveMatrixTab("BIO"); return; }
     setIsSavingProfile(true);
     const lowerWallet = account.address.toLowerCase();
-    const localKey = `athlete_profile_${lowerWallet}`;
-    const today = new Date().toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" });
-    
-    let computedKminusBB = profile.kMinusBbPercentage;
-    if (profile.kPercentage && profile.bbPercentage && !computedKminusBB) {
-      computedKminusBB = (parseFloat(profile.kPercentage) - parseFloat(profile.bbPercentage)).toFixed(1);
-    }
+    let kMinusBB = profile.kMinusBbPercentage;
+    if (profile.kPercentage && profile.bbPercentage && !kMinusBB) kMinusBB = (parseFloat(profile.kPercentage) - parseFloat(profile.bbPercentage)).toFixed(1);
 
-    const updatedProfile: AthleteProfile = {
-      ...profile,
-      walletAddress: lowerWallet,
-      kMinusBbPercentage: computedKminusBB,
-      recordedDateHitting: profile.maxExitVelo ? (profile.recordedDateHitting || today) : "",
-      recordedDatePitching: (profile.peakFB || profile.stuffPlus) ? (profile.recordedDatePitching || today) : "",
-    };
-
+    const updatedProfile: AthleteProfile = { ...profile, walletAddress: lowerWallet, kMinusBbPercentage: kMinusBB };
     setProfile(updatedProfile);
-    localStorage.setItem(localKey, JSON.stringify(updatedProfile));
+    localStorage.setItem(`athlete_profile_${lowerWallet}`, JSON.stringify(updatedProfile));
 
-    const payload = {
-      action: "saveProfile", walletAddress: lowerWallet, athleteEmail: updatedProfile.email, email: updatedProfile.email,
-      fullName: updatedProfile.fullName || "", college: updatedProfile.college || "", currentCollege: updatedProfile.college || "",
-      position: updatedProfile.position || "", playerStatus: updatedProfile.playerStatus || "", portalStatus: updatedProfile.playerStatus || "",
-      collegeYear: updatedProfile.collegeYear || "", phone: updatedProfile.phone || "", state: updatedProfile.state || "UT",
-      primaryRole: updatedProfile.primaryRole || "HITTER", isProfileVisible: updatedProfile.isProfileVisible !== false,
-      verificationLink: updatedProfile.verificationLink || "", height: updatedProfile.height || "", weight: updatedProfile.weight || "",
-      maxExitVelo: updatedProfile.maxExitVelo || "", ninetyEV: updatedProfile.ninetyEV || "", batSpeed: updatedProfile.batSpeed || "",
-      sixtyTime: updatedProfile.sixtyTime || "", recordedDateHitting: updatedProfile.recordedDateHitting || "", peakFB: updatedProfile.peakFB || "",
-      sittingFB: updatedProfile.sittingFB || "", offSpeedType: updatedProfile.offSpeedType || "Slider", offSpeedVelo: updatedProfile.offSpeedVelo || "",
-      fbSpinRate: updatedProfile.fbSpinRate || "", offSpeedSpinRate: updatedProfile.offSpeedSpinRate || "", firstPitchStrike: updatedProfile.firstPitchStrike || "",
-      recordedDatePitching: updatedProfile.recordedDatePitching || "", stuffPlus: updatedProfile.stuffPlus || "", locationPlus: updatedProfile.locationPlus || "",
-      pitchingPlus: updatedProfile.pitchingPlus || "", inducedVertBreak: updatedProfile.inducedVertBreak || "", horizontalBreak: updatedProfile.horizontalBreak || "",
-      vertApproachAngle: updatedProfile.vertApproachAngle || "", releaseExtension: updatedProfile.releaseExtension || "", releaseHeight: updatedProfile.releaseHeight || "",
-      kPercentage: updatedProfile.kPercentage || "", bbPercentage: updatedProfile.bbPercentage || "", kMinusBbPercentage: updatedProfile.kMinusBbPercentage || "",
-      social1_Type: updatedProfile.social1_Type || "X", social1_Url: updatedProfile.social1_Url || "", social2_Type: updatedProfile.social2_Type || "IG", social2_Url: updatedProfile.social2_Url || "",
-    };
+    const payload = { action: "saveProfile", walletAddress: lowerWallet, athleteEmail: updatedProfile.email, ...updatedProfile };
 
     setLeaderboardRows((prev) => {
       const exists = prev.some((p) => p.email.toLowerCase() === updatedProfile.email.toLowerCase() || p.fullName.toLowerCase() === updatedProfile.fullName.toLowerCase());
@@ -895,13 +438,8 @@ function AppContent() {
     try {
       await fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
       setIsSavingProfile(false);
-      if (typeof window !== "undefined" && (window as any).fbq) (window as any).fbq('track', 'CompleteRegistration');
-      if (!isUnlocked) setShowClaimPromptModal(true);
-      else alert("Player profile & metrics published to the National Scoreboard!");
-    } catch (err: any) {
-      setIsSavingProfile(false);
-      alert("Error saving profile: " + err.message);
-    }
+      if (!isUnlocked) setShowClaimPromptModal(true); else alert("Metrics published!");
+    } catch (err) { setIsSavingProfile(false); alert("Error saving profile."); }
   };
 
   const handleInitiateIntro = (brand: BrandItem) => {
@@ -914,26 +452,14 @@ function AppContent() {
 
   const handleConfirmAndSendIntro = async () => {
     if (!pendingIntroBrand) return;
-    const brand = pendingIntroBrand;
-    setPendingIntroBrand(null);
-    const now = Date.now();
+    const brand = pendingIntroBrand; setPendingIntroBrand(null);
     const lowerWallet = account?.address?.toLowerCase() || "";
-    const localIntroKey = `athlete_intros_${lowerWallet}`;
-    
     setIntroTimestamps((prev) => {
-      const updated = { ...prev, [brand.name]: now };
-      localStorage.setItem(localIntroKey, JSON.stringify(updated));
-      return updated;
+      const updated = { ...prev, [brand.name]: Date.now() };
+      localStorage.setItem(`athlete_intros_${lowerWallet}`, JSON.stringify(updated)); return updated;
     });
-    setDispatchedBrand(brand);
-    setIsLockoutModal(false);
-
-    try {
-      await fetch(GOOGLE_SCRIPT_URL, {
-        method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "requestIntro", walletAddress: lowerWallet, brandName: brand.name, brandRepEmail: brand.brandRepEmail, brandRepName: brand.brandRepName, ...profile }),
-      });
-    } catch {}
+    setDispatchedBrand(brand); setIsLockoutModal(false);
+    try { await fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "requestIntro", walletAddress: lowerWallet, brandName: brand.name, brandRepEmail: brand.brandRepEmail, brandRepName: brand.brandRepName, ...profile }) }); } catch {}
   };
 
   const flattenedBrands = useMemo(() => {
@@ -949,43 +475,29 @@ function AppContent() {
   }, [brandCategoryFilter]);
 
   const filteredScoreboard = useMemo(() => {
-    return leaderboardRows
-      .filter((ath) => {
-        if (ath.isProfileVisible === false || String(ath.isProfileVisible).toLowerCase() === "false") return false;
-
-        // Smart Geo-Aware Search (Checks Name, College, and State)
-        if (searchQuery && searchQuery.trim() !== "") {
-          const q = searchQuery.toLowerCase().trim();
-          const name = (ath.fullName || "").toLowerCase();
-          const school = (ath.college || "").toLowerCase();
-          const pState = (ath.state || "").toLowerCase();
-          if (!name.includes(q) && !school.includes(q) && !pState.includes(q)) return false;
-        }
-        
-        if (regionFilter !== "ALL") {
-          const validStates = REGIONS[regionFilter] || [];
-          if (!ath.state || !validStates.includes(ath.state.toUpperCase())) return false;
-        }
-
-        if (roleFilter !== "ALL") {
-          if (roleFilter === "TWP" && ath.primaryRole !== "TWP") return false;
-          if (roleFilter === "HITTER" && ath.primaryRole !== "HITTER" && ath.primaryRole !== "TWP") return false;
-          if (roleFilter === "PITCHER" && ath.primaryRole !== "PITCHER" && ath.primaryRole !== "TWP") return false;
-        }
-        
-        if (positionFilter !== "ALL" && ath.position && !ath.position.toUpperCase().includes(positionFilter.toUpperCase())) return false;
-        if (statusFilter !== "ALL" && ath.playerStatus && !ath.playerStatus.toLowerCase().includes(statusFilter.toLowerCase())) return false;
-        if (stateFilter !== "ALL" && ath.state && ath.state.toUpperCase() !== stateFilter.toUpperCase()) return false;
-
-        return true;
-      })
-      .sort((a, b) => {
-        if (sortBy === "MAX_EV") return (parseFloat(b.maxExitVelo || "0") || 0) - (parseFloat(a.maxExitVelo || "0") || 0);
-        if (sortBy === "PEAK_FB") return (parseFloat(b.peakFB || "0") || 0) - (parseFloat(a.peakFB || "0") || 0);
-        if (sortBy === "STUFF_PLUS") return (parseFloat(b.stuffPlus || "0") || 0) - (parseFloat(a.stuffPlus || "0") || 0);
-        if (sortBy === "IVB") return (parseFloat(b.inducedVertBreak || "0") || 0) - (parseFloat(a.inducedVertBreak || "0") || 0);
-        return 0;
-      });
+    return leaderboardRows.filter((ath) => {
+      if (ath.isProfileVisible === false || String(ath.isProfileVisible).toLowerCase() === "false") return false;
+      if (searchQuery && searchQuery.trim() !== "") {
+        const q = searchQuery.toLowerCase().trim();
+        if (!(ath.fullName || "").toLowerCase().includes(q) && !(ath.college || "").toLowerCase().includes(q) && !(ath.state || "").toLowerCase().includes(q)) return false;
+      }
+      if (regionFilter !== "ALL" && (!ath.state || !(REGIONS[regionFilter] || []).includes(ath.state.toUpperCase()))) return false;
+      if (roleFilter !== "ALL") {
+        if (roleFilter === "TWP" && ath.primaryRole !== "TWP") return false;
+        if (roleFilter === "HITTER" && ath.primaryRole !== "HITTER" && ath.primaryRole !== "TWP") return false;
+        if (roleFilter === "PITCHER" && ath.primaryRole !== "PITCHER" && ath.primaryRole !== "TWP") return false;
+      }
+      if (positionFilter !== "ALL" && ath.position && !ath.position.toUpperCase().includes(positionFilter.toUpperCase())) return false;
+      if (statusFilter !== "ALL" && ath.playerStatus && !ath.playerStatus.toLowerCase().includes(statusFilter.toLowerCase())) return false;
+      if (stateFilter !== "ALL" && ath.state && ath.state.toUpperCase() !== stateFilter.toUpperCase()) return false;
+      return true;
+    }).sort((a, b) => {
+      if (sortBy === "MAX_EV") return (parseFloat(b.maxExitVelo || "0") || 0) - (parseFloat(a.maxExitVelo || "0") || 0);
+      if (sortBy === "PEAK_FB") return (parseFloat(b.peakFB || "0") || 0) - (parseFloat(a.peakFB || "0") || 0);
+      if (sortBy === "STUFF_PLUS") return (parseFloat(b.stuffPlus || "0") || 0) - (parseFloat(a.stuffPlus || "0") || 0);
+      if (sortBy === "IVB") return (parseFloat(b.inducedVertBreak || "0") || 0) - (parseFloat(a.inducedVertBreak || "0") || 0);
+      return 0;
+    });
   }, [leaderboardRows, searchQuery, roleFilter, positionFilter, statusFilter, regionFilter, stateFilter, sortBy]);
 
   if (!mounted) return null;
@@ -1002,73 +514,21 @@ function AppContent() {
       {userRole === "SCOUT" && !isScoutOnboarded && account && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(5, 5, 7, 0.98)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 2000, padding: "16px" }}>
           <div style={{ backgroundColor: "#0c0c10", border: `2px solid ${NEON_GREEN}`, borderRadius: "22px", width: "100%", maxWidth: "480px", padding: "26px", boxShadow: "0 0 45px rgba(166, 255, 0, 0.15)" }}>
-            <span style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>
-              Verified Pro Gateway
-            </span>
-            <h3 style={{ margin: "6px 0 10px 0", fontSize: "22px", fontWeight: "950", textTransform: "uppercase", color: "#ffffff" }}>
-              Submit Your Credentials
-            </h3>
-            <p style={{ fontSize: "13px", color: "#a1a1aa", lineHeight: "1.5", margin: "0 0 20px 0" }}>
-              Provide your professional credentials below. Once verified by our team, you will unlock immediate access to athlete phone numbers, emails, and full video links on the National Scoreboard.
-            </p>
+            <span style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>Verified Pro Gateway</span>
+            <h3 style={{ margin: "6px 0 10px 0", fontSize: "22px", fontWeight: "950", textTransform: "uppercase", color: "#ffffff" }}>Submit Your Credentials</h3>
+            <p style={{ fontSize: "13px", color: "#a1a1aa", lineHeight: "1.5", margin: "0 0 20px 0" }}>Provide your professional credentials below. Once verified by our team, you will unlock immediate access to athlete phone numbers, emails, and full video links on the National Scoreboard.</p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}>
-              <div>
-                <label style={{ display: "block", fontSize: "10px", fontWeight: "800", color: "#ffffff", marginBottom: "4px", textTransform: "uppercase" }}>Full Name *</label>
-                <input 
-                  type="text" value={scoutProfile.fullName} 
-                  onChange={(e) => setScoutProfile({ ...scoutProfile, fullName: e.target.value })}
-                  placeholder="e.g. Jason Smith" 
-                  style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px", fontWeight: "700" }}
-                />
-              </div>
-              <div>
-                <label style={{ display: "block", fontSize: "10px", fontWeight: "800", color: "#ffffff", marginBottom: "4px", textTransform: "uppercase" }}>University / Agency / MLB Org *</label>
-                <input 
-                  type="text" value={scoutProfile.organization} 
-                  onChange={(e) => setScoutProfile({ ...scoutProfile, organization: e.target.value })}
-                  placeholder="e.g. State University Baseball" 
-                  style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px", fontWeight: "700" }}
-                />
-              </div>
+              <div><label style={{ display: "block", fontSize: "10px", fontWeight: "800", color: "#ffffff", marginBottom: "4px", textTransform: "uppercase" }}>Full Name *</label><input type="text" value={scoutProfile.fullName} onChange={(e) => setScoutProfile({ ...scoutProfile, fullName: e.target.value })} placeholder="e.g. Jason Smith" style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px", fontWeight: "700" }} /></div>
+              <div><label style={{ display: "block", fontSize: "10px", fontWeight: "800", color: "#ffffff", marginBottom: "4px", textTransform: "uppercase" }}>University / Agency / MLB Org *</label><input type="text" value={scoutProfile.organization} onChange={(e) => setScoutProfile({ ...scoutProfile, organization: e.target.value })} placeholder="e.g. State University Baseball" style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px", fontWeight: "700" }} /></div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                <div>
-                  <label style={{ display: "block", fontSize: "10px", fontWeight: "800", color: "#ffffff", marginBottom: "4px", textTransform: "uppercase" }}>Job Title</label>
-                  <input 
-                    type="text" value={scoutProfile.jobTitle} 
-                    onChange={(e) => setScoutProfile({ ...scoutProfile, jobTitle: e.target.value })}
-                    placeholder="Recruiting Coord." 
-                    style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px", fontWeight: "700" }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: "block", fontSize: "10px", fontWeight: "800", color: "#ffffff", marginBottom: "4px", textTransform: "uppercase" }}>Work Email</label>
-                  <input 
-                    type="email" value={scoutProfile.email} 
-                    onChange={(e) => setScoutProfile({ ...scoutProfile, email: e.target.value })}
-                    placeholder="coach@state.edu" 
-                    style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px", fontWeight: "700" }}
-                  />
-                </div>
+                <div><label style={{ display: "block", fontSize: "10px", fontWeight: "800", color: "#ffffff", marginBottom: "4px", textTransform: "uppercase" }}>Job Title</label><input type="text" value={scoutProfile.jobTitle} onChange={(e) => setScoutProfile({ ...scoutProfile, jobTitle: e.target.value })} placeholder="Recruiting Coord." style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px", fontWeight: "700" }} /></div>
+                <div><label style={{ display: "block", fontSize: "10px", fontWeight: "800", color: "#ffffff", marginBottom: "4px", textTransform: "uppercase" }}>Work Email</label><input type="email" value={scoutProfile.email} onChange={(e) => setScoutProfile({ ...scoutProfile, email: e.target.value })} placeholder="coach@state.edu" style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #333", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px", fontWeight: "700" }} /></div>
               </div>
-              <div>
-                <label style={{ display: "block", fontSize: "10px", fontWeight: "800", color: "#ff9933", marginBottom: "4px", textTransform: "uppercase" }}>Identity Verification Link (Required) *</label>
-                <input 
-                  type="url" value={scoutProfile.verificationLink || ""} 
-                  onChange={(e) => setScoutProfile({ ...scoutProfile, verificationLink: e.target.value })}
-                  placeholder="Link to your LinkedIn or official staff directory page" 
-                  style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #ff7a00", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px", fontWeight: "700" }}
-                />
-              </div>
+              <div><label style={{ display: "block", fontSize: "10px", fontWeight: "800", color: "#ff9933", marginBottom: "4px", textTransform: "uppercase" }}>Identity Verification Link (Required) *</label><input type="url" value={scoutProfile.verificationLink || ""} onChange={(e) => setScoutProfile({ ...scoutProfile, verificationLink: e.target.value })} placeholder="Link to your LinkedIn or official staff directory page" style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #ff7a00", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "13px", fontWeight: "700" }} /></div>
             </div>
 
-            <button
-              onClick={handleSaveScoutProfile}
-              disabled={isSavingScout}
-              style={{ width: "100%", backgroundColor: NEON_GREEN, color: "#000", fontWeight: "950", padding: "14px", borderRadius: "10px", border: "none", cursor: "pointer", fontSize: "13px", textTransform: "uppercase" }}
-            >
-              {isSavingScout ? "Submitting..." : "Submit for Verification ➔"}
-            </button>
+            <button onClick={handleSaveScoutProfile} disabled={isSavingScout} style={{ width: "100%", backgroundColor: NEON_GREEN, color: "#000", fontWeight: "950", padding: "14px", borderRadius: "10px", border: "none", cursor: "pointer", fontSize: "13px", textTransform: "uppercase" }}>{isSavingScout ? "Submitting..." : "Submit for Verification ➔"}</button>
           </div>
         </div>
       )}
@@ -1078,21 +538,9 @@ function AppContent() {
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(5, 5, 7, 0.95)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1900, padding: "16px" }}>
           <div style={{ backgroundColor: "#0c0c10", border: `2px solid #ffb800`, borderRadius: "22px", width: "100%", maxWidth: "460px", padding: "26px", textAlign: "center", boxShadow: "0 0 45px rgba(255, 184, 0, 0.15)" }}>
             <div style={{ fontSize: "40px", marginBottom: "12px" }}>⏳</div>
-            <h3 style={{ margin: "0 0 10px 0", fontSize: "22px", fontWeight: "950", textTransform: "uppercase", color: "#ffffff" }}>
-              Credentials Under Review
-            </h3>
-            <p style={{ fontSize: "14px", color: "#d4d4d8", lineHeight: "1.5", margin: "0 0 24px 0" }}>
-              Your application for Verified Pro Access has been submitted successfully and is currently under review by our administration team. 
-              <br/><br/>
-              To protect the privacy of our athletes, player contact information and unlisted video links will remain locked during this holding period. You will receive an email as soon as your credentials are approved.
-            </p>
-
-            <button
-              onClick={() => setShowScoutPendingModal(false)}
-              style={{ width: "100%", backgroundColor: "#181822", color: "#ffffff", border: "1px solid #383846", fontWeight: "900", padding: "14px", borderRadius: "10px", cursor: "pointer", fontSize: "13px", textTransform: "uppercase" }}
-            >
-              Understood, Return to Scoreboard
-            </button>
+            <h3 style={{ margin: "0 0 10px 0", fontSize: "22px", fontWeight: "950", textTransform: "uppercase", color: "#ffffff" }}>Credentials Under Review</h3>
+            <p style={{ fontSize: "14px", color: "#d4d4d8", lineHeight: "1.5", margin: "0 0 24px 0" }}>Your application for Verified Pro Access has been submitted successfully and is currently under review by our administration team. <br/><br/>To protect the privacy of our athletes, player contact information and unlisted video links will remain locked during this holding period. You will receive an email as soon as your credentials are approved.</p>
+            <button onClick={() => setShowScoutPendingModal(false)} style={{ width: "100%", backgroundColor: "#181822", color: "#ffffff", border: "1px solid #383846", fontWeight: "900", padding: "14px", borderRadius: "10px", cursor: "pointer", fontSize: "13px", textTransform: "uppercase" }}>Understood, Return to Scoreboard</button>
           </div>
         </div>
       )}
@@ -1111,18 +559,15 @@ function AppContent() {
               </div>
             </div>
           </div>
-
           <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
             {account ? (
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 {userRole === "SCOUT" && (
-                   <span style={{ backgroundColor: isScoutApproved ? "rgba(166, 255, 0, 0.12)" : "rgba(255, 184, 0, 0.12)", border: `1px solid ${isScoutApproved ? NEON_GREEN : "#ffb800"}`, color: isScoutApproved ? NEON_GREEN : "#ffb800", fontSize: "10px", fontWeight: "900", padding: "7px 10px", borderRadius: "8px", textTransform: "uppercase" }}>
+                   <span onClick={() => { if (!isScoutApproved) setShowScoutPendingModal(true); }} style={{ backgroundColor: isScoutApproved ? "rgba(166, 255, 0, 0.12)" : "rgba(255, 184, 0, 0.12)", border: `1px solid ${isScoutApproved ? NEON_GREEN : "#ffb800"}`, color: isScoutApproved ? NEON_GREEN : "#ffb800", fontSize: "10px", fontWeight: "900", padding: "7px 10px", borderRadius: "8px", textTransform: "uppercase", cursor: isScoutApproved ? "default" : "pointer" }}>
                      {isScoutApproved ? "Verified Pro" : "Pro Review Pending"}
                    </span>
                 )}
-                {userRole === "ATHLETE" && isUnlocked && (
-                  <span style={{ backgroundColor: "rgba(166, 255, 0, 0.12)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontSize: "10px", fontWeight: "900", padding: "7px 10px", borderRadius: "8px", textTransform: "uppercase", letterSpacing: "0.5px" }}>✅ 100 $SLUG Member</span>
-                )}
+                {userRole === "ATHLETE" && isUnlocked && <span style={{ backgroundColor: "rgba(166, 255, 0, 0.12)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontSize: "10px", fontWeight: "900", padding: "7px 10px", borderRadius: "8px", textTransform: "uppercase", letterSpacing: "0.5px" }}>✅ 100 $SLUG Member</span>}
                 <ConnectButton client={client} wallets={supportedWallets} accountAbstraction={{ chain: base, sponsorGas: true }} chain={base} theme="dark" connectButton={{ label: "Manage Account" }} />
               </div>
             ) : (
@@ -1134,46 +579,14 @@ function AppContent() {
           </div>
         </header>
 
-        {/* STEP-BY-STEP ONBOARDING BAR (SHOWN TO ATHLETES UNTIL 3 STEPS COMPLETE) */}
+        {/* STEP-BY-STEP ONBOARDING BAR */}
         {!isFullyOnboardedAthlete && userRole !== "SCOUT" && (
           <div style={{ backgroundColor: "#0c0c12", border: `1.5px solid ${NEON_GREEN}`, borderRadius: "16px", padding: "14px 16px", marginTop: "16px", boxShadow: "0 8px 28px rgba(166, 255, 0, 0.1)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px", flexWrap: "wrap", gap: "6px" }}>
-              <span style={{ fontSize: "11px", fontWeight: "950", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "0.8px" }}>🚀 Athlete Quick-Start (Unlock 20% Off TAG Sports, Giveaways & Brand Intros)</span>
-              <span style={{ fontSize: "10px", color: "#a1a1aa", fontWeight: "700" }}>100% Free • Takes 60 Seconds</span>
-            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px", flexWrap: "wrap", gap: "6px" }}><span style={{ fontSize: "11px", fontWeight: "950", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "0.8px" }}>🚀 Athlete Quick-Start</span><span style={{ fontSize: "10px", color: "#a1a1aa", fontWeight: "700" }}>Takes 60 Seconds</span></div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "8px" }}>
-              <button onClick={() => !account && handleOpenLogin("ATHLETE")} style={{ backgroundColor: account ? "rgba(166, 255, 0, 0.08)" : NEON_GREEN, color: account ? NEON_GREEN : "#000000", border: account ? `1px solid ${NEON_GREEN}` : "none", borderRadius: "10px", padding: "10px 12px", textAlign: "left", cursor: account ? "default" : "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontWeight: "900", fontSize: "11px" }}>
-                <span>1. Sign In (Google / Phone)</span><span>{account ? "✅ Done" : "Tap Here ➔"}</span>
-              </button>
-              <button onClick={() => { if (!account) handleOpenLogin("ATHLETE"); else setActiveMainTab("LOCKER"); }} style={{ backgroundColor: hasProfile ? "rgba(166, 255, 0, 0.08)" : account ? NEON_GREEN : "#16161d", color: hasProfile ? NEON_GREEN : account ? "#000000" : "#a1a1aa", border: hasProfile ? `1px solid ${NEON_GREEN}` : "1px solid #2e2e3a", borderRadius: "10px", padding: "10px 12px", textAlign: "left", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontWeight: "900", fontSize: "11px" }}>
-                <span>2. Fill Out Player Locker</span><span>{hasProfile ? "✅ Done" : account ? "Open Locker ➔" : "🔒 Step 2"}</span>
-              </button>
-              <button onClick={() => { if (!account) handleOpenLogin("ATHLETE"); else if (!hasProfile) setActiveMainTab("LOCKER"); else setShowClaimPromptModal(true); }} style={{ backgroundColor: isUnlocked ? "rgba(166, 255, 0, 0.08)" : (account && hasProfile) ? NEON_GREEN : "#16161d", color: isUnlocked ? NEON_GREEN : (account && hasProfile) ? "#000000" : "#a1a1aa", border: isUnlocked ? `1px solid ${NEON_GREEN}` : "1px solid #2e2e3a", borderRadius: "10px", padding: "10px 12px", textAlign: "left", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontWeight: "900", fontSize: "11px" }}>
-                <span>3. Claim Free 100 $SLUG Key</span><span>{isUnlocked ? "✅ Active" : (account && hasProfile) ? "Claim Now 🔑" : "🔒 Step 3"}</span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* NEXT GIVEAWAY & MEMBER PERK HUB (COMING SOON) */}
-        {userRole !== "SCOUT" && (
-          <div style={{ background: "linear-gradient(135deg, rgba(16, 24, 14, 0.95) 0%, rgba(12, 12, 18, 0.98) 100%)", border: "1.5px solid #262632", borderRadius: "16px", padding: "14px 18px", marginTop: "14px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", flex: "1 1 320px" }}>
-              <span style={{ backgroundColor: "rgba(166, 255, 0, 0.12)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontSize: "10px", fontWeight: "950", padding: "5px 10px", borderRadius: "999px", textTransform: "uppercase", letterSpacing: "0.8px" }}>🎁 Next Member Giveaway • Coming Soon</span>
-              <div>
-                <div style={{ fontSize: "14px", fontWeight: "950", color: "#ffffff", textTransform: "uppercase" }}>Exclusive Hardware & Pro Gear Drops</div>
-                <div style={{ fontSize: "11px", color: "#d4d4d8", marginTop: "2px" }}>
-                  {isFullyOnboardedAthlete ? <span>You are verified & eligible for the next drop • <strong style={{ color: NEON_GREEN }}>20% TAG Sports Code: DIAMONDCOLLECTIVE</strong></span> : <span>Complete your Locker & claim your free 100 $SLUG key to qualify for the next member giveaway.</span>}
-                </div>
-              </div>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-              {!isFullyOnboardedAthlete ? (
-                <button onClick={() => { if (!account) handleOpenLogin("ATHLETE"); else if (!hasProfile) setActiveMainTab("LOCKER"); else setShowClaimPromptModal(true); }} style={{ backgroundColor: NEON_GREEN, color: "#000000", border: "none", fontWeight: "950", padding: "10px 16px", borderRadius: "10px", cursor: "pointer", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.5px" }}>🔓 Get Eligible for Next Drop ➔</button>
-              ) : (
-                <span style={{ backgroundColor: "rgba(166, 255, 0, 0.1)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontWeight: "900", padding: "9px 14px", borderRadius: "10px", fontSize: "11px", textTransform: "uppercase" }}>✅ Eligible for Next Drop</span>
-              )}
-              <button onClick={() => { setActiveMainTab("EXCHANGE"); setBrandCategoryFilter("PERKS"); }} style={{ backgroundColor: "#181822", color: "#ffffff", border: "1px solid #383846", fontWeight: "800", padding: "10px 12px", borderRadius: "10px", cursor: "pointer", fontSize: "11px", textTransform: "uppercase" }}>Active Perks & 20% Code ↗</button>
+              <button onClick={() => !account && handleOpenLogin("ATHLETE")} style={{ backgroundColor: account ? "rgba(166, 255, 0, 0.08)" : NEON_GREEN, color: account ? NEON_GREEN : "#000000", border: account ? `1px solid ${NEON_GREEN}` : "none", borderRadius: "10px", padding: "10px 12px", textAlign: "left", cursor: account ? "default" : "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontWeight: "900", fontSize: "11px" }}><span>1. Sign In</span><span>{account ? "✅ Done" : "Tap Here ➔"}</span></button>
+              <button onClick={() => { if (!account) handleOpenLogin("ATHLETE"); else setActiveMainTab("LOCKER"); }} style={{ backgroundColor: hasProfile ? "rgba(166, 255, 0, 0.08)" : account ? NEON_GREEN : "#16161d", color: hasProfile ? NEON_GREEN : account ? "#000000" : "#a1a1aa", border: hasProfile ? `1px solid ${NEON_GREEN}` : "1px solid #2e2e3a", borderRadius: "10px", padding: "10px 12px", textAlign: "left", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontWeight: "900", fontSize: "11px" }}><span>2. Fill Locker</span><span>{hasProfile ? "✅ Done" : account ? "Open Locker ➔" : "🔒 Step 2"}</span></button>
+              <button onClick={() => { if (!account) handleOpenLogin("ATHLETE"); else if (!hasProfile) setActiveMainTab("LOCKER"); else setShowClaimPromptModal(true); }} style={{ backgroundColor: isUnlocked ? "rgba(166, 255, 0, 0.08)" : (account && hasProfile) ? NEON_GREEN : "#16161d", color: isUnlocked ? NEON_GREEN : (account && hasProfile) ? "#000000" : "#a1a1aa", border: isUnlocked ? `1px solid ${NEON_GREEN}` : "1px solid #2e2e3a", borderRadius: "10px", padding: "10px 12px", textAlign: "left", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", fontWeight: "900", fontSize: "11px" }}><span>3. Claim 100 $SLUG</span><span>{isUnlocked ? "✅ Active" : (account && hasProfile) ? "Claim Now 🔑" : "🔒 Step 3"}</span></button>
             </div>
           </div>
         )}
@@ -1197,98 +610,28 @@ function AppContent() {
             {/* Search & Quick Filter Bar */}
             <div style={{ backgroundColor: "#0c0c10", border: "1px solid #1e1e26", borderRadius: "16px", padding: "16px", marginBottom: "16px" }}>
               <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "12px" }}>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="🔍 Search player name, state, or college..."
-                  style={{ flex: "1 1 220px", backgroundColor: "#14141a", border: `1.5px solid ${searchQuery ? NEON_GREEN : "#2c2c36"}`, color: "#ffffff", padding: "11px 14px", borderRadius: "10px", fontSize: "13px", fontWeight: "700", outline: "none" }}
-                />
-
-                {searchQuery && (
-                  <button onClick={() => { setSearchQuery(""); if (typeof window !== "undefined" && window.location.search) window.history.replaceState({}, "", window.location.pathname); }} style={{ backgroundColor: "#22222c", border: "1px solid #3f3f4e", color: "#ffffff", padding: "10px 14px", borderRadius: "10px", fontSize: "12px", fontWeight: "800", cursor: "pointer" }}>Clear ✕</button>
-                )}
-
-                <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} style={{ backgroundColor: "#14141a", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontWeight: "900", padding: "10px 12px", borderRadius: "10px", fontSize: "12px", cursor: "pointer" }}>
-                  <option value="DEFAULT">Sort: Latest Added</option>
-                  <option value="PEAK_FB">Sort: Peak Fastball ↓</option>
-                  <option value="STUFF_PLUS">Sort: Stuff+ Grade ↓</option>
-                  <option value="IVB">Sort: Induced Vert Break ↓</option>
-                  <option value="MAX_EV">Sort: Max Exit Velo ↓</option>
-                </select>
-
-                <button onClick={() => setShowAdvancedFilters(!showAdvancedFilters)} style={{ backgroundColor: showAdvancedFilters ? "#22222c" : "#14141a", border: "1px solid #333340", color: "#ffffff", padding: "10px 14px", borderRadius: "10px", fontSize: "12px", fontWeight: "800", cursor: "pointer" }}>
-                  {showAdvancedFilters ? "Hide Filters ▲" : "Filters ▼"}
-                </button>
+                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="🔍 Search player name, state, or college..." style={{ flex: "1 1 220px", backgroundColor: "#14141a", border: `1.5px solid ${searchQuery ? NEON_GREEN : "#2c2c36"}`, color: "#ffffff", padding: "11px 14px", borderRadius: "10px", fontSize: "13px", fontWeight: "700", outline: "none" }} />
+                {searchQuery && <button onClick={() => { setSearchQuery(""); if (typeof window !== "undefined" && window.location.search) window.history.replaceState({}, "", window.location.pathname); }} style={{ backgroundColor: "#22222c", border: "1px solid #3f3f4e", color: "#ffffff", padding: "10px 14px", borderRadius: "10px", fontSize: "12px", fontWeight: "800", cursor: "pointer" }}>Clear ✕</button>}
+                <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} style={{ backgroundColor: "#14141a", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontWeight: "900", padding: "10px 12px", borderRadius: "10px", fontSize: "12px", cursor: "pointer" }}><option value="DEFAULT">Sort: Latest Added</option><option value="PEAK_FB">Sort: Peak Fastball ↓</option><option value="STUFF_PLUS">Sort: Stuff+ Grade ↓</option><option value="IVB">Sort: Induced Vert Break ↓</option><option value="MAX_EV">Sort: Max Exit Velo ↓</option></select>
+                <button onClick={() => setShowAdvancedFilters(!showAdvancedFilters)} style={{ backgroundColor: showAdvancedFilters ? "#22222c" : "#14141a", border: "1px solid #333340", color: "#ffffff", padding: "10px 14px", borderRadius: "10px", fontSize: "12px", fontWeight: "800", cursor: "pointer" }}>{showAdvancedFilters ? "Hide Filters ▲" : "Filters ▼"}</button>
               </div>
 
               {/* Role Filter Pills */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
                 <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
                   {(["ALL", "HITTER", "PITCHER", "TWP"] as const).map((r) => (
-                    <button
-                      key={r}
-                      onClick={() => setRoleFilter(r)}
-                      style={{ backgroundColor: roleFilter === r ? NEON_GREEN : "#15151c", color: roleFilter === r ? "#000000" : "#d4d4d8", border: roleFilter === r ? `1px solid ${NEON_GREEN}` : "1px solid #2b2b36", fontWeight: "900", fontSize: "11px", padding: "7px 14px", borderRadius: "999px", textTransform: "uppercase", cursor: "pointer" }}
-                    >
-                      {r === "TWP" ? "⚡ Two-Way" : r === "ALL" ? "All Players" : `${r}s`}
-                    </button>
+                    <button key={r} onClick={() => setRoleFilter(r)} style={{ backgroundColor: roleFilter === r ? NEON_GREEN : "#15151c", color: roleFilter === r ? "#000000" : "#d4d4d8", border: roleFilter === r ? `1px solid ${NEON_GREEN}` : "1px solid #2b2b36", fontWeight: "900", fontSize: "11px", padding: "7px 14px", borderRadius: "999px", textTransform: "uppercase", cursor: "pointer" }}>{r === "TWP" ? "⚡ Two-Way" : r === "ALL" ? "All Players" : `${r}s`}</button>
                   ))}
                 </div>
-
-                {userRole !== "SCOUT" && (
-                  <button onClick={() => setActiveMainTab("LOCKER")} style={{ backgroundColor: "rgba(166, 255, 0, 0.14)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontWeight: "900", padding: "7px 14px", borderRadius: "999px", fontSize: "11px", textTransform: "uppercase", cursor: "pointer" }}>+ Post / Edit My Numbers ➔</button>
-                )}
+                {userRole !== "SCOUT" && <button onClick={() => setActiveMainTab("LOCKER")} style={{ backgroundColor: "rgba(166, 255, 0, 0.14)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontWeight: "900", padding: "7px 14px", borderRadius: "999px", fontSize: "11px", textTransform: "uppercase", cursor: "pointer" }}>+ Post / Edit My Numbers ➔</button>}
               </div>
 
-              {/* Collapsible Advanced Filters */}
               {showAdvancedFilters && (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "8px", marginTop: "12px", paddingTop: "12px", borderTop: "1px solid #1e1e26" }}>
-                  <div>
-                    <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#a1a1aa", textTransform: "uppercase", marginBottom: "4px" }}>Scouting Region</label>
-                    <select value={regionFilter} onChange={(e) => { setRegionFilter(e.target.value); setStateFilter("ALL"); }} style={{ width: "100%", backgroundColor: "#14141a", border: "1px solid #33333d", color: "#fff", padding: "8px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}>
-                      <option value="ALL">All Regions</option>
-                      {Object.keys(REGIONS).map(r => <option key={r} value={r}>{r} Coast</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#a1a1aa", textTransform: "uppercase", marginBottom: "4px" }}>State</label>
-                    <select value={stateFilter} onChange={(e) => { setStateFilter(e.target.value); setRegionFilter("ALL"); }} style={{ width: "100%", backgroundColor: "#14141a", border: "1px solid #33333d", color: "#fff", padding: "8px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}>
-                      <option value="ALL">All States</option>
-                      <option value="UT">Utah (UT)</option>
-                      <option value="AZ">Arizona (AZ)</option>
-                      <option value="CA">California (CA)</option>
-                      <option value="TX">Texas (TX)</option>
-                      <option value="FL">Florida (FL)</option>
-                      <option value="NV">Nevada (NV)</option>
-                      <option value="CO">Colorado (CO)</option>
-                      <option value="ID">Idaho (ID)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#a1a1aa", textTransform: "uppercase", marginBottom: "4px" }}>Position</label>
-                    <select value={positionFilter} onChange={(e) => setPositionFilter(e.target.value)} style={{ width: "100%", backgroundColor: "#14141a", border: "1px solid #33333d", color: "#fff", padding: "8px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}>
-                      <option value="ALL">All Positions</option>
-                      <option value="RHP">RHP</option>
-                      <option value="LHP">LHP</option>
-                      <option value="C">Catcher (C)</option>
-                      <option value="MIF">Middle Inf (MIF)</option>
-                      <option value="SS">Shortstop (SS)</option>
-                      <option value="3B">Third Base (3B)</option>
-                      <option value="1B">First Base (1B)</option>
-                      <option value="OF">Outfield (OF)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#a1a1aa", textTransform: "uppercase", marginBottom: "4px" }}>Roster / Portal Status</label>
-                    <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ width: "100%", backgroundColor: "#14141a", border: "1px solid #33333d", color: "#fff", padding: "8px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}>
-                      <option value="ALL">All Statuses</option>
-                      <option value="Transfer Portal">Transfer Portal</option>
-                      <option value="Juco Uncommitted">Juco Uncommitted</option>
-                      <option value="Returning">Returning College</option>
-                      <option value="Incoming Freshman">Incoming Freshman</option>
-                    </select>
-                  </div>
+                  <div><label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#a1a1aa", textTransform: "uppercase", marginBottom: "4px" }}>Scouting Region</label><select value={regionFilter} onChange={(e) => { setRegionFilter(e.target.value); setStateFilter("ALL"); }} style={{ width: "100%", backgroundColor: "#14141a", border: "1px solid #33333d", color: "#fff", padding: "8px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}><option value="ALL">All Regions</option>{Object.keys(REGIONS).map(r => <option key={r} value={r}>{r}</option>)}</select></div>
+                  <div><label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#a1a1aa", textTransform: "uppercase", marginBottom: "4px" }}>State</label><select value={stateFilter} onChange={(e) => { setStateFilter(e.target.value); setRegionFilter("ALL"); }} style={{ width: "100%", backgroundColor: "#14141a", border: "1px solid #33333d", color: "#fff", padding: "8px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}><option value="ALL">All States</option><option value="UT">Utah (UT)</option><option value="AZ">Arizona (AZ)</option><option value="CA">California (CA)</option><option value="TX">Texas (TX)</option><option value="FL">Florida (FL)</option><option value="NV">Nevada (NV)</option><option value="CO">Colorado (CO)</option><option value="ID">Idaho (ID)</option></select></div>
+                  <div><label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#a1a1aa", textTransform: "uppercase", marginBottom: "4px" }}>Position</label><select value={positionFilter} onChange={(e) => setPositionFilter(e.target.value)} style={{ width: "100%", backgroundColor: "#14141a", border: "1px solid #33333d", color: "#fff", padding: "8px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}><option value="ALL">All Positions</option><option value="RHP">RHP</option><option value="LHP">LHP</option><option value="C">Catcher (C)</option><option value="MIF">Middle Inf (MIF)</option><option value="SS">Shortstop (SS)</option><option value="3B">Third Base (3B)</option><option value="1B">First Base (1B)</option><option value="OF">Outfield (OF)</option></select></div>
+                  <div><label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#a1a1aa", textTransform: "uppercase", marginBottom: "4px" }}>Roster / Portal Status</label><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ width: "100%", backgroundColor: "#14141a", border: "1px solid #33333d", color: "#fff", padding: "8px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}><option value="ALL">All Statuses</option><option value="Transfer Portal">Transfer Portal</option><option value="Juco Uncommitted">Juco Uncommitted</option><option value="Returning">Returning College</option><option value="Incoming Freshman">Incoming Freshman</option></select></div>
                 </div>
               )}
             </div>
@@ -1306,20 +649,10 @@ function AppContent() {
                   const isPitcherRole = ath.primaryRole === "PITCHER" || isAthleteTWP;
                   const isHitterRole = ath.primaryRole === "HITTER" || isAthleteTWP;
 
-                  const isCurrentUser = Boolean(
-                    (profile.email && ath.email && profile.email.toLowerCase() === ath.email.toLowerCase()) ||
-                    (account?.address && ath.walletAddress && account.address.toLowerCase() === ath.walletAddress.toLowerCase())
-                  );
-
-                  // Contact is unlocked if: user is an APPROVED scout, OR admin, OR it's their own card
+                  const isCurrentUser = Boolean((profile.email && ath.email && profile.email.toLowerCase() === ath.email.toLowerCase()) || (account?.address && ath.walletAddress && account.address.toLowerCase() === ath.walletAddress.toLowerCase()));
                   const canViewContact = (userRole === "SCOUT" && isScoutApproved) || isAdmin || isCurrentUser;
 
-                  const isEliteFB = parseFloat(ath.peakFB || "0") >= 92;
-                  const isEliteStuff = parseFloat(ath.stuffPlus || "0") >= 110;
-                  const isEliteIVB = parseFloat(ath.inducedVertBreak || "0") >= 18;
-                  const isEliteEV = parseFloat(ath.maxExitVelo || "0") >= 100;
-                  const isElite60 = parseFloat(ath.sixtyTime || "99") <= 6.65;
-
+                  const isEliteFB = parseFloat(ath.peakFB || "0") >= 92; const isEliteStuff = parseFloat(ath.stuffPlus || "0") >= 110; const isEliteIVB = parseFloat(ath.inducedVertBreak || "0") >= 18; const isEliteEV = parseFloat(ath.maxExitVelo || "0") >= 100; const isElite60 = parseFloat(ath.sixtyTime || "99") <= 6.65;
                   const headlinePills: { label: string; val: string; elite?: boolean }[] = [];
                   if (isPitcherRole) {
                     if (ath.peakFB) headlinePills.push({ label: "FB", val: `${ath.peakFB} mph`, elite: isEliteFB });
@@ -1336,7 +669,6 @@ function AppContent() {
 
                   return (
                     <div key={idx} style={{ backgroundColor: "#0d0d12", border: isExpanded || isCurrentUser ? `1.5px solid ${NEON_GREEN}` : "1px solid #24242e", borderRadius: "14px", padding: "14px 16px", transition: "all 0.15s ease" }}>
-                      {/* Compact Top Row (Always Visible - Click to Expand) */}
                       <div onClick={() => setExpandedCardIdx(isExpanded ? null : idx)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", cursor: "pointer" }}>
                         <div style={{ display: "flex", flexDirection: "column", gap: "3px", minWidth: "200px" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
@@ -1344,33 +676,19 @@ function AppContent() {
                             {isCurrentUser && <span style={{ backgroundColor: NEON_GREEN, color: "#000000", padding: "2px 7px", borderRadius: "999px", fontSize: "9px", fontWeight: "950", textTransform: "uppercase" }}>⭐ YOU</span>}
                             <span style={{ backgroundColor: isAthleteTWP ? "rgba(166, 255, 0, 0.16)" : "#1b1b24", border: `1px solid ${isAthleteTWP ? NEON_GREEN : "#383846"}`, color: isAthleteTWP ? NEON_GREEN : "#d4d4d8", padding: "2px 8px", borderRadius: "999px", fontSize: "10px", fontWeight: "900", textTransform: "uppercase" }}>{ath.position || ath.primaryRole}</span>
                           </div>
-                          <div style={{ fontSize: "12px", color: "#d4d4d8", fontWeight: "700" }}>
-                            <span style={{ color: NEON_GREEN, fontWeight: "800" }}>🏛️ {ath.college || "Undeclared"}</span>
-                            {ath.state ? ` (${ath.state})` : ""} {ath.height && ath.weight ? ` • ${ath.height} / ${ath.weight} lbs` : ""} <span> • {ath.playerStatus}</span>
-                          </div>
+                          <div style={{ fontSize: "12px", color: "#d4d4d8", fontWeight: "700" }}><span style={{ color: NEON_GREEN, fontWeight: "800" }}>🏛️ {ath.college || "Undeclared"}</span>{ath.state ? ` (${ath.state})` : ""} {ath.height && ath.weight ? ` • ${ath.height} / ${ath.weight} lbs` : ""} <span> • {ath.playerStatus}</span></div>
                         </div>
 
-                        {/* Headline Metric Pills & Action Buttons */}
                         <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
                           {headlinePills.slice(0, 4).map((p, pIdx) => (
-                            <div key={pIdx} style={{ backgroundColor: p.elite ? "rgba(255, 184, 0, 0.14)" : "#14141c", border: `1px solid ${p.elite ? "#ffb800" : "#2e2e3a"}`, padding: "5px 10px", borderRadius: "8px", fontFamily: "monospace", fontSize: "12px", fontWeight: "900" }}>
-                              <span style={{ color: p.elite ? "#ffb800" : NEON_GREEN }}>{p.elite ? "🔥 " : ""}{p.label}: </span><span style={{ color: "#ffffff" }}>{p.val}</span>
-                            </div>
+                            <div key={pIdx} style={{ backgroundColor: p.elite ? "rgba(255, 184, 0, 0.14)" : "#14141c", border: `1px solid ${p.elite ? "#ffb800" : "#2e2e3a"}`, padding: "5px 10px", borderRadius: "8px", fontFamily: "monospace", fontSize: "12px", fontWeight: "900" }}><span style={{ color: p.elite ? "#ffb800" : NEON_GREEN }}>{p.elite ? "🔥 " : ""}{p.label}: </span><span style={{ color: "#ffffff" }}>{p.val}</span></div>
                           ))}
-
-                          <button onClick={(e) => handleCopyPlayerLink(ath.fullName, e)} title="Copy direct link to this player's profile" style={{ backgroundColor: isLinkCopied ? NEON_GREEN : "#16161f", border: `1px solid ${isLinkCopied ? NEON_GREEN : "#383846"}`, color: isLinkCopied ? "#000000" : "#ffffff", padding: "6px 10px", borderRadius: "8px", fontSize: "11px", fontWeight: "900", cursor: "pointer" }}>
-                            {isLinkCopied ? "✓ Link Copied" : "🔗 Link"}
-                          </button>
-
-                          <button onClick={(e) => { e.stopPropagation(); triggerMobileScoutShare(ath); }} style={{ backgroundColor: "rgba(166, 255, 0, 0.14)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "6px 10px", borderRadius: "8px", fontSize: "11px", fontWeight: "900", cursor: "pointer" }}>
-                            📸 4:5 Card
-                          </button>
-
+                          <button onClick={(e) => handleCopyPlayerLink(ath.fullName, e)} title="Copy direct link" style={{ backgroundColor: isLinkCopied ? NEON_GREEN : "#16161f", border: `1px solid ${isLinkCopied ? NEON_GREEN : "#383846"}`, color: isLinkCopied ? "#000000" : "#ffffff", padding: "6px 10px", borderRadius: "8px", fontSize: "11px", fontWeight: "900", cursor: "pointer" }}>{isLinkCopied ? "✓ Link Copied" : "🔗 Link"}</button>
+                          <button onClick={(e) => { e.stopPropagation(); triggerMobileScoutShare(ath); }} style={{ backgroundColor: "rgba(166, 255, 0, 0.14)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "6px 10px", borderRadius: "8px", fontSize: "11px", fontWeight: "900", cursor: "pointer" }}>📸 4:5 Card</button>
                           <span style={{ fontSize: "11px", color: "#a1a1aa", fontWeight: "800", marginLeft: "4px" }}>{isExpanded ? "▲" : "▼"}</span>
                         </div>
                       </div>
 
-                      {/* Expanded Full Telemetry Drawer with Visual Progress Bars */}
                       {isExpanded && (
                         <div style={{ marginTop: "14px", paddingTop: "14px", borderTop: "1px solid #22222c", display: "flex", flexDirection: "column", gap: "12px" }}>
                           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "12px" }}>
@@ -1381,7 +699,6 @@ function AppContent() {
                                 <MetricBar label="STUFF+ GRADE" valueStr={ath.stuffPlus} unit="" min={80} max={140} eliteThreshold={110} subLabel="100 = Avg" />
                                 <MetricBar label="INDUCED VERT BREAK" valueStr={ath.inducedVertBreak} unit='"' min={8} max={24} eliteThreshold={18} subLabel="Carry" />
                                 <MetricBar label="FASTBALL SPIN" valueStr={ath.fbSpinRate} unit=" RPM" min={1800} max={2700} eliteThreshold={2400} />
-
                                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", color: "#d4d4d8", fontSize: "11px", fontFamily: "monospace", fontWeight: "800", marginTop: "8px" }}>
                                   {ath.horizontalBreak && <span style={{ backgroundColor: "#121218", padding: "4px 8px", borderRadius: "6px" }}>HB: {ath.horizontalBreak}"</span>}
                                   {ath.releaseExtension && <span style={{ backgroundColor: "#121218", padding: "4px 8px", borderRadius: "6px" }}>Ext: {ath.releaseExtension}ft</span>}
@@ -1403,7 +720,6 @@ function AppContent() {
                             )}
                           </div>
 
-                          {/* Gated Scout Info & Social Links */}
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
                             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                               {canViewContact ? (
@@ -1418,7 +734,6 @@ function AppContent() {
                                 </button>
                               )}
                             </div>
-
                             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                               {ath.social1_Url && <a href={ath.social1_Url} target="_blank" rel="noopener noreferrer" style={{ backgroundColor: "#1c1c24", border: "1px solid #44444f", color: NEON_GREEN, padding: "7px 12px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "900" }}>{ath.social1_Type || "Social 1"} ↗</a>}
                               {ath.social2_Url && <a href={ath.social2_Url} target="_blank" rel="noopener noreferrer" style={{ backgroundColor: "#1c1c24", border: "1px solid #44444f", color: NEON_GREEN, padding: "7px 12px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "900" }}>{ath.social2_Type || "Social 2"} ↗</a>}
@@ -1435,16 +750,13 @@ function AppContent() {
         )}
 
         {/* =====================================================================
-            TAB 2: BRAND DEALS & MEMBER PERKS
+            TAB 2: BRAND DEALS & TAB 3: LOCKER (ATHLETES ONLY)
            ===================================================================== */}
         {activeMainTab === "EXCHANGE" && userRole !== "SCOUT" && (
           <section>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: "14px" }}>
               {flattenedBrands.map((brand, bIdx) => {
-                const isDirectIntro = brand.type === "email_intro";
-                const hasCoupon = Boolean(brand.couponCode);
-                const activeIntro = isIntroActive(brand.name);
-
+                const isDirectIntro = brand.type === "email_intro"; const hasCoupon = Boolean(brand.couponCode); const activeIntro = isIntroActive(brand.name);
                 return (
                   <div key={bIdx} style={{ backgroundColor: "#0c0c10", border: (isDirectIntro || hasCoupon) ? `1.5px solid rgba(166, 255, 0, 0.55)` : "1px solid #1e1e26", borderRadius: "14px", padding: "18px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                     <div>
@@ -1460,15 +772,7 @@ function AppContent() {
                     <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "16px" }}>
                       {hasCoupon && (
                         <div>
-                          {!account ? (
-                            <button onClick={() => handleOpenLogin("ATHLETE")} style={{ width: "100%", backgroundColor: "#16161f", color: NEON_GREEN, border: `1px dashed ${NEON_GREEN}`, fontWeight: "900", padding: "9px", borderRadius: "8px", fontSize: "11px", textTransform: "uppercase", cursor: "pointer" }}>🔒 Sign In to Unlock 20% Off Code</button>
-                          ) : !hasProfile ? (
-                            <button onClick={() => setActiveMainTab("LOCKER")} style={{ width: "100%", backgroundColor: "#16161f", color: NEON_GREEN, border: `1px dashed ${NEON_GREEN}`, fontWeight: "900", padding: "9px", borderRadius: "8px", fontSize: "11px", textTransform: "uppercase", cursor: "pointer" }}>🔒 Complete Locker for 20% Off Code</button>
-                          ) : !isUnlocked ? (
-                            <button onClick={() => setShowClaimPromptModal(true)} style={{ width: "100%", backgroundColor: "#16161f", color: NEON_GREEN, border: `1px dashed ${NEON_GREEN}`, fontWeight: "900", padding: "9px", borderRadius: "8px", fontSize: "11px", textTransform: "uppercase", cursor: "pointer" }}>🔑 Claim 100 $SLUG to Unlock 20% Off</button>
-                          ) : !codeRevealed ? (
-                            <button onClick={() => setCodeRevealed(true)} style={{ width: "100%", backgroundColor: "rgba(166, 255, 0, 0.12)", color: NEON_GREEN, border: `1px dashed ${NEON_GREEN}`, fontWeight: "900", padding: "9px", borderRadius: "8px", fontSize: "11px", textTransform: "uppercase", cursor: "pointer" }}>🔓 Reveal 20% Off Member Code</button>
-                          ) : (
+                          {!account ? <button onClick={() => handleOpenLogin("ATHLETE")} style={{ width: "100%", backgroundColor: "#16161f", color: NEON_GREEN, border: `1px dashed ${NEON_GREEN}`, fontWeight: "900", padding: "9px", borderRadius: "8px", fontSize: "11px", textTransform: "uppercase", cursor: "pointer" }}>🔒 Sign In to Unlock 20% Off Code</button> : !hasProfile ? <button onClick={() => setActiveMainTab("LOCKER")} style={{ width: "100%", backgroundColor: "#16161f", color: NEON_GREEN, border: `1px dashed ${NEON_GREEN}`, fontWeight: "900", padding: "9px", borderRadius: "8px", fontSize: "11px", textTransform: "uppercase", cursor: "pointer" }}>🔒 Complete Locker for 20% Off Code</button> : !isUnlocked ? <button onClick={() => setShowClaimPromptModal(true)} style={{ width: "100%", backgroundColor: "#16161f", color: NEON_GREEN, border: `1px dashed ${NEON_GREEN}`, fontWeight: "900", padding: "9px", borderRadius: "8px", fontSize: "11px", textTransform: "uppercase", cursor: "pointer" }}>🔑 Claim 100 $SLUG to Unlock 20% Off</button> : !codeRevealed ? <button onClick={() => setCodeRevealed(true)} style={{ width: "100%", backgroundColor: "rgba(166, 255, 0, 0.12)", color: NEON_GREEN, border: `1px dashed ${NEON_GREEN}`, fontWeight: "900", padding: "9px", borderRadius: "8px", fontSize: "11px", textTransform: "uppercase", cursor: "pointer" }}>🔓 Reveal 20% Off Member Code</button> : (
                             <div style={{ backgroundColor: "rgba(166, 255, 0, 0.1)", border: `1.5px dashed ${NEON_GREEN}`, borderRadius: "8px", padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                               <div>
                                 <span style={{ display: "block", fontSize: "9px", color: NEON_GREEN, fontWeight: "800", textTransform: "uppercase" }}>{brand.couponLabel || "20% Off Code"} (<a href={brand.link} target="_blank" rel="noopener noreferrer" style={{ color: "#fff", textDecoration: "underline" }}>Shop ↗</a>)</span>
@@ -1479,11 +783,8 @@ function AppContent() {
                           )}
                         </div>
                       )}
-
                       {isDirectIntro ? (
-                        <button onClick={() => handleInitiateIntro(brand)} style={{ width: "100%", backgroundColor: activeIntro ? "#18181b" : NEON_GREEN, color: activeIntro ? "#a1a1aa" : "#000000", border: activeIntro ? "1px solid #27272a" : "none", fontWeight: "950", padding: "11px", borderRadius: "8px", fontSize: "11px", textTransform: "uppercase", cursor: "pointer" }}>
-                          {activeIntro ? `🔒 Intro Sent (${getDaysRemaining(brand.name)}d window)` : brand.buttonText}
-                        </button>
+                        <button onClick={() => handleInitiateIntro(brand)} style={{ width: "100%", backgroundColor: activeIntro ? "#18181b" : NEON_GREEN, color: activeIntro ? "#a1a1aa" : "#000000", border: activeIntro ? "1px solid #27272a" : "none", fontWeight: "950", padding: "11px", borderRadius: "8px", fontSize: "11px", textTransform: "uppercase", cursor: "pointer" }}>{activeIntro ? `🔒 Intro Sent (${getDaysRemaining(brand.name)}d window)` : brand.buttonText}</button>
                       ) : (
                         <a href={brand.link} target="_blank" rel="noopener noreferrer" style={{ display: "block", textAlign: "center", backgroundColor: "#16161c", color: "#ffffff", border: "1px solid #2e2e38", fontWeight: "800", padding: "11px", borderRadius: "8px", fontSize: "11px", textTransform: "uppercase", textDecoration: "none" }}>{brand.buttonText}</a>
                       )}
@@ -1495,9 +796,6 @@ function AppContent() {
           </section>
         )}
 
-        {/* =====================================================================
-            TAB 3: MY LOCKER (DIRECT IN-PAGE PROFILE & METRICS EDITOR)
-           ===================================================================== */}
         {activeMainTab === "LOCKER" && userRole !== "SCOUT" && (
           <section style={{ maxWidth: "720px", margin: "0 auto" }}>
             {!account ? (
@@ -1509,12 +807,8 @@ function AppContent() {
               </div>
             ) : (
               <div style={{ backgroundColor: "#0c0c10", border: `1.5px solid ${NEON_GREEN}`, borderRadius: "18px", padding: "22px" }}>
-                {/* Locker Status Header */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", borderBottom: "1px solid #22222a", paddingBottom: "16px", marginBottom: "18px" }}>
-                  <div>
-                    <h2 style={{ margin: 0, fontSize: "18px", fontWeight: "950", textTransform: "uppercase" }}>{profile.fullName ? `${profile.fullName}'s Locker` : "My Athlete Locker & Metrics"}</h2>
-                    <p style={{ margin: "3px 0 0 0", fontSize: "12px", color: "#d4d4d8" }}>Fill out your bio and numbers below, then click <strong style={{ color: NEON_GREEN }}>Save Profile</strong>.</p>
-                  </div>
+                  <div><h2 style={{ margin: 0, fontSize: "18px", fontWeight: "950", textTransform: "uppercase" }}>{profile.fullName ? `${profile.fullName}'s Locker` : "My Athlete Locker & Metrics"}</h2><p style={{ margin: "3px 0 0 0", fontSize: "12px", color: "#d4d4d8" }}>Fill out your bio and numbers below, then click <strong style={{ color: NEON_GREEN }}>Save Profile</strong>.</p></div>
                   <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                     {hasProfile && <button type="button" onClick={() => handleCopyPlayerLink(profile.fullName)} style={{ backgroundColor: "#16161f", border: "1px solid #383846", color: "#ffffff", padding: "9px 14px", borderRadius: "10px", fontSize: "11px", fontWeight: "900", cursor: "pointer" }}>{copiedPlayerName === profile.fullName ? "✓ Profile Link Copied!" : "🔗 Copy My Profile Link"}</button>}
                     {hasProfile && <button type="button" onClick={() => triggerMobileScoutShare(profile)} style={{ backgroundColor: "rgba(166, 255, 0, 0.14)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "9px 14px", borderRadius: "10px", fontSize: "11px", fontWeight: "900", cursor: "pointer" }}>📸 Download 4:5 Card</button>}
@@ -1591,10 +885,7 @@ function AppContent() {
                       <div><label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "3px" }}>VAA (°)</label><input type="number" step="0.1" placeholder="-4.6" value={profile.vertApproachAngle || ""} onChange={(e) => setProfile({ ...profile, vertApproachAngle: e.target.value })} style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "8px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }} /></div>
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px" }}>
-                      <div>
-                        <label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "3px" }}>OFF-SPEED</label>
-                        <select value={profile.offSpeedType || "Slider"} onChange={(e) => setProfile({ ...profile, offSpeedType: e.target.value })} style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "8px 4px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}><option value="Slider">Slider</option><option value="Sweeper">Sweeper</option><option value="Curveball">Curveball</option><option value="Changeup">Changeup</option><option value="Cutter">Cutter</option><option value="Splitter">Splitter</option></select>
-                      </div>
+                      <div><label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "3px" }}>OFF-SPEED</label><select value={profile.offSpeedType || "Slider"} onChange={(e) => setProfile({ ...profile, offSpeedType: e.target.value })} style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "8px 4px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}><option value="Slider">Slider</option><option value="Sweeper">Sweeper</option><option value="Curveball">Curveball</option><option value="Changeup">Changeup</option><option value="Cutter">Cutter</option><option value="Splitter">Splitter</option></select></div>
                       <div><label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "3px" }}>OS VELO</label><input type="number" step="0.1" placeholder="83.4" value={profile.offSpeedVelo || ""} onChange={(e) => setProfile({ ...profile, offSpeedVelo: e.target.value })} style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "8px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }} /></div>
                       <div><label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "3px" }}>K%</label><input type="number" step="0.1" placeholder="30" value={profile.kPercentage || ""} onChange={(e) => setProfile({ ...profile, kPercentage: e.target.value })} style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "8px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }} /></div>
                       <div><label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "3px" }}>BB%</label><input type="number" step="0.1" placeholder="6" value={profile.bbPercentage || ""} onChange={(e) => setProfile({ ...profile, bbPercentage: e.target.value })} style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "8px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }} /></div>
@@ -1627,10 +918,7 @@ function AppContent() {
 
         {/* FAQ Accordion */}
         <section style={{ margin: "48px 0 20px 0" }}>
-          <div style={{ textAlign: "center", marginBottom: "20px" }}>
-            <span style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>How It Works</span>
-            <h3 style={{ fontSize: "20px", fontWeight: "950", color: "#ffffff", textTransform: "uppercase", margin: "4px 0 0 0" }}>Frequently Asked Questions</h3>
-          </div>
+          <div style={{ textAlign: "center", marginBottom: "20px" }}><span style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>How It Works</span><h3 style={{ fontSize: "20px", fontWeight: "950", color: "#ffffff", textTransform: "uppercase", margin: "4px 0 0 0" }}>Frequently Asked Questions</h3></div>
           <div style={{ maxWidth: "760px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "10px" }}>
             {FAQS.map((faq, fIdx) => (
               <div key={fIdx} style={{ backgroundColor: "#0c0c10", border: "1px solid #1e1e26", borderRadius: "12px", overflow: "hidden" }}>
