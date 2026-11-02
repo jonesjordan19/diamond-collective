@@ -795,6 +795,8 @@ function AppContent() {
   
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isSavingScout, setIsSavingScout] = useState(false);
+  const [isScoutOnboarded, setIsScoutOnboarded] = useState(false);
+  
   const [introTimestamps, setIntroTimestamps] = useState<{ [brandName: string]: number }>({});
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
@@ -859,7 +861,6 @@ function AppContent() {
   const isUnlocked = balance >= 100 || justClaimed;
   
   const hasProfile = Boolean(profile.fullName && profile.email);
-  const isScoutOnboarded = Boolean(scoutProfile.fullName && scoutProfile.organization && userRole === "SCOUT");
   const isFullyOnboardedAthlete = Boolean(account && hasProfile && isUnlocked && userRole === "ATHLETE");
 
   const handleCopyCode = () => {
@@ -982,6 +983,9 @@ function AppContent() {
           try {
             const parsed = JSON.parse(savedScout);
             setScoutProfile({ ...emptyScout, ...parsed, email: parsed.email || acctEmail });
+            if (parsed.fullName && parsed.organization) {
+              setIsScoutOnboarded(true);
+            }
           } catch {}
         } else {
           setScoutProfile({ ...emptyScout, email: acctEmail });
@@ -1048,6 +1052,7 @@ function AppContent() {
 
     localStorage.setItem(`scout_profile_${lowerWallet}`, JSON.stringify(scoutProfile));
     setUserRole("SCOUT");
+    setIsScoutOnboarded(true);
 
     try {
       await fetch(GOOGLE_SCRIPT_URL, {
