@@ -86,6 +86,8 @@ const MARKET_SECTIONS: MarketCategory[] = [
   },
 ];
 
+const BRAND_COUNT = MARKET_SECTIONS.reduce((total, section) => total + section.brands.length, 0);
+
 const FAQS = [
   { q: "How do I unlock the 20% TAG Sports discount & Brand Intros?", a: "It takes 3 quick steps: (1) Sign in with your Google, Apple, or phone ID, (2) Fill out your player bio in the 'My Locker' tab, and (3) Claim your free 100 $SLUG membership key." },
   { q: "Is this compliant with NCAA and Institutional NIL rules?", a: "Yes. All Slugger Coins ($SLUG) distributed during the Founders phase have zero market cash value and are non-compensatory. Each verified member claims a flat 100 $SLUG allocation used strictly as an access key to unlock brand directories." },
@@ -93,11 +95,15 @@ const FAQS = [
   { q: "I'm a Scout or Coach. How do I view player contact info?", a: "Click 'Scout & Pro Access' in the header to log in. Once you complete your brief Pro Credential profile and are approved by our team, you will unlock full access to the athletes' cell phones, emails, and TrackMan video links directly on their Scoreboard cards." },
 ];
 
+const US_STATES: [string, string][] = [
+  ["AL", "Alabama"], ["AK", "Alaska"], ["AZ", "Arizona"], ["AR", "Arkansas"], ["CA", "California"], ["CO", "Colorado"], ["CT", "Connecticut"], ["DE", "Delaware"], ["DC", "District of Columbia"], ["FL", "Florida"], ["GA", "Georgia"], ["HI", "Hawaii"], ["ID", "Idaho"], ["IL", "Illinois"], ["IN", "Indiana"], ["IA", "Iowa"], ["KS", "Kansas"], ["KY", "Kentucky"], ["LA", "Louisiana"], ["ME", "Maine"], ["MD", "Maryland"], ["MA", "Massachusetts"], ["MI", "Michigan"], ["MN", "Minnesota"], ["MS", "Mississippi"], ["MO", "Missouri"], ["MT", "Montana"], ["NE", "Nebraska"], ["NV", "Nevada"], ["NH", "New Hampshire"], ["NJ", "New Jersey"], ["NM", "New Mexico"], ["NY", "New York"], ["NC", "North Carolina"], ["ND", "North Dakota"], ["OH", "Ohio"], ["OK", "Oklahoma"], ["OR", "Oregon"], ["PA", "Pennsylvania"], ["RI", "Rhode Island"], ["SC", "South Carolina"], ["SD", "South Dakota"], ["TN", "Tennessee"], ["TX", "Texas"], ["UT", "Utah"], ["VT", "Vermont"], ["VA", "Virginia"], ["WA", "Washington"], ["WV", "West Virginia"], ["WI", "Wisconsin"], ["WY", "Wyoming"],
+];
+
 const REGIONS: Record<string, string[]> = {
-  "West": ["UT", "AZ", "CA", "NV", "ID", "WA", "OR", "CO", "NM", "MT", "WY", "HI"],
+  "West": ["UT", "AZ", "CA", "NV", "ID", "WA", "OR", "CO", "NM", "MT", "WY", "HI", "AK"],
   "Midwest": ["ND", "SD", "NE", "KS", "MN", "IA", "MO", "WI", "IL", "MI", "IN", "OH"],
   "South": ["TX", "OK", "AR", "LA", "MS", "TN", "KY", "AL", "GA", "FL", "SC", "NC", "VA", "WV"],
-  "Northeast": ["PA", "NY", "NJ", "CT", "RI", "MA", "VT", "NH", "ME", "MD", "DE"]
+  "Northeast": ["PA", "NY", "NJ", "CT", "RI", "MA", "VT", "NH", "ME", "MD", "DE", "DC"]
 };
 
 export interface AthleteProfile {
@@ -218,7 +224,7 @@ async function triggerMobileScoutShare(athlete: AthleteProfile) {
   ctx.fillText("TrackMan, Hawkeye, and verified metrics published on National Scoreboard.", 120, 1046);
   ctx.fillText("Direct scout verification & NIL access powered by Slugger Coin ($SLUG).", 120, 1078);
 
-  ctx.fillStyle = "#ffffff"; ctx.font = "900 24px -apple-system, BlinkMacSystemFont, sans-serif"; ctx.textAlign = "center"; ctx.fillText("SLUGGERCOIN.COM/SCOREBOARD", 540, 1260);
+  ctx.fillStyle = "#ffffff"; ctx.font = "900 24px -apple-system, BlinkMacSystemFont, sans-serif"; ctx.textAlign = "center"; ctx.fillText("SLUGGERCOIN.COM", 540, 1260);
   ctx.fillStyle = "#888888"; ctx.font = "600 16px -apple-system, BlinkMacSystemFont, sans-serif"; ctx.fillText("THE DIAMOND COLLECTIVE • ALL RIGHTS RESERVED", 540, 1295);
 
   canvas.toBlob(async (blob) => {
@@ -632,7 +638,7 @@ function AppContent() {
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "3px" }}>
                 <span style={{ fontSize: "10px", color: NEON_GREEN, fontWeight: "800", letterSpacing: "0.8px", textTransform: "uppercase" }}>College Scouting & Brand Perks</span>
                 <span style={{ fontSize: "10px", color: "#71717a" }}>•</span>
-                <span style={{ fontSize: "10px", color: "#a1a1aa", fontWeight: "700" }}>{totalSupplyData !== undefined ? `${remainingPercentage}% Founders Keys Left` : "16+ Brand Partners"}</span>
+                <span style={{ fontSize: "10px", color: "#a1a1aa", fontWeight: "700" }}>{totalSupplyData !== undefined ? `${remainingPercentage}% Founders Keys Left` : `${BRAND_COUNT} Brand Partners`}</span>
               </div>
             </div>
           </div>
@@ -673,7 +679,7 @@ function AppContent() {
           <button onClick={() => setActiveMainTab("SCOREBOARD")} style={{ backgroundColor: activeMainTab === "SCOREBOARD" ? NEON_GREEN : "transparent", color: activeMainTab === "SCOREBOARD" ? "#000000" : "#ffffff", border: "none", borderRadius: "12px", padding: "12px 8px", cursor: "pointer", textAlign: "center", fontWeight: "950", fontSize: "13px", textTransform: "uppercase", letterSpacing: "0.4px", transition: "all 0.15s ease" }}>🏆 Scoreboard ({filteredScoreboard.length})</button>
           {userRole !== "SCOUT" && (
             <>
-              <button onClick={() => setActiveMainTab("EXCHANGE")} style={{ backgroundColor: activeMainTab === "EXCHANGE" ? NEON_GREEN : "transparent", color: activeMainTab === "EXCHANGE" ? "#000000" : "#ffffff", border: "none", borderRadius: "12px", padding: "12px 8px", cursor: "pointer", textAlign: "center", fontWeight: "950", fontSize: "13px", textTransform: "uppercase", letterSpacing: "0.4px", transition: "all 0.15s ease" }}>🤝 Brand Deals (16)</button>
+              <button onClick={() => setActiveMainTab("EXCHANGE")} style={{ backgroundColor: activeMainTab === "EXCHANGE" ? NEON_GREEN : "transparent", color: activeMainTab === "EXCHANGE" ? "#000000" : "#ffffff", border: "none", borderRadius: "12px", padding: "12px 8px", cursor: "pointer", textAlign: "center", fontWeight: "950", fontSize: "13px", textTransform: "uppercase", letterSpacing: "0.4px", transition: "all 0.15s ease" }}>🤝 Brand Deals ({BRAND_COUNT})</button>
               <button onClick={() => setActiveMainTab("LOCKER")} style={{ backgroundColor: activeMainTab === "LOCKER" ? NEON_GREEN : "transparent", color: activeMainTab === "LOCKER" ? "#000000" : "#ffffff", border: "none", borderRadius: "12px", padding: "12px 8px", cursor: "pointer", textAlign: "center", fontWeight: "950", fontSize: "13px", textTransform: "uppercase", letterSpacing: "0.4px", transition: "all 0.15s ease" }}>👤 My Locker {hasProfile ? "✓" : "⚙️"}</button>
             </>
           )}
@@ -706,7 +712,7 @@ function AppContent() {
               {showAdvancedFilters && (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "8px", marginTop: "12px", paddingTop: "12px", borderTop: "1px solid #1e1e26" }}>
                   <div><label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#a1a1aa", textTransform: "uppercase", marginBottom: "4px" }}>Scouting Region</label><select value={regionFilter} onChange={(e) => { setRegionFilter(e.target.value); setStateFilter("ALL"); }} style={{ width: "100%", backgroundColor: "#14141a", border: "1px solid #33333d", color: "#fff", padding: "8px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}><option value="ALL">All Regions</option>{Object.keys(REGIONS).map(r => <option key={r} value={r}>{r}</option>)}</select></div>
-                  <div><label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#a1a1aa", textTransform: "uppercase", marginBottom: "4px" }}>State</label><select value={stateFilter} onChange={(e) => { setStateFilter(e.target.value); setRegionFilter("ALL"); }} style={{ width: "100%", backgroundColor: "#14141a", border: "1px solid #33333d", color: "#fff", padding: "8px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}><option value="ALL">All States</option><option value="UT">Utah (UT)</option><option value="AZ">Arizona (AZ)</option><option value="CA">California (CA)</option><option value="TX">Texas (TX)</option><option value="FL">Florida (FL)</option><option value="NV">Nevada (NV)</option><option value="CO">Colorado (CO)</option><option value="ID">Idaho (ID)</option></select></div>
+                  <div><label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#a1a1aa", textTransform: "uppercase", marginBottom: "4px" }}>State</label><select value={stateFilter} onChange={(e) => { setStateFilter(e.target.value); setRegionFilter("ALL"); }} style={{ width: "100%", backgroundColor: "#14141a", border: "1px solid #33333d", color: "#fff", padding: "8px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}><option value="ALL">All States</option>{US_STATES.map(([code, name]) => <option key={code} value={code}>{name} ({code})</option>)}</select></div>
                   <div><label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#a1a1aa", textTransform: "uppercase", marginBottom: "4px" }}>Position</label><select value={positionFilter} onChange={(e) => setPositionFilter(e.target.value)} style={{ width: "100%", backgroundColor: "#14141a", border: "1px solid #33333d", color: "#fff", padding: "8px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}><option value="ALL">All Positions</option><option value="RHP">RHP</option><option value="LHP">LHP</option><option value="C">Catcher (C)</option><option value="MIF">Middle Inf (MIF)</option><option value="SS">Shortstop (SS)</option><option value="3B">Third Base (3B)</option><option value="1B">First Base (1B)</option><option value="OF">Outfield (OF)</option></select></div>
                   <div><label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#a1a1aa", textTransform: "uppercase", marginBottom: "4px" }}>Roster / Portal Status</label><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ width: "100%", backgroundColor: "#14141a", border: "1px solid #33333d", color: "#fff", padding: "8px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}><option value="ALL">All Statuses</option><option value="Transfer Portal">Transfer Portal</option><option value="Juco Uncommitted">Juco Uncommitted</option><option value="Returning">Returning College</option><option value="Incoming Freshman">Incoming Freshman</option></select></div>
                 </div>
@@ -922,7 +928,7 @@ function AppContent() {
                       <div><label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: NEON_GREEN, marginBottom: "4px" }}>Primary Role</label><select value={profile.primaryRole} onChange={(e) => setProfile(prev => ({ ...prev, primaryRole: e.target.value as any }))} style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "10px 4px", borderRadius: "8px", fontSize: "11px", fontWeight: "900" }}><option value="HITTER">Hitter</option><option value="PITCHER">Pitcher</option><option value="TWP">Two-Way</option></select></div>
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
-                      <div><label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>State</label><select value={profile.state || "UT"} onChange={(e) => setProfile(prev => ({ ...prev, state: e.target.value }))} style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}><option value="UT">UT</option><option value="AZ">AZ</option><option value="CA">CA</option><option value="TX">TX</option><option value="FL">FL</option><option value="NV">NV</option><option value="CO">CO</option><option value="ID">ID</option></select></div>
+                      <div><label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>State</label><select value={profile.state || "UT"} onChange={(e) => setProfile(prev => ({ ...prev, state: e.target.value }))} style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }}>{US_STATES.map(([code]) => <option key={code} value={code}>{code}</option>)}</select></div>
                       <div><label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>Roster Status</label><select value={profile.playerStatus} onChange={(e) => setProfile(prev => ({ ...prev, playerStatus: e.target.value }))} style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}><option value="Transfer Portal">Transfer Portal</option><option value="Returning College Player">Returning</option><option value="Incoming Freshman">Incoming Freshman</option><option value="Juco Uncommitted">Juco Uncommitted</option></select></div>
                       <div><label style={{ display: "block", fontSize: "9px", fontWeight: "800", color: "#ffffff", marginBottom: "4px" }}>Class Year</label><select value={profile.collegeYear} onChange={(e) => setProfile(prev => ({ ...prev, collegeYear: e.target.value }))} style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "11px", fontWeight: "700" }}><option value="Freshman">Freshman</option><option value="Sophomore">Sophomore</option><option value="Junior">Junior</option><option value="Senior">Senior</option><option value="Graduate">Graduate</option></select></div>
                     </div>
