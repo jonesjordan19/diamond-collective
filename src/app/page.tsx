@@ -109,7 +109,7 @@ const REGIONS: Record<string, string[]> = {
 
 export interface AthleteProfile {
   verificationStatus?: string; fullName: string; email: string; phone: string; college: string; state?: string; position: string; collegeYear: string; playerStatus: string; verificationLink: string;
-  height?: string; weight?: string; primaryRole: "HITTER" | "PITCHER" | "TWP"; isProfileVisible: boolean; walletAddress?: string; social1_Type?: string; social1_Url?: string; social2_Type?: string; social2_Url?: string;
+  height?: string; weight?: string; primaryRole: "HITTER" | "PITCHER" | "TWP"; isProfileVisible: boolean; promoConsent?: boolean; walletAddress?: string; social1_Type?: string; social1_Url?: string; social2_Type?: string; social2_Url?: string;
   maxExitVelo?: string; ninetyEV?: string; batSpeed?: string; sixtyTime?: string; recordedDateHitting?: string; peakFB?: string; sittingFB?: string; offSpeedVelo?: string; offSpeedType?: string;
   fbSpinRate?: string; offSpeedSpinRate?: string; firstPitchStrike?: string; recordedDatePitching?: string; stuffPlus?: string; locationPlus?: string; pitchingPlus?: string;
   inducedVertBreak?: string; horizontalBreak?: string; vertApproachAngle?: string; releaseExtension?: string; releaseHeight?: string; kPercentage?: string; bbPercentage?: string; kMinusBbPercentage?: string;
@@ -121,7 +121,7 @@ export interface ScoutProfile {
 
 const emptyProfile: AthleteProfile = {
   verificationStatus: "Pending", fullName: "", email: "", phone: "", college: "", state: "UT", position: "", collegeYear: "Freshman", playerStatus: "Incoming Freshman", verificationLink: "",
-  height: "", weight: "", primaryRole: "HITTER", isProfileVisible: true, walletAddress: "", social1_Type: "X", social1_Url: "", social2_Type: "IG", social2_Url: "",
+  height: "", weight: "", primaryRole: "HITTER", isProfileVisible: true, promoConsent: false, walletAddress: "", social1_Type: "X", social1_Url: "", social2_Type: "IG", social2_Url: "",
   maxExitVelo: "", ninetyEV: "", batSpeed: "", sixtyTime: "", recordedDateHitting: "", peakFB: "", sittingFB: "", offSpeedVelo: "", offSpeedType: "Slider",
   fbSpinRate: "", offSpeedSpinRate: "", firstPitchStrike: "", recordedDatePitching: "", stuffPlus: "", locationPlus: "", pitchingPlus: "",
   inducedVertBreak: "", horizontalBreak: "", vertApproachAngle: "", releaseExtension: "", releaseHeight: "", kPercentage: "", bbPercentage: "", kMinusBbPercentage: "",
@@ -965,6 +965,10 @@ function AppContent() {
                       <div><label style={{ display: "block", fontSize: "12px", fontWeight: "800", textTransform: "uppercase", color: NEON_GREEN, marginBottom: "4px" }}>Email *</label><input type="email" value={profile.email || ""} onChange={(e) => setProfile(prev => ({ ...prev, email: e.target.value }))} placeholder="athlete@school.edu" style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: `1px solid ${NEON_GREEN}`, color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }} /></div>
                       <div><label style={{ display: "block", fontSize: "12px", fontWeight: "800", textTransform: "uppercase", color: "#ffffff", marginBottom: "4px" }}>Cell Phone *</label><input type="tel" value={profile.phone || ""} onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))} placeholder="(555) 000-0000" style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000", border: "1px solid #444", color: "#fff", padding: "10px", borderRadius: "8px", fontSize: "12px", fontWeight: "700" }} /></div>
                     </div>
+                    <label className="consent-row">
+                      <input type="checkbox" checked={profile.promoConsent === true} onChange={(e) => setProfile(prev => ({ ...prev, promoConsent: e.target.checked }))} />
+                      <span><strong>Optional:</strong> The Diamond Collective can feature my name, school, position, public stats, and player card in its promotions and ads. I won&apos;t be paid, and I can change this anytime. If I&apos;m under 18, a parent or guardian has approved. <a href="/privacy">Learn more</a></span>
+                    </label>
                   </div>
                 )}
 
@@ -1027,6 +1031,7 @@ function AppContent() {
                 <button onClick={handleSaveProfile} disabled={isSavingProfile} style={{ width: "100%", marginTop: "18px", backgroundColor: NEON_GREEN, color: "#000000", border: "none", fontWeight: "950", padding: "14px", borderRadius: "12px", cursor: "pointer", fontSize: "13px", textTransform: "uppercase", letterSpacing: "0.8px" }}>
                   {isSavingProfile ? "Saving to National Scoreboard..." : "Save Profile & Publish Metrics 🚀"}
                 </button>
+                <p className="legal-note">By saving, you agree to our <a href="/terms">Terms of Use</a> and <a href="/privacy">Privacy Policy</a>.</p>
                 {saveNotice && <p role="status" style={{ margin: "12px 0 0 0", textAlign: "center", fontSize: "13px", fontWeight: "800", color: saveNotice.ok ? NEON_GREEN : "#ff9933" }}>{saveNotice.text}</p>}
               </div>
             )}
@@ -1053,6 +1058,8 @@ function AppContent() {
       <div style={{ backgroundColor: "#0a0a0d", borderTop: "1px solid #181820", borderBottom: "1px solid #181820", padding: "14px", marginTop: "24px", textAlign: "center", fontSize: "12px", lineHeight: "1.5", color: "#a1a1aa", letterSpacing: "0.3px" }}>
         <strong style={{ color: "#ffffff" }}>NCAA NIL Compliant:</strong> Slugger Coins ($SLUG) are non-compensatory ($0 cash value) and serve strictly as a flat 100 $SLUG member access key.
       </div>
+
+      <div className="site-legal-links"><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Use</a></div>
 
       {/* STICKY BOTTOM NAVIGATION BAR */}
       <nav style={{ position: "fixed", bottom: 0, left: 0, right: 0, backgroundColor: "rgba(10, 10, 14, 0.92)", backdropFilter: "blur(14px)", borderTop: "1px solid #242430", padding: "8px 12px 12px 12px", zIndex: 950, display: "flex", justifyContent: "center", boxShadow: "0 -8px 25px rgba(0, 0, 0, 0.7)" }}>
