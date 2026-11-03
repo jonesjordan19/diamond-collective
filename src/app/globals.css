@@ -352,23 +352,6 @@
     gap: 10px;
   }
 
-  /* Categories scroll sideways so they stay on one line. */
-  .brand-categories {
-    flex-wrap: nowrap;
-    margin-right: -14px;
-    padding-right: 14px;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-
-  .brand-categories::-webkit-scrollbar {
-    display: none;
-  }
-
-  .brand-categories button {
-    flex: none;
-  }
-
   .home-hero-button-primary,
   .home-hero-button-secondary {
     width: 100%;
