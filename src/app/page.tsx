@@ -249,7 +249,7 @@ function AppContent() {
   const [userRole, setUserRole] = useState<"GUEST" | "ATHLETE" | "SCOUT">("GUEST");
 
   const [activeMainTab, setActiveMainTab] = useState<"SCOREBOARD" | "EXCHANGE" | "LOCKER">("SCOREBOARD");
-  const [brandCategoryFilter, setBrandCategoryFilter] = useState<"ALL" | "DIRECT" | "PERKS" | "GEAR" | "APPAREL">("ALL");
+  const [brandCategory, setBrandCategory] = useState<string>("ALL");
   const [roleFilter, setRoleFilter] = useState<"ALL" | "HITTER" | "PITCHER" | "TWP">("ALL");
   const [positionFilter, setPositionFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
@@ -548,17 +548,10 @@ function AppContent() {
     } catch (err) { alert(err instanceof Error ? err.message : "Your intro wasn't sent. Try again."); }
   };
 
-  const flattenedBrands = useMemo(() => {
-    const list: (BrandItem & { sectionTitle: string; sectionEmoji: string })[] = [];
-    MARKET_SECTIONS.forEach((sec) => sec.brands.forEach((b) => list.push({ ...b, sectionTitle: sec.title, sectionEmoji: sec.emoji })));
-    return list.filter((b) => {
-      if (brandCategoryFilter === "DIRECT") return b.type === "email_intro";
-      if (brandCategoryFilter === "PERKS") return Boolean(b.couponCode) || b.type === "email_intro";
-      if (brandCategoryFilter === "GEAR") return ["Technology", "Hitting", "Equipment", "Eyewear & Vision"].includes(b.sectionTitle);
-      if (brandCategoryFilter === "APPAREL") return ["Clothing & Apparel", "Footwear", "Nutrition", "Player Services"].includes(b.sectionTitle);
-      return true;
-    });
-  }, [brandCategoryFilter]);
+  const visibleBrandSections = useMemo(() => {
+    const sections = brandCategory === "ALL" ? MARKET_SECTIONS : MARKET_SECTIONS.filter((section) => section.title === brandCategory);
+    return sections.map((section) => ({ ...section, brands: [...section.brands].sort((a, b) => Number(b.type === "email_intro") - Number(a.type === "email_intro")) }));
+  }, [brandCategory]);
 
   const filteredScoreboard = useMemo(() => {
     return leaderboardRows.filter((ath) => {
@@ -661,7 +654,7 @@ function AppContent() {
         </header>
 
         {!account && activeMainTab === "SCOREBOARD" && !openedPlayerLink && (
-          <HomeHero brandCount={BRAND_COUNT} onJoinClick={() => handleOpenLogin("ATHLETE")} onBrandsClick={() => setActiveMainTab("EXCHANGE")} onCoachClick={() => handleOpenLogin("SCOUT")} />
+          <HomeHero brandCount={BRAND_COUNT} onJoinClick={() => handleOpenLogin("ATHLETE")} onBrandsClick={() => { setActiveMainTab("EXCHANGE"); window.scrollTo({ top: 0 }); }} onCoachClick={() => handleOpenLogin("SCOUT")} />
         )}
 
         {/* STEP-BY-STEP ONBOARDING BAR */}
@@ -848,45 +841,61 @@ function AppContent() {
            ===================================================================== */}
         {activeMainTab === "EXCHANGE" && userRole !== "SCOUT" && (
           <section>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: "14px" }}>
-              {flattenedBrands.map((brand, bIdx) => {
-                const isDirectIntro = brand.type === "email_intro"; const hasCoupon = Boolean(brand.couponCode); const activeIntro = isIntroActive(brand.name);
-                return (
-                  <div key={bIdx} style={{ backgroundColor: "#0c0c10", border: (isDirectIntro || hasCoupon) ? `1.5px solid rgba(166, 255, 0, 0.55)` : "1px solid #1e1e26", borderRadius: "14px", padding: "18px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                    <div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "6px", marginBottom: "8px", flexWrap: "wrap" }}>
-                        <span style={{ fontSize: "12px", fontWeight: "900", color: isDirectIntro ? NEON_GREEN : "#a1a1aa", textTransform: "uppercase" }}>{brand.sectionEmoji} {brand.sectionTitle}</span>
-                        {isDirectIntro && <span style={{ backgroundColor: "rgba(166, 255, 0, 0.12)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontSize: "11px", fontWeight: "900", padding: "2px 7px", borderRadius: "999px", textTransform: "uppercase" }}>⚡ Direct Rep Intro</span>}
-                      </div>
-                      <h4 style={{ fontSize: "18px", fontWeight: "950", color: "#ffffff", margin: "0 0 4px 0", textTransform: "uppercase" }}>{brand.name}</h4>
-                      <div style={{ fontSize: "13px", color: NEON_GREEN, fontWeight: "800", marginBottom: "8px" }}>{brand.tagline}</div>
-                      <p style={{ fontSize: "12px", color: "#d4d4d8", lineHeight: "1.45", margin: 0 }}>{brand.description}</p>
-                    </div>
+            <div className="scoreboard-intro">
+              <h2>Brand Deals</h2>
+              <p>Connect with brands for gear, discounts, and ambassador programs. Pick a category, then choose a brand.</p>
+            </div>
 
-                    <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "16px" }}>
-                      {hasCoupon && (
-                        <div>
-                          {!account ? <button onClick={() => handleOpenLogin("ATHLETE")} style={{ width: "100%", backgroundColor: "#16161f", color: NEON_GREEN, border: `1px dashed ${NEON_GREEN}`, fontWeight: "900", padding: "9px", borderRadius: "8px", fontSize: "13px", textTransform: "uppercase", cursor: "pointer" }}>🔒 Sign In to Unlock 20% Off Code</button> : !hasProfile ? <button onClick={() => setActiveMainTab("LOCKER")} style={{ width: "100%", backgroundColor: "#16161f", color: NEON_GREEN, border: `1px dashed ${NEON_GREEN}`, fontWeight: "900", padding: "9px", borderRadius: "8px", fontSize: "13px", textTransform: "uppercase", cursor: "pointer" }}>🔒 Complete Locker for 20% Off Code</button> : !isUnlocked ? <button onClick={() => setShowClaimPromptModal(true)} style={{ width: "100%", backgroundColor: "#16161f", color: NEON_GREEN, border: `1px dashed ${NEON_GREEN}`, fontWeight: "900", padding: "9px", borderRadius: "8px", fontSize: "13px", textTransform: "uppercase", cursor: "pointer" }}>🔑 Claim 100 $SLUG to Unlock 20% Off</button> : !codeRevealed ? <button onClick={() => setCodeRevealed(true)} style={{ width: "100%", backgroundColor: "rgba(166, 255, 0, 0.12)", color: NEON_GREEN, border: `1px dashed ${NEON_GREEN}`, fontWeight: "900", padding: "9px", borderRadius: "8px", fontSize: "13px", textTransform: "uppercase", cursor: "pointer" }}>🔓 Reveal 20% Off Member Code</button> : (
-                            <div style={{ backgroundColor: "rgba(166, 255, 0, 0.1)", border: `1.5px dashed ${NEON_GREEN}`, borderRadius: "8px", padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                              <div>
-                                <span style={{ display: "block", fontSize: "11px", color: NEON_GREEN, fontWeight: "800", textTransform: "uppercase" }}>{brand.couponLabel || "20% Off Code"} (<a href={brand.link} target="_blank" rel="noopener noreferrer" style={{ color: "#fff", textDecoration: "underline" }}>Shop ↗</a>)</span>
-                                <span style={{ fontSize: "13px", fontWeight: "950", color: "#ffffff", fontFamily: "monospace" }}>{brand.couponCode}</span>
-                              </div>
-                              <button onClick={handleCopyCode} style={{ backgroundColor: copiedCode ? NEON_GREEN : "#22222a", color: copiedCode ? "#000000" : NEON_GREEN, border: `1px solid ${NEON_GREEN}`, padding: "5px 9px", borderRadius: "6px", fontSize: "12px", fontWeight: "900", cursor: "pointer", textTransform: "uppercase" }}>{copiedCode ? "Copied!" : "Copy 📋"}</button>
+            <dl className="brand-key">
+              <div><dt>Direct intro</dt><dd>We email your player profile to the brand&apos;s rep and copy you. Members only.</dd></div>
+              <div><dt>Program</dt><dd>Opens the brand&apos;s own application or partner page.</dd></div>
+            </dl>
+
+            <div className="brand-categories" role="group" aria-label="Filter brands by category">
+              {["ALL", ...MARKET_SECTIONS.map((section) => section.title)].map((category) => (
+                <button key={category} type="button" aria-pressed={brandCategory === category} onClick={() => setBrandCategory(category)}>{category === "ALL" ? "All Brands" : category}</button>
+              ))}
+            </div>
+
+            {visibleBrandSections.map((section) => (
+              <div key={section.title} className="brand-section">
+                <h3>{section.title}</h3>
+                <div className="brand-grid">
+                  {section.brands.map((brand) => {
+                    const isDirectIntro = brand.type === "email_intro"; const hasCoupon = Boolean(brand.couponCode); const activeIntro = isIntroActive(brand.name);
+                    return (
+                      <article key={brand.name} className="brand-card">
+                        <div className="brand-card-top">
+                          <h4>{brand.name}</h4>
+                          <span className={isDirectIntro ? "brand-tag brand-tag-direct" : "brand-tag"}>{isDirectIntro ? "Direct intro" : "Program"}</span>
+                        </div>
+                        <p>{brand.tagline}</p>
+                        <div className="brand-card-actions">
+                          {hasCoupon && (
+                            <div>
+                              {!account ? <button onClick={() => handleOpenLogin("ATHLETE")} style={{ width: "100%", backgroundColor: "#16161f", color: NEON_GREEN, border: `1px dashed ${NEON_GREEN}`, fontWeight: "900", padding: "9px", borderRadius: "8px", fontSize: "13px", textTransform: "uppercase", cursor: "pointer" }}>Sign In for 20% Off Code</button> : !hasProfile ? <button onClick={() => setActiveMainTab("LOCKER")} style={{ width: "100%", backgroundColor: "#16161f", color: NEON_GREEN, border: `1px dashed ${NEON_GREEN}`, fontWeight: "900", padding: "9px", borderRadius: "8px", fontSize: "13px", textTransform: "uppercase", cursor: "pointer" }}>Finish Your Locker for 20% Off</button> : !isUnlocked ? <button onClick={() => setShowClaimPromptModal(true)} style={{ width: "100%", backgroundColor: "#16161f", color: NEON_GREEN, border: `1px dashed ${NEON_GREEN}`, fontWeight: "900", padding: "9px", borderRadius: "8px", fontSize: "13px", textTransform: "uppercase", cursor: "pointer" }}>Claim Your Key for 20% Off</button> : !codeRevealed ? <button onClick={() => setCodeRevealed(true)} style={{ width: "100%", backgroundColor: "rgba(166, 255, 0, 0.12)", color: NEON_GREEN, border: `1px dashed ${NEON_GREEN}`, fontWeight: "900", padding: "9px", borderRadius: "8px", fontSize: "13px", textTransform: "uppercase", cursor: "pointer" }}>Show My 20% Off Code</button> : (
+                                <div style={{ backgroundColor: "rgba(166, 255, 0, 0.1)", border: `1.5px dashed ${NEON_GREEN}`, borderRadius: "8px", padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                  <div>
+                                    <span style={{ display: "block", fontSize: "11px", color: NEON_GREEN, fontWeight: "800", textTransform: "uppercase" }}>{brand.couponLabel || "20% Off Code"} (<a href={brand.link} target="_blank" rel="noopener noreferrer" style={{ color: "#fff", textDecoration: "underline" }}>Shop ↗</a>)</span>
+                                    <span style={{ fontSize: "13px", fontWeight: "950", color: "#ffffff", fontFamily: "monospace" }}>{brand.couponCode}</span>
+                                  </div>
+                                  <button onClick={handleCopyCode} style={{ backgroundColor: copiedCode ? NEON_GREEN : "#22222a", color: copiedCode ? "#000000" : NEON_GREEN, border: `1px solid ${NEON_GREEN}`, padding: "5px 9px", borderRadius: "6px", fontSize: "12px", fontWeight: "900", cursor: "pointer", textTransform: "uppercase" }}>{copiedCode ? "Copied!" : "Copy 📋"}</button>
+                                </div>
+                              )}
                             </div>
                           )}
+                          {isDirectIntro ? (
+                            <button onClick={() => handleInitiateIntro(brand)} style={{ width: "100%", minHeight: "44px", backgroundColor: activeIntro ? "#18181b" : NEON_GREEN, color: activeIntro ? "#a1a1aa" : "#000000", border: activeIntro ? "1px solid #27272a" : "none", fontWeight: 800, padding: "11px", borderRadius: "8px", fontSize: "15px", cursor: "pointer" }}>{activeIntro ? `Intro sent (${getDaysRemaining(brand.name)} days left)` : "Request Intro"}</button>
+                          ) : (
+                            <a href={brand.link} target="_blank" rel="noopener noreferrer" style={{ display: "block", textAlign: "center", backgroundColor: "#16161c", color: "#ffffff", border: "1px solid #3f3f4e", fontWeight: 800, padding: "11px", borderRadius: "8px", fontSize: "15px", textDecoration: "none" }}>Open Program ↗</a>
+                          )}
                         </div>
-                      )}
-                      {isDirectIntro ? (
-                        <button onClick={() => handleInitiateIntro(brand)} style={{ width: "100%", backgroundColor: activeIntro ? "#18181b" : NEON_GREEN, color: activeIntro ? "#a1a1aa" : "#000000", border: activeIntro ? "1px solid #27272a" : "none", fontWeight: "950", padding: "11px", borderRadius: "8px", fontSize: "13px", textTransform: "uppercase", cursor: "pointer" }}>{activeIntro ? `🔒 Intro Sent (${getDaysRemaining(brand.name)}d window)` : brand.buttonText}</button>
-                      ) : (
-                        <a href={brand.link} target="_blank" rel="noopener noreferrer" style={{ display: "block", textAlign: "center", backgroundColor: "#16161c", color: "#ffffff", border: "1px solid #2e2e38", fontWeight: "800", padding: "11px", borderRadius: "8px", fontSize: "13px", textTransform: "uppercase", textDecoration: "none" }}>{brand.buttonText}</a>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </section>
         )}
 
