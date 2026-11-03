@@ -458,6 +458,11 @@ function AppContent() {
     }
   }, [account, intendedRole]);
 
+  // Coaches and scouts land on the scoreboard, since the athlete tabs are hidden for them.
+  useEffect(() => {
+    if (userRole === "SCOUT") setActiveMainTab("SCOREBOARD");
+  }, [userRole]);
+
   // Approved coaches and scouts load contact details only after the server confirms their approval.
   useEffect(() => {
     if (!account || userRole !== "SCOUT" || !isScoutApproved) { setContactsByName({}); return; }
