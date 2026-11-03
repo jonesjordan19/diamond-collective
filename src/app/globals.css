@@ -1,3 +1,392 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:focus-visible {
+  outline: 2px solid #a6ff00;
+  outline-offset: 2px;
+}
+
+.home-hero {
+  padding: 44px 0 40px;
+  border-bottom: 1px solid #1c1c24;
+  margin-bottom: 8px;
+}
+
+.home-hero h1 {
+  margin: 0;
+  max-width: 13ch;
+  color: #ffffff;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(52px, 10vw, 104px);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.01em;
+}
+
+.home-hero-lede {
+  max-width: 34em;
+  margin: 22px 0 0;
+  color: #d4d4d8;
+  font-size: 19px;
+  line-height: 1.5;
+}
+
+.home-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.home-hero-perks {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  margin-top: 44px;
+}
+
+.home-hero-perk {
+  padding-top: 14px;
+  border-top: 3px solid #a6ff00;
+}
+
+.home-hero-perk h2 {
+  margin: 0 0 8px;
+  color: #ffffff;
+  font-family: var(--font-display), sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.home-hero-perk p {
+  margin: 0;
+  color: #d4d4d8;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.home-hero-coach {
+  margin: 32px 0 0;
+  color: #a1a1aa;
+  font-size: 15px;
+}
+
+.home-hero-coach button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.home-hero-button-primary,
+.home-hero-button-secondary {
+  min-height: 48px;
+  padding: 12px 22px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.home-hero-button-primary {
+  border: 1px solid #a6ff00;
+  background: #a6ff00;
+  color: #000000;
+}
+
+.home-hero-button-secondary {
+  border: 1px solid #a1a1aa;
+  background: transparent;
+  color: #ffffff;
+}
+
+.scoreboard-intro {
+  margin: 8px 0 20px;
+}
+
+.scoreboard-intro h2 {
+  margin: 0 0 6px;
+  color: #ffffff;
+  font-family: var(--font-display), sans-serif;
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.scoreboard-intro p {
+  max-width: 38em;
+  margin: 0;
+  color: #d4d4d8;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.scoreboard-intro .scoreboard-note {
+  margin-top: 4px;
+  color: #a1a1aa;
+  font-size: 14px;
+}
+
+.scoreboard-intro button {
+  min-height: 44px;
+  margin-top: 14px;
+  padding: 10px 18px;
+  border: 1px solid #a6ff00;
+  border-radius: 8px;
+  background: rgba(166, 255, 0, 0.14);
+  color: #a6ff00;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.role-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.player-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.player-stats,
+.player-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.player-details-toggle {
+  margin-left: 6px;
+  color: #a1a1aa;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.brand-key {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 0 0 18px;
+  padding: 14px 0;
+  border-top: 1px solid #22222c;
+  border-bottom: 1px solid #22222c;
+}
+
+.brand-key dt {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.brand-key dd {
+  margin: 2px 0 0;
+  color: #a1a1aa;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.brand-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.brand-categories button {
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid #383846;
+  border-radius: 8px;
+  background: #14141a;
+  color: #d4d4d8;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.brand-categories button[aria-pressed="true"] {
+  border-color: #a6ff00;
+  background: #a6ff00;
+  color: #000000;
+}
+
+.brand-section {
+  margin-bottom: 30px;
+}
+
+.brand-section h3 {
+  margin: 0 0 12px;
+  color: #ffffff;
+  font-family: var(--font-display), sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.brand-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 12px;
+}
+
+.brand-card {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  border: 1px solid #24242e;
+  border-radius: 12px;
+  background: #0c0c10;
+}
+
+.brand-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.brand-card h4 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.brand-card p {
+  flex: 1;
+  margin: 6px 0 14px;
+  color: #d4d4d8;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.brand-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.brand-card-actions button {
+  text-transform: none !important;
+}
+
+.brand-tag {
+  flex: none;
+  padding: 3px 8px;
+  border: 1px solid #383846;
+  border-radius: 6px;
+  color: #d4d4d8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.brand-tag-direct {
+  border-color: #a6ff00;
+  color: #a6ff00;
+}
+
+@media (max-width: 640px) {
+  .scoreboard-search input {
+    flex: 1 0 100% !important;
+  }
+
+  .scoreboard-search select,
+  .scoreboard-search button {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .role-filters {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .role-filters button {
+    padding: 6px 2px !important;
+  }
+
+  .player-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .player-actions {
+    border-top: 1px solid #22222c;
+    padding-top: 10px;
+  }
+
+  .player-details-toggle {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .home-hero {
+    padding: 28px 0 32px;
+  }
+
+  .home-hero-perks {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    margin-top: 32px;
+  }
+
+  .brand-key {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .home-hero-button-primary,
+  .home-hero-button-secondary {
+    width: 100%;
+  }
+
+  /* The bottom bar is the phone navigation. */
+  .top-tabs,
+  .header-tagline {
+    display: none !important;
+  }
+
+  /* 16px stops iPhones zooming the page when a field is tapped. */
+  .app-shell input,
+  .app-shell select,
+  .app-shell textarea {
+    min-height: 44px;
+    font-size: 16px !important;
+  }
+
+  /* Comfortable tap areas. */
+  .app-shell button,
+  .app-shell a {
+    min-height: 44px;
+  }
+
+  .app-shell a {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .form-grid-4 {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .form-grid-3 {
+    grid-template-columns: 1fr !important;
+  }
+}
