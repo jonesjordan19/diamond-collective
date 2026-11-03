@@ -121,4 +121,37 @@
   .home-hero-button-secondary {
     width: 100%;
   }
+
+  /* The bottom bar is the phone navigation. */
+  .top-tabs,
+  .header-tagline {
+    display: none !important;
+  }
+
+  /* 16px stops iPhones zooming the page when a field is tapped. */
+  .app-shell input,
+  .app-shell select,
+  .app-shell textarea {
+    min-height: 44px;
+    font-size: 16px !important;
+  }
+
+  /* Comfortable tap areas. */
+  .app-shell button,
+  .app-shell a {
+    min-height: 44px;
+  }
+
+  .app-shell a {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .form-grid-4 {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .form-grid-3 {
+    grid-template-columns: 1fr !important;
+  }
 }
