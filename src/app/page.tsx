@@ -635,8 +635,8 @@ function AppContent() {
               <div style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "26px", fontWeight: 800, color: "#ffffff", lineHeight: 1 }}>The Diamond Collective</div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "3px" }}>
                 <span style={{ fontSize: "12px", color: NEON_GREEN, fontWeight: "800", letterSpacing: "0.8px", textTransform: "uppercase" }}>College Scouting & Brand Perks</span>
-                <span style={{ fontSize: "12px", color: "#71717a" }}>•</span>
-                <span style={{ fontSize: "12px", color: "#a1a1aa", fontWeight: "700" }}>{totalSupplyData !== undefined ? `${remainingPercentage}% Founders Keys Left` : `${BRAND_COUNT} Brand Partners`}</span>
+                {account && <><span style={{ fontSize: "12px", color: "#71717a" }}>•</span>
+                <span style={{ fontSize: "12px", color: "#a1a1aa", fontWeight: "700" }}>{totalSupplyData !== undefined ? `${remainingPercentage}% Founders Keys Left` : `${BRAND_COUNT} Brand Partners`}</span></>}
               </div>
             </div>
           </div>

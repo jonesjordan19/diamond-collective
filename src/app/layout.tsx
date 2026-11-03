@@ -13,9 +13,9 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://sluggercoin.com"),
   title,
   description,
-  icons: { icon: "/logo.png" },
-  openGraph: { title, description, url: "/", siteName: "The Diamond Collective", images: ["/logo.png"], type: "website" },
-  twitter: { card: "summary", title, description, images: ["/logo.png"] },
+  icons: { icon: "/icon.png" },
+  openGraph: { title, description, url: "/", siteName: "The Diamond Collective", images: ["/og.png"], type: "website" },
+  twitter: { card: "summary_large_image", title, description, images: ["/og.png"] },
 };
 
 export default function RootLayout({
