@@ -1,10 +1,21 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { Barlow, Barlow_Condensed } from "next/font/google";
 import "./globals.css";
 
+const bodyFont = Barlow({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800", "900"], variable: "--font-body" });
+const displayFont = Barlow_Condensed({ subsets: ["latin"], weight: ["700", "800"], variable: "--font-display" });
+
+const title = "The Diamond Collective | College Baseball Player Scoreboard";
+const description = "College baseball players post their stats on one national scoreboard. Coaches and scouts search it and reach out directly.";
+
 export const metadata: Metadata = {
-  title: "The Diamond Collective | Collegiate Baseball & NIL Ecosystem",
-  description: "Verified collegiate baseball scouting data, national scoreboard, and brand partnerships on Base.",
+  metadataBase: new URL("https://sluggercoin.com"),
+  title,
+  description,
+  icons: { icon: "/logo.png" },
+  openGraph: { title, description, url: "/", siteName: "The Diamond Collective", images: ["/logo.png"], type: "website" },
+  twitter: { card: "summary", title, description, images: ["/logo.png"] },
 };
 
 export default function RootLayout({
@@ -13,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${bodyFont.variable} ${displayFont.variable}`}>
       <head>
         {/* Google tag (gtag.js) */}
         <Script
