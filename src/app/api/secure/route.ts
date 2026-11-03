@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { createThirdwebClient } from "thirdweb";
 import { base } from "thirdweb/chains";
 import { verifySignature } from "thirdweb/auth";
@@ -7,7 +8,10 @@ const SCRIPT_URL =
   process.env.APPS_SCRIPT_URL ||
   "https://script.google.com/macros/s/AKfycbwe5YJxF93X4fJXpODhAGbJQ-1Xs3FiRHuLC2umjkGLGtsJTqj4VjO-0Ai0_hBqZMojdw/exec";
 
-const ALLOWED_ACTIONS = ["getAccount", "getContacts", "saveProfile", "saveScout", "requestIntro"];
+const ALLOWED_ACTIONS = ["getAccount", "getContacts", "saveProfile", "saveScout", "requestIntro", "listPromoPlayers", "sendPromoRequest"];
+// These use the private link from a player's email instead of a signed-in wallet.
+const PROMO_TOKEN_ACTIONS = ["getPromoRequest", "answerPromoRequest"];
+const PROMO_COOKIE = "dc_promo_token";
 const MAX_AGE_MS = 15 * 60 * 1000;
 const MAX_CLOCK_SKEW_MS = 2 * 60 * 1000;
 
@@ -41,6 +45,24 @@ async function getVerifiedWallet(message: unknown, signature: unknown): Promise<
   return isValid ? wallet : null;
 }
 
+// Sends a request to Apps Script. Trusted values go last so nothing can replace them.
+async function forwardToScript(payload: Record<string, unknown>, secret: string) {
+  try {
+    const response = await fetch(SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ ...payload, secret }),
+      redirect: "follow",
+      cache: "no-store",
+    });
+    const result = await response.json();
+    return NextResponse.json(result, { status: result?.status === "error" ? 400 : 200 });
+  } catch (error) {
+    console.error("Apps Script request failed", error);
+    return fail("The request didn't go through. Try again in a moment.", 502);
+  }
+}
+
 export async function POST(request: Request) {
   const secret = process.env.APPS_SCRIPT_SECRET;
   if (!secret) return fail("Secure access isn't configured yet.", 503);
@@ -53,6 +75,13 @@ export async function POST(request: Request) {
   }
 
   const action = typeof body.action === "string" ? body.action : "";
+
+  if (PROMO_TOKEN_ACTIONS.includes(action)) {
+    const promoToken = cookies().get(PROMO_COOKIE)?.value || "";
+    const answer = (body.data as { answer?: unknown } | undefined)?.answer;
+    return forwardToScript({ action, answer, promoToken }, secret);
+  }
+
   if (!ALLOWED_ACTIONS.includes(action)) return fail("Invalid request.", 400);
 
   let verifiedWallet: string | null = null;
@@ -65,19 +94,6 @@ export async function POST(request: Request) {
 
   const data = body.data && typeof body.data === "object" ? (body.data as Record<string, unknown>) : {};
 
-  try {
-    const response = await fetch(SCRIPT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      // Spread first so nothing in `data` can replace these trusted values.
-      body: JSON.stringify({ ...data, action, secret, verifiedWallet }),
-      redirect: "follow",
-      cache: "no-store",
-    });
-    const result = await response.json();
-    return NextResponse.json(result, { status: result?.status === "error" ? 400 : 200 });
-  } catch (error) {
-    console.error("Apps Script request failed", error);
-    return fail("The request didn't go through. Try again in a moment.", 502);
-  }
+  // Spread first so nothing in `data` can replace these trusted values.
+  return forwardToScript({ ...data, action, verifiedWallet }, secret);
 }

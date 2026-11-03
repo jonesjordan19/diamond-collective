@@ -34,7 +34,7 @@ export default function PrivacyPage() {
       </ul>
 
       <h2>Promotional use of your profile</h2>
-      <p>We&apos;ll only feature an athlete in our promotions if they choose to allow it in their Locker. This permission is optional and is not required to use the site.</p>
+      <p>We&apos;ll only feature an athlete in our promotions if they choose to allow it in their Locker or by approving an email request from us. This permission is optional and is not required to use the site.</p>
       <p>If you allow it, we may use your name, school, position, public stats, and player card in The Diamond Collective&apos;s website, social media, email, and advertising. We won&apos;t use your phone number or email in promotions, sell your name or image to another company, or use your profile to advertise another company&apos;s products.</p>
       <p>You won&apos;t be paid for this use. You can withdraw permission in your Locker or by emailing us. We&apos;ll stop using your profile in new promotions and make reasonable efforts to remove it from materials we control, but we can&apos;t recall content others have already shared or saved.</p>
       <p>Athletes under 18 need a parent or guardian&apos;s approval before giving this permission.</p>
