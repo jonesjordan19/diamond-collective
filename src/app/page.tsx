@@ -275,6 +275,8 @@ function AppContent() {
   const [copiedCode, setCopiedCode] = useState(false);
   const [codeRevealed, setCodeRevealed] = useState(false);
   const [contactsByName, setContactsByName] = useState<Record<string, AthleteContact>>({});
+  const [accountLoaded, setAccountLoaded] = useState(false);
+  const [saveNotice, setSaveNotice] = useState<{ ok: boolean; text: string } | null>(null);
   const authRef = useRef<{ wallet: string; message: string; signature: string; issuedAt: number } | null>(null);
 
   // Every private request is signed by the signed-in wallet and checked on the server.
@@ -434,6 +436,7 @@ function AppContent() {
       }
 
       // Loads this account's saved details without wiping out anything being typed.
+      setAccountLoaded(false);
       secureCall("getAccount").then((data) => {
         if (data && data.scoutProfile && data.scoutProfile.fullName) {
           setScoutProfile(prev => ({ ...prev, ...data.scoutProfile }));
@@ -449,7 +452,7 @@ function AppContent() {
           Object.keys(data.existingIntros).forEach((brandName) => { introsMap[brandName] = Number(data.existingIntros[brandName]); });
           setIntroTimestamps(introsMap);
         }
-      }).catch((err) => console.error("Couldn't load account", err));
+      }).catch((err) => console.error("Couldn't load account", err)).finally(() => setAccountLoaded(true));
     } else {
       setUserRole("GUEST");
     }
@@ -490,6 +493,7 @@ function AppContent() {
     if (!account?.address) return;
     if (!profile.fullName || !profile.email) { alert("Please fill in your Full Name and Email."); setActiveMatrixTab("BIO"); return; }
     setIsSavingProfile(true);
+    setSaveNotice(null);
     const lowerWallet = account.address.toLowerCase();
     let kMinusBB = profile.kMinusBbPercentage;
     if (profile.kPercentage && profile.bbPercentage && !kMinusBB) kMinusBB = (parseFloat(profile.kPercentage) - parseFloat(profile.bbPercentage)).toFixed(1);
@@ -507,8 +511,9 @@ function AppContent() {
     try {
       await secureCall("saveProfile", { ...updatedProfile, athleteEmail: updatedProfile.email });
       setIsSavingProfile(false);
-      if (!isUnlocked) setShowClaimPromptModal(true); else alert("Metrics published!");
-    } catch (err) { setIsSavingProfile(false); alert(err instanceof Error ? err.message : "Your profile wasn't saved. Try again."); }
+      setSaveNotice({ ok: true, text: "Profile saved. Your numbers are on the scoreboard." });
+      if (!isUnlocked) setShowClaimPromptModal(true);
+    } catch (err) { setIsSavingProfile(false); setSaveNotice({ ok: false, text: err instanceof Error ? err.message : "Your profile wasn't saved. Try again." }); }
   };
 
   const handleInitiateIntro = (brand: BrandItem) => {
@@ -578,7 +583,7 @@ function AppContent() {
       </div>
 
       {/* PRO SCOUT / AGENT ONBOARDING MODAL OVERLAY */}
-      {userRole === "SCOUT" && !isScoutOnboarded && account && (
+      {userRole === "SCOUT" && !isScoutOnboarded && account && accountLoaded && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(5, 5, 7, 0.98)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 2000, padding: "16px" }}>
           <div style={{ backgroundColor: "#0c0c10", border: `2px solid ${NEON_GREEN}`, borderRadius: "22px", width: "100%", maxWidth: "480px", padding: "26px", boxShadow: "0 0 45px rgba(166, 255, 0, 0.15)" }}>
             <span style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>Verified Pro Gateway</span>
@@ -982,6 +987,7 @@ function AppContent() {
                 <button onClick={handleSaveProfile} disabled={isSavingProfile} style={{ width: "100%", marginTop: "18px", backgroundColor: NEON_GREEN, color: "#000000", border: "none", fontWeight: "950", padding: "14px", borderRadius: "12px", cursor: "pointer", fontSize: "13px", textTransform: "uppercase", letterSpacing: "0.8px" }}>
                   {isSavingProfile ? "Saving to National Scoreboard..." : "Save Profile & Publish Metrics 🚀"}
                 </button>
+                {saveNotice && <p role="status" style={{ margin: "12px 0 0 0", textAlign: "center", fontSize: "13px", fontWeight: "800", color: saveNotice.ok ? NEON_GREEN : "#ff9933" }}>{saveNotice.text}</p>}
               </div>
             )}
           </section>
