@@ -39,6 +39,60 @@
   margin-top: 28px;
 }
 
+.home-hero-player {
+  max-width: 420px;
+  margin-top: 20px;
+  padding: 14px 16px;
+  border: 1px solid #2e2e3a;
+  border-radius: 12px;
+  background: #0d0d12;
+}
+
+.home-hero-player p {
+  margin: 0;
+}
+
+.home-hero-player-label {
+  color: #a6ff00;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.home-hero-player-name {
+  margin-top: 4px !important;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.home-hero-player-meta {
+  color: #d4d4d8;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.home-hero-player-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.home-hero-player-stats span {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.home-hero-player-stats small {
+  display: block;
+  color: #a1a1aa;
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .home-hero-perks {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

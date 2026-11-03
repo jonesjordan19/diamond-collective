@@ -87,7 +87,14 @@ const MARKET_SECTIONS: MarketCategory[] = [
   },
 ];
 
-const BRAND_COUNT = MARKET_SECTIONS.reduce((total, section) => total + section.brands.length, 0);
+const ALL_BRANDS = MARKET_SECTIONS.flatMap((section) => section.brands);
+const BRAND_COUNT = ALL_BRANDS.length;
+const DIRECT_INTRO_COUNT = ALL_BRANDS.filter((brand) => brand.type === "email_intro").length;
+const OPEN_PROGRAM_COUNT = BRAND_COUNT - DIRECT_INTRO_COUNT;
+
+// The homepage card is promotional, so it stays on the owner's own card.
+// Before changing this name, confirm that player's promoConsent is TRUE.
+const HERO_PLAYER_NAME = "Jordan Jones";
 
 const FAQS = [
   { q: "How do I unlock the 20% TAG Sports discount & Brand Intros?", a: "It takes 3 quick steps: (1) Sign in with your Google, Apple, or phone ID, (2) Fill out your player bio in the 'My Locker' tab, and (3) Claim your free 100 $SLUG membership key." },
@@ -135,6 +142,23 @@ const emptyScout: ScoutProfile = { fullName: "", organization: "", jobTitle: "",
 function trackEvent(name: string, params: Record<string, string> = {}) {
   if (typeof window === "undefined") return;
   (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag?.("event", name, params);
+}
+
+function getHeadlinePills(ath: AthleteProfile) {
+  const isPitcherRole = ath.primaryRole === "PITCHER" || ath.primaryRole === "TWP";
+  const isHitterRole = ath.primaryRole === "HITTER" || ath.primaryRole === "TWP";
+  const pills: { label: string; val: string; elite?: boolean }[] = [];
+  if (isPitcherRole) {
+    if (ath.peakFB) pills.push({ label: "FB", val: `${ath.peakFB} mph`, elite: parseFloat(ath.peakFB) >= 92 });
+    if (ath.stuffPlus) pills.push({ label: "Stuff+", val: ath.stuffPlus, elite: parseFloat(ath.stuffPlus) >= 110 });
+    if (ath.inducedVertBreak) pills.push({ label: "IVB", val: `${ath.inducedVertBreak}"`, elite: parseFloat(ath.inducedVertBreak) >= 18 });
+  }
+  if (isHitterRole) {
+    if (ath.maxExitVelo) pills.push({ label: "Max EV", val: `${ath.maxExitVelo} mph`, elite: parseFloat(ath.maxExitVelo) >= 100 });
+    if (ath.batSpeed) pills.push({ label: "Bat", val: `${ath.batSpeed} mph` });
+    if (ath.sixtyTime) pills.push({ label: "60yd", val: `${ath.sixtyTime}s`, elite: parseFloat(ath.sixtyTime) <= 6.65 });
+  }
+  return pills;
 }
 
 function MetricBar({ label, valueStr, unit, min, max, eliteThreshold, invert = false, subLabel }: { label: string; valueStr?: string; unit: string; min: number; max: number; eliteThreshold: number; invert?: boolean; subLabel?: string; }) {
@@ -585,9 +609,12 @@ function AppContent() {
       if (sortBy === "PEAK_FB") return (parseFloat(b.peakFB || "0") || 0) - (parseFloat(a.peakFB || "0") || 0);
       if (sortBy === "STUFF_PLUS") return (parseFloat(b.stuffPlus || "0") || 0) - (parseFloat(a.stuffPlus || "0") || 0);
       if (sortBy === "IVB") return (parseFloat(b.inducedVertBreak || "0") || 0) - (parseFloat(a.inducedVertBreak || "0") || 0);
-      return 0;
+      return Number(getHeadlinePills(b).length > 0) - Number(getHeadlinePills(a).length > 0);
     });
   }, [leaderboardRows, searchQuery, roleFilter, positionFilter, statusFilter, regionFilter, stateFilter, sortBy]);
+
+  const heroPlayer = leaderboardRows.find((ath) => ath.fullName === HERO_PLAYER_NAME && ath.isProfileVisible !== false);
+  const heroPlayerStats = heroPlayer ? getHeadlinePills(heroPlayer).slice(0, 3) : [];
 
   if (!mounted) return null;
 
@@ -639,7 +666,7 @@ function AppContent() {
               <div className="header-tagline" style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "3px" }}>
                 <span style={{ fontSize: "12px", color: NEON_GREEN, fontWeight: "800", letterSpacing: "0.8px", textTransform: "uppercase" }}>College Scouting & Brand Perks</span>
                 {account && <><span style={{ fontSize: "12px", color: "#71717a" }}>•</span>
-                <span style={{ fontSize: "12px", color: "#a1a1aa", fontWeight: "700" }}>{totalSupplyData !== undefined ? `${remainingPercentage}% Founders Keys Left` : `${BRAND_COUNT} Brand Partners`}</span></>}
+                <span style={{ fontSize: "12px", color: "#a1a1aa", fontWeight: "700" }}>{totalSupplyData !== undefined ? `${remainingPercentage}% Founders Keys Left` : `${DIRECT_INTRO_COUNT} Direct Brand Intros`}</span></>}
               </div>
             </div>
           </div>
@@ -664,7 +691,7 @@ function AppContent() {
         </header>
 
         {!account && activeMainTab === "SCOREBOARD" && !openedPlayerLink && (
-          <HomeHero brandCount={BRAND_COUNT} onJoinClick={() => handleOpenLogin("ATHLETE")} onBrandsClick={() => { setActiveMainTab("EXCHANGE"); window.scrollTo({ top: 0 }); }} onCoachClick={() => handleOpenLogin("SCOUT")} />
+          <HomeHero directIntroCount={DIRECT_INTRO_COUNT} openProgramCount={OPEN_PROGRAM_COUNT} player={heroPlayer && heroPlayerStats.length > 0 ? { name: heroPlayer.fullName, position: heroPlayer.position, college: heroPlayer.college, stats: heroPlayerStats } : undefined} onJoinClick={() => handleOpenLogin("ATHLETE")} onBrandsClick={() => { setActiveMainTab("EXCHANGE"); window.scrollTo({ top: 0 }); }} onCoachClick={() => handleOpenLogin("SCOUT")} />
         )}
 
         {/* STEP-BY-STEP ONBOARDING BAR */}
@@ -707,7 +734,7 @@ function AppContent() {
               <div className="scoreboard-search" style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "12px" }}>
                 <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search player, school, or state" style={{ flex: "1 1 220px", backgroundColor: "#14141a", border: `1.5px solid ${searchQuery ? NEON_GREEN : "#2c2c36"}`, color: "#ffffff", padding: "11px 14px", borderRadius: "10px", fontSize: "13px", fontWeight: "700", outline: "none" }} />
                 {searchQuery && <button onClick={() => { setSearchQuery(""); if (typeof window !== "undefined" && window.location.search) window.history.replaceState({}, "", window.location.pathname); }} style={{ backgroundColor: "#22222c", border: "1px solid #3f3f4e", color: "#ffffff", padding: "10px 14px", borderRadius: "10px", fontSize: "12px", fontWeight: "800", cursor: "pointer" }}>Clear ✕</button>}
-                <select aria-label="Sort players" value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} style={{ backgroundColor: "#14141a", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontWeight: "900", padding: "10px 12px", borderRadius: "10px", fontSize: "12px", cursor: "pointer" }}><option value="DEFAULT">Latest Added</option><option value="PEAK_FB">Peak Fastball</option><option value="STUFF_PLUS">Stuff+ Grade</option><option value="IVB">Induced Vert Break</option><option value="MAX_EV">Max Exit Velo</option></select>
+                <select aria-label="Sort players" value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} style={{ backgroundColor: "#14141a", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontWeight: "900", padding: "10px 12px", borderRadius: "10px", fontSize: "12px", cursor: "pointer" }}><option value="DEFAULT">Numbers First</option><option value="PEAK_FB">Peak Fastball</option><option value="STUFF_PLUS">Stuff+ Grade</option><option value="IVB">Induced Vert Break</option><option value="MAX_EV">Max Exit Velo</option></select>
                 <button onClick={() => setShowAdvancedFilters(!showAdvancedFilters)} style={{ backgroundColor: showAdvancedFilters ? "#22222c" : "#14141a", border: "1px solid #333340", color: "#ffffff", padding: "10px 14px", borderRadius: "10px", fontSize: "12px", fontWeight: "800", cursor: "pointer" }}>{showAdvancedFilters ? "Hide Filters ▲" : "Filters ▼"}</button>
               </div>
 
@@ -745,18 +772,7 @@ function AppContent() {
                   const canViewContact = (userRole === "SCOUT" && isScoutApproved) || isCurrentUser;
                   const contact: AthleteContact | undefined = isCurrentUser ? { fullName: profile.fullName, email: profile.email, phone: profile.phone, verificationLink: profile.verificationLink } : contactsByName[(ath.fullName || "").toLowerCase().trim()];
 
-                  const isEliteFB = parseFloat(ath.peakFB || "0") >= 92; const isEliteStuff = parseFloat(ath.stuffPlus || "0") >= 110; const isEliteIVB = parseFloat(ath.inducedVertBreak || "0") >= 18; const isEliteEV = parseFloat(ath.maxExitVelo || "0") >= 100; const isElite60 = parseFloat(ath.sixtyTime || "99") <= 6.65;
-                  const headlinePills: { label: string; val: string; elite?: boolean }[] = [];
-                  if (isPitcherRole) {
-                    if (ath.peakFB) headlinePills.push({ label: "FB", val: `${ath.peakFB} mph`, elite: isEliteFB });
-                    if (ath.stuffPlus) headlinePills.push({ label: "Stuff+", val: ath.stuffPlus, elite: isEliteStuff });
-                    if (ath.inducedVertBreak) headlinePills.push({ label: "IVB", val: `${ath.inducedVertBreak}"`, elite: isEliteIVB });
-                  }
-                  if (isHitterRole) {
-                    if (ath.maxExitVelo) headlinePills.push({ label: "Max EV", val: `${ath.maxExitVelo} mph`, elite: isEliteEV });
-                    if (ath.batSpeed) headlinePills.push({ label: "Bat", val: `${ath.batSpeed} mph` });
-                    if (ath.sixtyTime) headlinePills.push({ label: "60yd", val: `${ath.sixtyTime}s`, elite: isElite60 });
-                  }
+                  const headlinePills = getHeadlinePills(ath);
 
                   const isLinkCopied = copiedPlayerName === (ath.fullName || "Athlete");
 
