@@ -692,23 +692,27 @@ function AppContent() {
            ===================================================================== */}
         {activeMainTab === "SCOREBOARD" && (
           <section>
+            <div className="scoreboard-intro">
+              <h2>National Scoreboard</h2>
+              <p>See college players and the numbers they&apos;ve posted. Search or filter the list, then tap a player for their full stats.</p>
+              <p className="scoreboard-note">Players enter their own numbers.</p>
+              {userRole !== "SCOUT" && <button type="button" onClick={() => setActiveMainTab("LOCKER")}>Add Your Numbers</button>}
+            </div>
+
             {/* Search & Quick Filter Bar */}
-            <div style={{ backgroundColor: "#0c0c10", border: "1px solid #1e1e26", borderRadius: "16px", padding: "16px", marginBottom: "16px" }}>
-              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "12px" }}>
-                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="🔍 Search player name, state, or college..." style={{ flex: "1 1 220px", backgroundColor: "#14141a", border: `1.5px solid ${searchQuery ? NEON_GREEN : "#2c2c36"}`, color: "#ffffff", padding: "11px 14px", borderRadius: "10px", fontSize: "13px", fontWeight: "700", outline: "none" }} />
+            <div style={{ marginBottom: "16px" }}>
+              <div className="scoreboard-search" style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "12px" }}>
+                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search player, school, or state" style={{ flex: "1 1 220px", backgroundColor: "#14141a", border: `1.5px solid ${searchQuery ? NEON_GREEN : "#2c2c36"}`, color: "#ffffff", padding: "11px 14px", borderRadius: "10px", fontSize: "13px", fontWeight: "700", outline: "none" }} />
                 {searchQuery && <button onClick={() => { setSearchQuery(""); if (typeof window !== "undefined" && window.location.search) window.history.replaceState({}, "", window.location.pathname); }} style={{ backgroundColor: "#22222c", border: "1px solid #3f3f4e", color: "#ffffff", padding: "10px 14px", borderRadius: "10px", fontSize: "12px", fontWeight: "800", cursor: "pointer" }}>Clear ✕</button>}
                 <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} style={{ backgroundColor: "#14141a", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontWeight: "900", padding: "10px 12px", borderRadius: "10px", fontSize: "12px", cursor: "pointer" }}><option value="DEFAULT">Sort: Latest Added</option><option value="PEAK_FB">Sort: Peak Fastball ↓</option><option value="STUFF_PLUS">Sort: Stuff+ Grade ↓</option><option value="IVB">Sort: Induced Vert Break ↓</option><option value="MAX_EV">Sort: Max Exit Velo ↓</option></select>
                 <button onClick={() => setShowAdvancedFilters(!showAdvancedFilters)} style={{ backgroundColor: showAdvancedFilters ? "#22222c" : "#14141a", border: "1px solid #333340", color: "#ffffff", padding: "10px 14px", borderRadius: "10px", fontSize: "12px", fontWeight: "800", cursor: "pointer" }}>{showAdvancedFilters ? "Hide Filters ▲" : "Filters ▼"}</button>
               </div>
 
               {/* Role Filter Pills */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
-                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+              <div className="role-filters">
                   {(["ALL", "HITTER", "PITCHER", "TWP"] as const).map((r) => (
-                    <button key={r} onClick={() => setRoleFilter(r)} style={{ backgroundColor: roleFilter === r ? NEON_GREEN : "#15151c", color: roleFilter === r ? "#000000" : "#d4d4d8", border: roleFilter === r ? `1px solid ${NEON_GREEN}` : "1px solid #2b2b36", fontWeight: "900", fontSize: "13px", padding: "7px 14px", borderRadius: "999px", textTransform: "uppercase", cursor: "pointer" }}>{r === "TWP" ? "⚡ Two-Way" : r === "ALL" ? "All Players" : `${r}s`}</button>
+                    <button key={r} onClick={() => setRoleFilter(r)} style={{ backgroundColor: roleFilter === r ? NEON_GREEN : "#15151c", color: roleFilter === r ? "#000000" : "#d4d4d8", border: roleFilter === r ? `1px solid ${NEON_GREEN}` : "1px solid #2b2b36", fontWeight: "900", fontSize: "13px", padding: "7px 14px", borderRadius: "8px", cursor: "pointer" }}>{r === "TWP" ? "Two-Way" : r === "ALL" ? "All" : r === "HITTER" ? "Hitters" : "Pitchers"}</button>
                   ))}
-                </div>
-                {userRole !== "SCOUT" && <button onClick={() => setActiveMainTab("LOCKER")} style={{ backgroundColor: "rgba(166, 255, 0, 0.14)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, fontWeight: "900", padding: "7px 14px", borderRadius: "999px", fontSize: "13px", textTransform: "uppercase", cursor: "pointer" }}>+ Post / Edit My Numbers ➔</button>}
               </div>
 
               {showAdvancedFilters && (
@@ -755,7 +759,7 @@ function AppContent() {
 
                   return (
                     <div key={idx} style={{ backgroundColor: "#0d0d12", border: isExpanded || isCurrentUser ? `1.5px solid ${NEON_GREEN}` : "1px solid #24242e", borderRadius: "14px", padding: "14px 16px", transition: "all 0.15s ease" }}>
-                      <div onClick={() => setExpandedCardIdx(isExpanded ? null : idx)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", cursor: "pointer" }}>
+                      <div className="player-row" onClick={() => setExpandedCardIdx(isExpanded ? null : idx)} style={{ cursor: "pointer" }}>
                         <div style={{ display: "flex", flexDirection: "column", gap: "3px", minWidth: "200px" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                             <span style={{ fontWeight: "950", color: "#ffffff", fontSize: "17px" }}>{ath.fullName || "Member Athlete"}</span>
@@ -765,13 +769,17 @@ function AppContent() {
                           <div style={{ fontSize: "12px", color: "#d4d4d8", fontWeight: "700" }}><span style={{ color: NEON_GREEN, fontWeight: "800" }}>🏛️ {ath.college || "Undeclared"}</span>{ath.state ? ` (${ath.state})` : ""} {ath.height && ath.weight ? ` • ${ath.height} / ${ath.weight} lbs` : ""} <span> • {ath.playerStatus}</span></div>
                         </div>
 
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                        <div className="player-stats">
+                          {headlinePills.length === 0 && <span style={{ color: "#a1a1aa", fontSize: "13px", fontWeight: "700" }}>No numbers posted yet</span>}
                           {headlinePills.slice(0, 4).map((p, pIdx) => (
                             <div key={pIdx} style={{ backgroundColor: p.elite ? "rgba(255, 184, 0, 0.14)" : "#14141c", border: `1px solid ${p.elite ? "#ffb800" : "#2e2e3a"}`, padding: "5px 10px", borderRadius: "8px", fontFamily: "monospace", fontSize: "12px", fontWeight: "900" }}><span style={{ color: p.elite ? "#ffb800" : NEON_GREEN }}>{p.elite ? "🔥 " : ""}{p.label}: </span><span style={{ color: "#ffffff" }}>{p.val}</span></div>
                           ))}
-                          <button onClick={(e) => handleCopyPlayerLink(ath.fullName, e)} title="Copy direct link" style={{ backgroundColor: isLinkCopied ? NEON_GREEN : "#16161f", border: `1px solid ${isLinkCopied ? NEON_GREEN : "#383846"}`, color: isLinkCopied ? "#000000" : "#ffffff", padding: "6px 10px", borderRadius: "8px", fontSize: "13px", fontWeight: "900", cursor: "pointer" }}>{isLinkCopied ? "✓ Link Copied" : "🔗 Link"}</button>
-                          <button onClick={(e) => { e.stopPropagation(); triggerMobileScoutShare(ath); }} style={{ backgroundColor: "rgba(166, 255, 0, 0.14)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "6px 10px", borderRadius: "8px", fontSize: "13px", fontWeight: "900", cursor: "pointer" }}>📸 4:5 Card</button>
-                          <span style={{ fontSize: "13px", color: "#a1a1aa", fontWeight: "800", marginLeft: "4px" }}>{isExpanded ? "▲" : "▼"}</span>
+                        </div>
+
+                        <div className="player-actions">
+                          <button onClick={(e) => handleCopyPlayerLink(ath.fullName, e)} title="Copy direct link" style={{ backgroundColor: isLinkCopied ? NEON_GREEN : "#16161f", border: `1px solid ${isLinkCopied ? NEON_GREEN : "#383846"}`, color: isLinkCopied ? "#000000" : "#ffffff", padding: "6px 10px", borderRadius: "8px", fontSize: "13px", fontWeight: "900", cursor: "pointer" }}>{isLinkCopied ? "Link Copied" : "Copy Link"}</button>
+                          <button onClick={(e) => { e.stopPropagation(); triggerMobileScoutShare(ath); }} style={{ backgroundColor: "rgba(166, 255, 0, 0.14)", border: `1px solid ${NEON_GREEN}`, color: NEON_GREEN, padding: "6px 10px", borderRadius: "8px", fontSize: "13px", fontWeight: "900", cursor: "pointer" }}>Share Card</button>
+                          <span className="player-details-toggle">{isExpanded ? "Hide details ▲" : "Details ▼"}</span>
                         </div>
                       </div>
 

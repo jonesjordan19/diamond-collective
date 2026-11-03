@@ -106,6 +106,111 @@
   color: #ffffff;
 }
 
+.scoreboard-intro {
+  margin: 8px 0 20px;
+}
+
+.scoreboard-intro h2 {
+  margin: 0 0 6px;
+  color: #ffffff;
+  font-family: var(--font-display), sans-serif;
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.scoreboard-intro p {
+  max-width: 38em;
+  margin: 0;
+  color: #d4d4d8;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.scoreboard-intro .scoreboard-note {
+  margin-top: 4px;
+  color: #a1a1aa;
+  font-size: 14px;
+}
+
+.scoreboard-intro button {
+  min-height: 44px;
+  margin-top: 14px;
+  padding: 10px 18px;
+  border: 1px solid #a6ff00;
+  border-radius: 8px;
+  background: rgba(166, 255, 0, 0.14);
+  color: #a6ff00;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.role-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.player-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.player-stats,
+.player-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.player-details-toggle {
+  margin-left: 6px;
+  color: #a1a1aa;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .scoreboard-search input {
+    flex: 1 0 100% !important;
+  }
+
+  .scoreboard-search select,
+  .scoreboard-search button {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .role-filters {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .role-filters button {
+    padding: 6px 2px !important;
+  }
+
+  .player-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .player-actions {
+    border-top: 1px solid #22222c;
+    padding-top: 10px;
+  }
+
+  .player-details-toggle {
+    margin-left: auto;
+  }
+}
+
 @media (max-width: 640px) {
   .home-hero {
     padding: 28px 0 32px;
