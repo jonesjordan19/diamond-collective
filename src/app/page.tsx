@@ -144,6 +144,12 @@ function trackEvent(name: string, params: Record<string, string> = {}) {
   (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag?.("event", name, params);
 }
 
+// Tells Meta a new player finished signing up. Send no player details here.
+function trackMetaSignup() {
+  if (typeof window === "undefined") return;
+  (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq?.("track", "CompleteRegistration");
+}
+
 function getHeadlinePills(ath: AthleteProfile) {
   const isPitcherRole = ath.primaryRole === "PITCHER" || ath.primaryRole === "TWP";
   const isHitterRole = ath.primaryRole === "HITTER" || ath.primaryRole === "TWP";
@@ -292,6 +298,7 @@ function AppContent() {
   const [copiedPlayerName, setCopiedPlayerName] = useState<string | null>(null);
 
   const [leaderboardRows, setLeaderboardRows] = useState<AthleteProfile[]>([]);
+  const isNewSignupPending = useRef(false);
   const [loadingScoreboard, setLoadingScoreboard] = useState(false);
 
   const [activeMatrixTab, setActiveMatrixTab] = useState<"BIO" | "HITTING" | "PITCHING">("BIO");
@@ -546,6 +553,8 @@ function AppContent() {
 
     const updatedProfile: AthleteProfile = { ...profile, walletAddress: lowerWallet, kMinusBbPercentage: kMinusBB };
     setProfile(updatedProfile);
+    // Saved profiles are stored here on sign-in, so an empty key means a new player.
+    if (!localStorage.getItem(`athlete_profile_${lowerWallet}`)) isNewSignupPending.current = true;
     localStorage.setItem(`athlete_profile_${lowerWallet}`, JSON.stringify(updatedProfile));
 
     setLeaderboardRows((prev) => {
@@ -557,6 +566,7 @@ function AppContent() {
     try {
       await secureCall("saveProfile", { ...updatedProfile, athleteEmail: updatedProfile.email });
       trackEvent("profile_saved", { primary_role: updatedProfile.primaryRole });
+      if (isNewSignupPending.current) { isNewSignupPending.current = false; trackMetaSignup(); }
       setIsSavingProfile(false);
       setSaveNotice({ ok: true, text: "Profile saved. Your numbers are on the scoreboard." });
       if (!isUnlocked) setShowClaimPromptModal(true);
