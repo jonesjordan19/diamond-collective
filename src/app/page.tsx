@@ -131,6 +131,12 @@ interface AthleteContact { fullName: string; email?: string; phone?: string; ver
 
 const emptyScout: ScoutProfile = { fullName: "", organization: "", jobTitle: "", email: "", verificationLink: "", verificationStatus: "UNREGISTERED" };
 
+// Sends anonymous action counts to Google Analytics. Never include names, emails, phone numbers, or wallets.
+function trackEvent(name: string, params: Record<string, string> = {}) {
+  if (typeof window === "undefined") return;
+  (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag?.("event", name, params);
+}
+
 function MetricBar({ label, valueStr, unit, min, max, eliteThreshold, invert = false, subLabel }: { label: string; valueStr?: string; unit: string; min: number; max: number; eliteThreshold: number; invert?: boolean; subLabel?: string; }) {
   const num = parseFloat(valueStr || "");
   if (isNaN(num)) return null;
@@ -335,6 +341,7 @@ function AppContent() {
 
   const handleOpenLogin = (roleTarget: "ATHLETE" | "SCOUT") => {
     setIntendedRole(roleTarget);
+    trackEvent("sign_in_started", { account_type: roleTarget === "SCOUT" ? "coach_scout" : "athlete" });
     if (typeof window !== "undefined") {
       localStorage.setItem("pending_login_role", roleTarget);
     }
@@ -498,6 +505,7 @@ function AppContent() {
 
     try {
       await secureCall("saveScout", { fullName: scoutProfile.fullName, organization: scoutProfile.organization, jobTitle: scoutProfile.jobTitle, email: scoutProfile.email, verificationLink: scoutProfile.verificationLink });
+      trackEvent("coach_application_sent");
       setIsSavingScout(false);
       setShowScoutPendingModal(true);
     } catch (err) { setIsSavingScout(false); alert(err instanceof Error ? err.message : "Your details weren't saved. Try again."); }
@@ -524,6 +532,7 @@ function AppContent() {
 
     try {
       await secureCall("saveProfile", { ...updatedProfile, athleteEmail: updatedProfile.email });
+      trackEvent("profile_saved", { primary_role: updatedProfile.primaryRole });
       setIsSavingProfile(false);
       setSaveNotice({ ok: true, text: "Profile saved. Your numbers are on the scoreboard." });
       if (!isUnlocked) setShowClaimPromptModal(true);
@@ -543,6 +552,7 @@ function AppContent() {
     const brand = pendingIntroBrand; setPendingIntroBrand(null);
     try {
       await secureCall("requestIntro", { brandName: brand.name });
+      trackEvent("brand_intro_sent", { brand_name: brand.name });
       setIntroTimestamps((prev) => ({ ...prev, [brand.name]: Date.now() }));
       setDispatchedBrand(brand); setIsLockoutModal(false);
     } catch (err) { alert(err instanceof Error ? err.message : "Your intro wasn't sent. Try again."); }
@@ -1083,6 +1093,7 @@ function AppContent() {
                 }
                 onTransactionConfirmed={() => {
                   setJustClaimed(true);
+                  trackEvent("key_claimed");
                   refetchBalance();
                   refetchSupply();
                   setShowClaimPromptModal(false);
