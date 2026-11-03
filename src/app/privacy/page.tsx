@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   return (
     <LegalPage title="Privacy Policy" updated="November 3, 2026">
-      <p>This policy explains how The Diamond Collective (&quot;we&quot; or &quot;us&quot;) handles information when you use sluggercoin.com.</p>
+      <p>The Diamond Collective is operated by Manifest Destiny Corp (&quot;we&quot; or &quot;us&quot;). This policy explains how we handle information when you use sluggercoin.com.</p>
 
       <h2>Information we collect</h2>
       <ul>
@@ -69,6 +69,7 @@ export default function PrivacyPage() {
 
       <h2>Contact</h2>
       <p>Email <a href="mailto:jordan@diamondcollective.net">jordan@diamondcollective.net</a>.</p>
+      <p>Manifest Destiny Corp<br />14231 S Green Drake Drive<br />Bluffdale, UT 84065</p>
     </LegalPage>
   );
 }

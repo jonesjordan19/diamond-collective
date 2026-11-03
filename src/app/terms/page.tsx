@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   return (
     <LegalPage title="Terms of Use" updated="November 3, 2026">
-      <p>These terms apply to your use of sluggercoin.com and The Diamond Collective. By using the site, you agree to these terms and our <Link href="/privacy">Privacy Policy</Link>.</p>
+      <p>The Diamond Collective is operated by Manifest Destiny Corp (&quot;we&quot; or &quot;us&quot;). These terms apply to your use of sluggercoin.com and The Diamond Collective. By using the site, you agree to these terms and our <Link href="/privacy">Privacy Policy</Link>.</p>
 
       <h2>Who can use the site</h2>
       <p>You must be at least 13. If you&apos;re under 18, a parent or guardian must agree to these terms for you. Coach and scout access is subject to our approval, and we can decline or remove access.</p>
@@ -49,6 +49,7 @@ export default function TermsPage() {
 
       <h2>Contact</h2>
       <p>Email <a href="mailto:jordan@diamondcollective.net">jordan@diamondcollective.net</a>.</p>
+      <p>Manifest Destiny Corp<br />14231 S Green Drake Drive<br />Bluffdale, UT 84065</p>
     </LegalPage>
   );
 }
