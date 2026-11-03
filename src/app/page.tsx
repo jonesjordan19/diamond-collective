@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { createThirdwebClient, getContract } from "thirdweb";
 import { base } from "thirdweb/chains";
 import { ThirdwebProvider, ConnectButton, TransactionButton, useActiveAccount, useReadContract, useConnectModal } from "thirdweb/react";
@@ -119,6 +119,8 @@ const emptyProfile: AthleteProfile = {
   fbSpinRate: "", offSpeedSpinRate: "", firstPitchStrike: "", recordedDatePitching: "", stuffPlus: "", locationPlus: "", pitchingPlus: "",
   inducedVertBreak: "", horizontalBreak: "", vertApproachAngle: "", releaseExtension: "", releaseHeight: "", kPercentage: "", bbPercentage: "", kMinusBbPercentage: "",
 };
+
+interface AthleteContact { fullName: string; email?: string; phone?: string; verificationLink?: string; }
 
 const emptyScout: ScoutProfile = { fullName: "", organization: "", jobTitle: "", email: "", verificationLink: "", verificationStatus: "UNREGISTERED" };
 
@@ -272,6 +274,32 @@ function AppContent() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [copiedCode, setCopiedCode] = useState(false);
   const [codeRevealed, setCodeRevealed] = useState(false);
+  const [contactsByName, setContactsByName] = useState<Record<string, AthleteContact>>({});
+  const [accountLoaded, setAccountLoaded] = useState(false);
+  const [saveNotice, setSaveNotice] = useState<{ ok: boolean; text: string } | null>(null);
+  const authRef = useRef<{ wallet: string; message: string; signature: string; issuedAt: number } | null>(null);
+
+  // Every private request is signed by the signed-in wallet and checked on the server.
+  const secureCall = async (action: string, data: Record<string, unknown> = {}) => {
+    if (!account) throw new Error("Sign in to continue.");
+    const wallet = account.address.toLowerCase();
+    const now = Date.now();
+    let auth = authRef.current;
+    if (!auth || auth.wallet !== wallet || now - auth.issuedAt > 10 * 60 * 1000) {
+      const message = `The Diamond Collective secure request\nWallet: ${wallet}\nIssued: ${new Date(now).toISOString()}`;
+      const signature = await account.signMessage({ message });
+      auth = { wallet, message, signature, issuedAt: now };
+      authRef.current = auth;
+    }
+    const response = await fetch("/api/secure", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, auth: { message: auth.message, signature: auth.signature }, data }),
+    });
+    const result = await response.json().catch(() => null);
+    if (!response.ok || !result || result.status === "error") throw new Error(result?.message || "The request didn't go through. Try again in a moment.");
+    return result;
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -315,7 +343,6 @@ function AppContent() {
   const remainingPercentage = Math.max(0, Math.min(100, Math.round(((FOUNDERS_POOL_TOTAL - totalMinted) / FOUNDERS_POOL_TOTAL) * 100)));
   const balance = balanceData ? Math.min(100, Number(balanceData.displayValue)) : 0;
   
-  const isAdmin = useMemo(() => account?.address?.toLowerCase() === "0x46cbd713d7440692156e1219153622c45b04d3a", [account?.address]);
   const isUnlocked = balance >= 100 || justClaimed;
   
   const hasProfile = Boolean(profile.fullName && profile.email);
@@ -408,9 +435,9 @@ function AppContent() {
         } else if (acctEmail) { setProfile(prev => ({ ...prev, email: acctEmail })); }
       }
 
-      // CRITICAL FIX: The background check will NO LONGER wipe out active typing.
-      const callbackName = `cb_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-      (window as any)[callbackName] = (data: any) => {
+      // Loads this account's saved details without wiping out anything being typed.
+      setAccountLoaded(false);
+      secureCall("getAccount").then((data) => {
         if (data && data.scoutProfile && data.scoutProfile.fullName) {
           setScoutProfile(prev => ({ ...prev, ...data.scoutProfile }));
           localStorage.setItem(localScoutKey, JSON.stringify(data.scoutProfile));
@@ -420,16 +447,31 @@ function AppContent() {
           setProfile(prev => ({ ...prev, ...data.profile }));
           localStorage.setItem(localProfileKey, JSON.stringify(data.profile));
         }
-        try { delete (window as any)[callbackName]; const el = document.getElementById(callbackName); if (el) el.remove(); } catch {}
-      };
-      
-      const script = document.createElement("script");
-      script.id = callbackName; script.src = `${GOOGLE_SCRIPT_URL}?walletAddress=${encodeURIComponent(lowerWallet)}&callback=${callbackName}&_t=${Date.now()}`;
-      document.body.appendChild(script);
+        if (data && data.existingIntros) {
+          const introsMap: { [brandName: string]: number } = {};
+          Object.keys(data.existingIntros).forEach((brandName) => { introsMap[brandName] = Number(data.existingIntros[brandName]); });
+          setIntroTimestamps(introsMap);
+        }
+      }).catch((err) => console.error("Couldn't load account", err)).finally(() => setAccountLoaded(true));
     } else {
       setUserRole("GUEST");
     }
   }, [account, intendedRole]);
+
+  // Coaches and scouts land on the scoreboard, since the athlete tabs are hidden for them.
+  useEffect(() => {
+    if (userRole === "SCOUT") setActiveMainTab("SCOREBOARD");
+  }, [userRole]);
+
+  // Approved coaches and scouts load contact details only after the server confirms their approval.
+  useEffect(() => {
+    if (!account || userRole !== "SCOUT" || !isScoutApproved) { setContactsByName({}); return; }
+    secureCall("getContacts").then((data) => {
+      const byName: Record<string, AthleteContact> = {};
+      (data.contacts || []).forEach((item: AthleteContact) => { if (item.fullName) byName[item.fullName.toLowerCase().trim()] = item; });
+      setContactsByName(byName);
+    }).catch((err) => console.error("Couldn't load contact details", err));
+  }, [account?.address, userRole, isScoutApproved]);
 
   const handleSaveScoutProfile = async () => {
     if (!account?.address) return;
@@ -440,24 +482,23 @@ function AppContent() {
     setIsSavingScout(true);
     const lowerWallet = account.address.toLowerCase();
     
-    const payload = { action: "saveScout", walletAddress: lowerWallet, fullName: scoutProfile.fullName, organization: scoutProfile.organization, jobTitle: scoutProfile.jobTitle, email: scoutProfile.email, verificationLink: scoutProfile.verificationLink };
-    
     const newScoutState = { ...scoutProfile, verificationStatus: "Pending" };
     setScoutProfile(newScoutState);
     localStorage.setItem(`scout_profile_${lowerWallet}`, JSON.stringify(newScoutState));
     setUserRole("SCOUT");
 
     try {
-      await fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+      await secureCall("saveScout", { fullName: scoutProfile.fullName, organization: scoutProfile.organization, jobTitle: scoutProfile.jobTitle, email: scoutProfile.email, verificationLink: scoutProfile.verificationLink });
       setIsSavingScout(false);
       setShowScoutPendingModal(true);
-    } catch (err) { setIsSavingScout(false); alert("Error saving scout profile."); }
+    } catch (err) { setIsSavingScout(false); alert(err instanceof Error ? err.message : "Your details weren't saved. Try again."); }
   };
 
   const handleSaveProfile = async () => {
     if (!account?.address) return;
     if (!profile.fullName || !profile.email) { alert("Please fill in your Full Name and Email."); setActiveMatrixTab("BIO"); return; }
     setIsSavingProfile(true);
+    setSaveNotice(null);
     const lowerWallet = account.address.toLowerCase();
     let kMinusBB = profile.kMinusBbPercentage;
     if (profile.kPercentage && profile.bbPercentage && !kMinusBB) kMinusBB = (parseFloat(profile.kPercentage) - parseFloat(profile.bbPercentage)).toFixed(1);
@@ -466,8 +507,6 @@ function AppContent() {
     setProfile(updatedProfile);
     localStorage.setItem(`athlete_profile_${lowerWallet}`, JSON.stringify(updatedProfile));
 
-    const payload = { action: "saveProfile", walletAddress: lowerWallet, athleteEmail: updatedProfile.email, ...updatedProfile };
-
     setLeaderboardRows((prev) => {
       const exists = prev.some((p) => p.email.toLowerCase() === updatedProfile.email.toLowerCase() || p.fullName.toLowerCase() === updatedProfile.fullName.toLowerCase());
       if (exists) return prev.map((p) => (p.email.toLowerCase() === updatedProfile.email.toLowerCase() || p.fullName.toLowerCase() === updatedProfile.fullName.toLowerCase() ? updatedProfile : p));
@@ -475,10 +514,11 @@ function AppContent() {
     });
 
     try {
-      await fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+      await secureCall("saveProfile", { ...updatedProfile, athleteEmail: updatedProfile.email });
       setIsSavingProfile(false);
-      if (!isUnlocked) setShowClaimPromptModal(true); else alert("Metrics published!");
-    } catch (err) { setIsSavingProfile(false); alert("Error saving profile."); }
+      setSaveNotice({ ok: true, text: "Profile saved. Your numbers are on the scoreboard." });
+      if (!isUnlocked) setShowClaimPromptModal(true);
+    } catch (err) { setIsSavingProfile(false); setSaveNotice({ ok: false, text: err instanceof Error ? err.message : "Your profile wasn't saved. Try again." }); }
   };
 
   const handleInitiateIntro = (brand: BrandItem) => {
@@ -492,13 +532,11 @@ function AppContent() {
   const handleConfirmAndSendIntro = async () => {
     if (!pendingIntroBrand) return;
     const brand = pendingIntroBrand; setPendingIntroBrand(null);
-    const lowerWallet = account?.address?.toLowerCase() || "";
-    setIntroTimestamps((prev) => {
-      const updated = { ...prev, [brand.name]: Date.now() };
-      localStorage.setItem(`athlete_intros_${lowerWallet}`, JSON.stringify(updated)); return updated;
-    });
-    setDispatchedBrand(brand); setIsLockoutModal(false);
-    try { await fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "requestIntro", walletAddress: lowerWallet, brandName: brand.name, brandRepEmail: brand.brandRepEmail, brandRepName: brand.brandRepName, ...profile }) }); } catch {}
+    try {
+      await secureCall("requestIntro", { brandName: brand.name });
+      setIntroTimestamps((prev) => ({ ...prev, [brand.name]: Date.now() }));
+      setDispatchedBrand(brand); setIsLockoutModal(false);
+    } catch (err) { alert(err instanceof Error ? err.message : "Your intro wasn't sent. Try again."); }
   };
 
   const flattenedBrands = useMemo(() => {
@@ -550,7 +588,7 @@ function AppContent() {
       </div>
 
       {/* PRO SCOUT / AGENT ONBOARDING MODAL OVERLAY */}
-      {userRole === "SCOUT" && !isScoutOnboarded && account && (
+      {userRole === "SCOUT" && !isScoutOnboarded && account && accountLoaded && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(5, 5, 7, 0.98)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 2000, padding: "16px" }}>
           <div style={{ backgroundColor: "#0c0c10", border: `2px solid ${NEON_GREEN}`, borderRadius: "22px", width: "100%", maxWidth: "480px", padding: "26px", boxShadow: "0 0 45px rgba(166, 255, 0, 0.15)" }}>
             <span style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>Verified Pro Gateway</span>
@@ -688,8 +726,9 @@ function AppContent() {
                   const isPitcherRole = ath.primaryRole === "PITCHER" || isAthleteTWP;
                   const isHitterRole = ath.primaryRole === "HITTER" || isAthleteTWP;
 
-                  const isCurrentUser = Boolean((profile.email && ath.email && profile.email.toLowerCase() === ath.email.toLowerCase()) || (account?.address && ath.walletAddress && account.address.toLowerCase() === ath.walletAddress.toLowerCase()));
-                  const canViewContact = (userRole === "SCOUT" && isScoutApproved) || isAdmin || isCurrentUser;
+                  const isCurrentUser = Boolean(account && profile.fullName && ath.fullName && profile.fullName.toLowerCase().trim() === ath.fullName.toLowerCase().trim());
+                  const canViewContact = (userRole === "SCOUT" && isScoutApproved) || isCurrentUser;
+                  const contact: AthleteContact | undefined = isCurrentUser ? { fullName: profile.fullName, email: profile.email, phone: profile.phone, verificationLink: profile.verificationLink } : contactsByName[(ath.fullName || "").toLowerCase().trim()];
 
                   const isEliteFB = parseFloat(ath.peakFB || "0") >= 92; const isEliteStuff = parseFloat(ath.stuffPlus || "0") >= 110; const isEliteIVB = parseFloat(ath.inducedVertBreak || "0") >= 18; const isEliteEV = parseFloat(ath.maxExitVelo || "0") >= 100; const isElite60 = parseFloat(ath.sixtyTime || "99") <= 6.65;
                   const headlinePills: { label: string; val: string; elite?: boolean }[] = [];
@@ -763,9 +802,9 @@ function AppContent() {
                             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                               {canViewContact ? (
                                 <>
-                                  {ath.verificationLink && ath.verificationLink.startsWith("http") && <a href={ath.verificationLink} target="_blank" rel="noopener noreferrer" style={{ backgroundColor: "rgba(255, 122, 0, 0.15)", border: "1px solid #ff7a00", color: "#ff9933", padding: "7px 12px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "900" }}>🎥 Watch Video Clip ↗</a>}
-                                  {ath.phone && <a href={`tel:${ath.phone}`} style={{ backgroundColor: "#181822", border: "1px solid #3f3f4e", color: "#ffffff", padding: "7px 12px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "900" }}>📞 {ath.phone}</a>}
-                                  {ath.email && <a href={`mailto:${ath.email}`} style={{ backgroundColor: "#181822", border: "1px solid #3f3f4e", color: "#ffffff", padding: "7px 12px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "900" }}>✉️ {ath.email}</a>}
+                                  {contact?.verificationLink && contact.verificationLink.startsWith("http") && <a href={contact.verificationLink} target="_blank" rel="noopener noreferrer" style={{ backgroundColor: "rgba(255, 122, 0, 0.15)", border: "1px solid #ff7a00", color: "#ff9933", padding: "7px 12px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "900" }}>🎥 Watch Video Clip ↗</a>}
+                                  {contact?.phone && <a href={`tel:${contact.phone}`} style={{ backgroundColor: "#181822", border: "1px solid #3f3f4e", color: "#ffffff", padding: "7px 12px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "900" }}>📞 {contact.phone}</a>}
+                                  {contact?.email && <a href={`mailto:${contact.email}`} style={{ backgroundColor: "#181822", border: "1px solid #3f3f4e", color: "#ffffff", padding: "7px 12px", borderRadius: "8px", textDecoration: "none", fontSize: "11px", fontWeight: "900" }}>✉️ {contact.email}</a>}
                                 </>
                               ) : (
                                 <button onClick={() => { if (!account) handleOpenLogin("SCOUT"); else if (userRole === "SCOUT" && !isScoutApproved) setShowScoutPendingModal(true); }} style={{ backgroundColor: "#121218", border: `1px dashed ${NEON_GREEN}`, color: NEON_GREEN, padding: "7px 12px", borderRadius: "8px", fontSize: "11px", fontWeight: "900", cursor: "pointer", textTransform: "uppercase" }}>
@@ -953,6 +992,7 @@ function AppContent() {
                 <button onClick={handleSaveProfile} disabled={isSavingProfile} style={{ width: "100%", marginTop: "18px", backgroundColor: NEON_GREEN, color: "#000000", border: "none", fontWeight: "950", padding: "14px", borderRadius: "12px", cursor: "pointer", fontSize: "13px", textTransform: "uppercase", letterSpacing: "0.8px" }}>
                   {isSavingProfile ? "Saving to National Scoreboard..." : "Save Profile & Publish Metrics 🚀"}
                 </button>
+                {saveNotice && <p role="status" style={{ margin: "12px 0 0 0", textAlign: "center", fontSize: "13px", fontWeight: "800", color: saveNotice.ok ? NEON_GREEN : "#ff9933" }}>{saveNotice.text}</p>}
               </div>
             )}
           </section>
@@ -986,6 +1026,186 @@ function AppContent() {
           )}
         </div>
       </nav>
+
+      {/* 100 $SLUG MEMBERSHIP KEY CLAIM MODAL */}
+      {showClaimPromptModal && account && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.9)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1200, padding: "16px" }}>
+          <div style={{ backgroundColor: "#0c0c10", border: `2px solid ${NEON_GREEN}`, borderRadius: "22px", width: "100%", maxWidth: "460px", padding: "26px 22px", textAlign: "center", boxShadow: "0 0 45px rgba(166, 255, 0, 0.2)" }}>
+            <div style={{ fontSize: "34px", marginBottom: "6px" }}>🔑</div>
+            <span style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>
+              Final Step • 100% Free
+            </span>
+            <h3 style={{ margin: "6px 0 10px 0", fontSize: "21px", fontWeight: "950", textTransform: "uppercase", color: "#ffffff" }}>
+              Activate Your 100 $SLUG Key
+            </h3>
+            <p style={{ fontSize: "13px", color: "#d4d4d8", lineHeight: "1.5", margin: "0 0 18px 0" }}>
+              Your player profile is saved! Tap below to claim your free <strong style={{ color: "#ffffff" }}>100 $SLUG membership key</strong> to unlock upcoming member giveaways, your 20% off TAG Sports code, and Direct Brand Intros.
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <TransactionButton
+                transaction={() =>
+                  claimTo({
+                    contract: sluggerContract,
+                    to: account.address,
+                    quantity: "100",
+                  })
+                }
+                onTransactionConfirmed={() => {
+                  setJustClaimed(true);
+                  refetchBalance();
+                  refetchSupply();
+                  setShowClaimPromptModal(false);
+                }}
+                onError={(err) => alert(`Claim error: ${err.message}`)}
+                style={{ width: "100%", backgroundColor: NEON_GREEN, color: "#000000", fontWeight: "950", textTransform: "uppercase", letterSpacing: "1px", padding: "14px", borderRadius: "10px", border: "none", cursor: "pointer", fontSize: "13px" }}
+              >
+                🔑 Claim 100 Free $SLUG Now
+              </TransactionButton>
+
+              <button
+                onClick={() => setShowClaimPromptModal(false)}
+                style={{ width: "100%", backgroundColor: "transparent", border: "1px solid #33333d", color: "#a1a1aa", fontWeight: "800", padding: "10px", borderRadius: "10px", cursor: "pointer", fontSize: "11px", textTransform: "uppercase" }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PRE-SEND PROFILE VERIFICATION MODAL (ALL DIRECT INTROS) */}
+      {pendingIntroBrand && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.9)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1150, padding: "16px" }}>
+          <div style={{ backgroundColor: "#0c0c10", border: `2px solid ${NEON_GREEN}`, borderRadius: "22px", width: "100%", maxWidth: "540px", padding: "24px", boxShadow: "0 0 45px rgba(166, 255, 0, 0.2)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+              <div>
+                <span style={{ fontSize: "10px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>
+                  Verify Your Dossier
+                </span>
+                <h3 style={{ margin: "4px 0 0 0", fontSize: "20px", fontWeight: "950", textTransform: "uppercase", color: "#ffffff" }}>
+                  Send Intro to {pendingIntroBrand.name}?
+                </h3>
+              </div>
+              <button
+                onClick={() => setPendingIntroBrand(null)}
+                style={{ background: "none", border: "none", color: "#ffffff", fontSize: "20px", cursor: "pointer" }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <p style={{ fontSize: "13px", color: "#d4d4d8", lineHeight: "1.5", margin: "0 0 14px 0" }}>
+              We will email your player profile directly to <strong style={{ color: "#ffffff" }}>{pendingIntroBrand.brandRepName || pendingIntroBrand.name}</strong> and CC you so you can connect directly.
+            </p>
+
+            <div style={{ backgroundColor: "#07070a", border: "1px solid #262632", borderRadius: "14px", padding: "14px", marginBottom: "18px", display: "flex", flexDirection: "column", gap: "8px", fontSize: "12px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "#a1a1aa", fontWeight: "700" }}>Athlete & School:</span>
+                <span style={{ color: "#ffffff", fontWeight: "900" }}>{profile.fullName} • <span style={{ color: NEON_GREEN }}>{profile.college || "Undeclared"}</span></span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "#a1a1aa", fontWeight: "700" }}>Position / Class:</span>
+                <span style={{ color: "#ffffff", fontWeight: "800" }}>{profile.position || "ATH"} ({profile.primaryRole}) • {profile.collegeYear}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "#a1a1aa", fontWeight: "700" }}>Contact:</span>
+                <span style={{ color: "#ffffff", fontWeight: "800" }}>{profile.email} {profile.phone ? `• ${profile.phone}` : ""}</span>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setPendingIntroBrand(null);
+                  setActiveMainTab("LOCKER");
+                }}
+                style={{
+                  flex: 1,
+                  backgroundColor: "#181820",
+                  color: "#ffffff",
+                  border: "1px solid #3f3f4e",
+                  fontWeight: "900",
+                  textTransform: "uppercase",
+                  padding: "13px",
+                  borderRadius: "10px",
+                  cursor: "pointer",
+                  fontSize: "11px"
+                }}
+              >
+                Edit Locker First ⚙️
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmAndSendIntro}
+                style={{
+                  flex: 1.4,
+                  backgroundColor: NEON_GREEN,
+                  color: "#000000",
+                  border: "none",
+                  fontWeight: "950",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.8px",
+                  padding: "13px",
+                  borderRadius: "10px",
+                  cursor: "pointer",
+                  fontSize: "12px"
+                }}
+              >
+                Confirm & Send Intro ⚡
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 60-DAY LOCKOUT NOTIFICATION MODAL */}
+      {dispatchedBrand && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.88)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1100, padding: "16px" }}>
+          <div style={{ backgroundColor: "#0d0d12", border: `2px solid ${isLockoutModal ? "#eab308" : NEON_GREEN}`, borderRadius: "24px", width: "100%", maxWidth: "500px", padding: "26px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+              <span style={{ fontSize: "28px" }}>{isLockoutModal ? "⏳" : "⚡"}</span>
+              <div>
+                <span style={{ fontSize: "11px", fontWeight: "900", color: isLockoutModal ? "#eab308" : NEON_GREEN, textTransform: "uppercase", letterSpacing: "1.5px" }}>
+                  {isLockoutModal ? "Direct Intro Already Active" : "Direct Intro Dispatched"}
+                </span>
+                <h3 style={{ margin: "2px 0 0 0", fontSize: "22px", fontWeight: "900", textTransform: "uppercase", color: "#ffffff" }}>
+                  {dispatchedBrand.name}
+                </h3>
+              </div>
+            </div>
+
+            <p style={{ fontSize: "13px", color: "#d4d4d8", lineHeight: "1.5", margin: "12px 0 18px 0" }}>
+              {isLockoutModal 
+                ? `You already sent an intro to ${dispatchedBrand.name}. Check your email inbox for your CC'd introduction thread (~${getDaysRemaining(dispatchedBrand.name)} days left in current window).`
+                : `Your verified player dossier has been emailed directly to ${dispatchedBrand.name} with you CC'd on the thread!`}
+            </p>
+
+            <button
+              onClick={() => {
+                setDispatchedBrand(null);
+                setIsLockoutModal(false);
+              }}
+              style={{
+                width: "100%",
+                backgroundColor: isLockoutModal ? "#262626" : NEON_GREEN,
+                color: isLockoutModal ? "#ffffff" : "#000000",
+                fontWeight: "900",
+                textTransform: "uppercase",
+                letterSpacing: "1px",
+                padding: "13px",
+                borderRadius: "10px",
+                border: "none",
+                cursor: "pointer",
+                fontSize: "12px"
+              }}
+            >
+              Done ➔
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
