@@ -6,8 +6,8 @@ import "./globals.css";
 const bodyFont = Barlow({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800", "900"], variable: "--font-body" });
 const displayFont = Barlow_Condensed({ subsets: ["latin"], weight: ["700", "800"], variable: "--font-display" });
 
-const title = "The Diamond Collective | College Baseball Player Scoreboard";
-const description = "College baseball players post their stats on one national scoreboard. Coaches and scouts search it and reach out directly.";
+const title = "The Diamond Collective | Built for College Ballplayers";
+const description = "College ballplayers connect with brands, get in on gear drops, and post their numbers on a national scoreboard. Free to join.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://sluggercoin.com"),

@@ -661,7 +661,7 @@ function AppContent() {
         </header>
 
         {!account && activeMainTab === "SCOREBOARD" && !openedPlayerLink && (
-          <HomeHero onCoachClick={() => handleOpenLogin("SCOUT")} onPlayerClick={() => handleOpenLogin("ATHLETE")} />
+          <HomeHero brandCount={BRAND_COUNT} onJoinClick={() => handleOpenLogin("ATHLETE")} onBrandsClick={() => setActiveMainTab("EXCHANGE")} onCoachClick={() => handleOpenLogin("SCOUT")} />
         )}
 
         {/* STEP-BY-STEP ONBOARDING BAR */}
