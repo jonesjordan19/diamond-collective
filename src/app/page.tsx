@@ -7,6 +7,7 @@ import { ThirdwebProvider, ConnectButton, TransactionButton, useActiveAccount, u
 import { inAppWallet } from "thirdweb/wallets";
 import { getBalance, claimTo, totalSupply } from "thirdweb/extensions/erc20";
 import HomeHero from "../components/HomeHero";
+import GiveawayCard, { GIVEAWAY_CLOSES_AT, GIVEAWAY_HIDE_AT, type GiveawayState } from "../components/GiveawayCard";
 
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwe5YJxF93X4fJXpODhAGbJQ-1Xs3FiRHuLC2umjkGLGtsJTqj4VjO-0Ai0_hBqZMojdw/exec";
 const STRIPE_GRIP_DROP_URL = "https://buy.stripe.com/8x2eVeeW57dgc5I1hX8Vi01";
@@ -322,6 +323,7 @@ function AppContent() {
   const [accountLoaded, setAccountLoaded] = useState(false);
   const [openedPlayerLink, setOpenedPlayerLink] = useState(false);
   const [saveNotice, setSaveNotice] = useState<{ ok: boolean; text: string } | null>(null);
+  const [giveawayStatus, setGiveawayStatus] = useState<{ approved: boolean; excluded: boolean; entered: boolean } | null>(null);
   const authRef = useRef<{ wallet: string; message: string; signature: string; issuedAt: number } | null>(null);
 
   // Every private request is signed by the signed-in wallet and checked on the server.
@@ -505,6 +507,15 @@ function AppContent() {
     }
   }, [account, intendedRole]);
 
+  // Membership is the giveaway entry. Checks this player's membership once their account loads and after each save.
+  useEffect(() => {
+    setGiveawayStatus(null);
+    if (!account || !accountLoaded || userRole !== "ATHLETE" || !profile.fullName || Date.now() > GIVEAWAY_HIDE_AT) return;
+    secureCall("getGiveawayStatus")
+      .then((data) => setGiveawayStatus({ approved: Boolean(data?.giveaway?.approved), excluded: Boolean(data?.giveaway?.excluded), entered: Boolean(data?.giveaway?.entered) }))
+      .catch((err) => console.error("Couldn't load giveaway status", err));
+  }, [account, accountLoaded, userRole, profile.fullName, isSavingProfile]);
+
   // Coaches and scouts land on the scoreboard, since the athlete tabs are hidden for them.
   useEffect(() => {
     if (userRole === "SCOUT") setActiveMainTab("SCOREBOARD");
@@ -572,6 +583,10 @@ function AppContent() {
       if (!isUnlocked) setShowClaimPromptModal(true);
     } catch (err) { setIsSavingProfile(false); setSaveNotice({ ok: false, text: err instanceof Error ? err.message : "Your profile wasn't saved. Try again." }); }
   };
+
+  const giveawayClosed = Date.now() > GIVEAWAY_CLOSES_AT;
+  const showGiveaway = userRole !== "SCOUT" && Date.now() < GIVEAWAY_HIDE_AT;
+  const giveawayState: GiveawayState = giveawayStatus?.excluded ? "excluded" : giveawayStatus?.entered ? "entered" : giveawayClosed ? "closed" : !account ? "signedOut" : !hasProfile ? "needsProfile" : !giveawayStatus ? "checking" : giveawayStatus.approved ? "entered" : "pending";
 
   const handleInitiateIntro = (brand: BrandItem) => {
     if (isIntroActive(brand.name)) { setDispatchedBrand(brand); setIsLockoutModal(true); return; }
@@ -699,6 +714,10 @@ function AppContent() {
             )}
           </div>
         </header>
+
+        {showGiveaway && (
+          <GiveawayCard state={giveawayState} onSignIn={() => handleOpenLogin("ATHLETE")} onOpenLocker={() => setActiveMainTab("LOCKER")} />
+        )}
 
         {!account && activeMainTab === "SCOREBOARD" && !openedPlayerLink && (
           <HomeHero directIntroCount={DIRECT_INTRO_COUNT} openProgramCount={OPEN_PROGRAM_COUNT} player={heroPlayer && heroPlayerStats.length > 0 ? { name: heroPlayer.fullName, position: heroPlayer.position, college: heroPlayer.college, stats: heroPlayerStats } : undefined} onJoinClick={() => handleOpenLogin("ATHLETE")} onBrandsClick={() => { setActiveMainTab("EXCHANGE"); window.scrollTo({ top: 0 }); }} onCoachClick={() => handleOpenLogin("SCOUT")} />
