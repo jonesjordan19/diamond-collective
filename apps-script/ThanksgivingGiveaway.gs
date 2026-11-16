@@ -6,8 +6,8 @@
 //
 // Setup (site owner):
 // 1. Add this file to the Leaderboard API project as ThanksgivingGiveaway.gs.
-// 2. In doPost, after the shared secret and verifiedWallet checks that the other wallet
-//    actions use, add:
+// 2. In doPost, right after the isPromoAdminAction_ line (which runs after isTrustedRequest_
+//    and the verifiedWallet setup), add:
 //      if (isGiveawayAction_(postData.action)) return handleGiveawayAction_(postData, verifiedWallet);
 // 3. Deploy a new version of the active deployment (AKfycbwe5YJx...).
 // Uses promoPlayerId_ from PromoRequests.gs and getTargetSheet / jsonOut_ / SPREADSHEET_ID.
@@ -23,10 +23,6 @@ function isGiveawayAction_(action) {
 }
 
 function handleGiveawayAction_(postData, verifiedWallet) {
-  // Checked again here so this handler is safe even if doPost changes.
-  var secret = PropertiesService.getScriptProperties().getProperty("API_SECRET");
-  if (!secret || postData.secret !== secret) return jsonOut_({ status: "error", message: "Not authorized." });
-
   var wallet = String(verifiedWallet || "").toLowerCase().trim();
   if (!/^0x[0-9a-f]{40}$/.test(wallet)) return jsonOut_({ status: "error", message: "Sign in again to continue." });
 
