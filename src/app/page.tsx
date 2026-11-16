@@ -323,9 +323,7 @@ function AppContent() {
   const [accountLoaded, setAccountLoaded] = useState(false);
   const [openedPlayerLink, setOpenedPlayerLink] = useState(false);
   const [saveNotice, setSaveNotice] = useState<{ ok: boolean; text: string } | null>(null);
-  const [giveawayEntered, setGiveawayEntered] = useState(false);
-  const [giveawayEntering, setGiveawayEntering] = useState(false);
-  const [giveawayError, setGiveawayError] = useState("");
+  const [giveawayStatus, setGiveawayStatus] = useState<{ approved: boolean; excluded: boolean; entered: boolean } | null>(null);
   const authRef = useRef<{ wallet: string; message: string; signature: string; issuedAt: number } | null>(null);
 
   // Every private request is signed by the signed-in wallet and checked on the server.
@@ -509,15 +507,14 @@ function AppContent() {
     }
   }, [account, intendedRole]);
 
-  // Checks whether this player already entered the giveaway, once their account has loaded.
+  // Membership is the giveaway entry. Checks this player's membership once their account loads and after each save.
   useEffect(() => {
-    setGiveawayEntered(false);
-    setGiveawayError("");
-    if (!account || !accountLoaded || userRole !== "ATHLETE" || Date.now() > GIVEAWAY_HIDE_AT) return;
+    setGiveawayStatus(null);
+    if (!account || !accountLoaded || userRole !== "ATHLETE" || !profile.fullName || Date.now() > GIVEAWAY_HIDE_AT) return;
     secureCall("getGiveawayStatus")
-      .then((data) => setGiveawayEntered(Boolean(data?.giveaway?.entered)))
+      .then((data) => setGiveawayStatus({ approved: Boolean(data?.giveaway?.approved), excluded: Boolean(data?.giveaway?.excluded), entered: Boolean(data?.giveaway?.entered) }))
       .catch((err) => console.error("Couldn't load giveaway status", err));
-  }, [account, accountLoaded, userRole]);
+  }, [account, accountLoaded, userRole, profile.fullName, isSavingProfile]);
 
   // Coaches and scouts land on the scoreboard, since the athlete tabs are hidden for them.
   useEffect(() => {
@@ -587,23 +584,9 @@ function AppContent() {
     } catch (err) { setIsSavingProfile(false); setSaveNotice({ ok: false, text: err instanceof Error ? err.message : "Your profile wasn't saved. Try again." }); }
   };
 
-  const handleEnterGiveaway = async () => {
-    setGiveawayError("");
-    setGiveawayEntering(true);
-    try {
-      const data = await secureCall("enterGiveaway");
-      setGiveawayEntered(true);
-      if (!data?.giveaway?.alreadyEntered) trackEvent("giveaway_entered", { giveaway_id: "thanksgiving-2026" });
-    } catch (err) {
-      setGiveawayError(err instanceof Error ? err.message : "Your entry didn't go through. Try again.");
-    } finally {
-      setGiveawayEntering(false);
-    }
-  };
-
   const giveawayClosed = Date.now() > GIVEAWAY_CLOSES_AT;
   const showGiveaway = userRole !== "SCOUT" && Date.now() < GIVEAWAY_HIDE_AT;
-  const giveawayState: GiveawayState = giveawayEntered ? "entered" : giveawayClosed ? "closed" : !account ? "signedOut" : !hasProfile ? "needsProfile" : giveawayEntering ? "entering" : "ready";
+  const giveawayState: GiveawayState = giveawayStatus?.excluded ? "excluded" : giveawayStatus?.entered ? "entered" : giveawayClosed ? "closed" : !account ? "signedOut" : !hasProfile ? "needsProfile" : !giveawayStatus ? "checking" : giveawayStatus.approved ? "entered" : "pending";
 
   const handleInitiateIntro = (brand: BrandItem) => {
     if (isIntroActive(brand.name)) { setDispatchedBrand(brand); setIsLockoutModal(true); return; }
@@ -733,7 +716,7 @@ function AppContent() {
         </header>
 
         {showGiveaway && (
-          <GiveawayCard state={giveawayState} error={giveawayError} onSignIn={() => handleOpenLogin("ATHLETE")} onOpenLocker={() => setActiveMainTab("LOCKER")} onEnter={handleEnterGiveaway} />
+          <GiveawayCard state={giveawayState} onSignIn={() => handleOpenLogin("ATHLETE")} onOpenLocker={() => setActiveMainTab("LOCKER")} />
         )}
 
         {!account && activeMainTab === "SCOREBOARD" && !openedPlayerLink && (

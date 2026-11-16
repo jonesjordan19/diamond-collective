@@ -27,6 +27,13 @@ const STATUS_LABELS: Record<PromoPlayer["status"], string> = {
   WITHDRAWN: "Turned off",
 };
 
+interface GiveawaySummary {
+  closesAt: string;
+  closed: boolean;
+  eligibleCount: number;
+  winner: { name: string; college: string; pickedAt: string; eligibleCount: number } | null;
+}
+
 const formatDate = (value: string) => (value ? new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "");
 
 function AdminContent() {
@@ -35,6 +42,9 @@ function AdminContent() {
   const [notAdmin, setNotAdmin] = useState(false);
   const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
   const [sendingId, setSendingId] = useState("");
+  const [giveaway, setGiveaway] = useState<GiveawaySummary | null>(null);
+  const [confirmPick, setConfirmPick] = useState(false);
+  const [picking, setPicking] = useState(false);
   const authRef = useRef<{ wallet: string; message: string; signature: string; issuedAt: number } | null>(null);
 
   const secureCall = useCallback(async (action: string, data: Record<string, unknown> = {}) => {
@@ -66,7 +76,11 @@ function AdminContent() {
     if (!account) { setPlayers(null); setNotAdmin(false); return; }
     let active = true;
     secureCall("listPromoPlayers")
-      .then((result) => { if (active) setPlayers(result.players); })
+      .then((result) => {
+        if (!active) return;
+        setPlayers(result.players);
+        secureCall("getGiveawayAdmin").then((g) => { if (active) setGiveaway(g.giveaway); }).catch(() => {});
+      })
       .catch((error) => {
         if (!active) return;
         if (error.code === "NOT_ADMIN") setNotAdmin(true);
@@ -88,6 +102,20 @@ function AdminContent() {
     setSendingId("");
   };
 
+  // Picks one approved member at random. Admin accounts and the owner's emails are left out by the script.
+  const pickWinner = async () => {
+    setPicking(true);
+    setNotice(null);
+    try {
+      const result = await secureCall("pickGiveawayWinner");
+      setGiveaway(result.giveaway);
+    } catch (error) {
+      setNotice({ ok: false, text: (error as Error).message });
+    }
+    setPicking(false);
+    setConfirmPick(false);
+  };
+
   const approvedCount = players?.filter((player) => player.status === "ON").length ?? 0;
 
   return (
@@ -107,6 +135,33 @@ function AdminContent() {
       )}
       {account && !notAdmin && !players && !notice && <p className="promo-text" role="status">Loading players...</p>}
       {notice && <p className={notice.ok ? "admin-notice" : "admin-notice admin-notice-error"} role="status">{notice.text}</p>}
+
+      {giveaway && (
+        <section className="admin-giveaway" aria-labelledby="admin-giveaway-title">
+          <h2 id="admin-giveaway-title">Thanksgiving Giveaway</h2>
+          {giveaway.winner ? (
+            <>
+              <p className="admin-giveaway-winner">🏆 {giveaway.winner.name}{giveaway.winner.college ? ` · ${giveaway.winner.college}` : ""}</p>
+              <p className="promo-text">Picked {new Date(giveaway.winner.pickedAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} from {giveaway.winner.eligibleCount} eligible members. Their email is in the athlete data.</p>
+            </>
+          ) : (
+            <>
+              <p className="promo-text">{giveaway.eligibleCount} approved members entered. You&apos;re left out of the drawing.</p>
+              {!giveaway.closed && <p className="promo-text">You can pick a winner after entries close Thanksgiving Day at 4:00 PM MT.</p>}
+              {giveaway.closed && !confirmPick && (
+                <button type="button" className="promo-button promo-button-yes" onClick={() => setConfirmPick(true)}>Pick Random Winner</button>
+              )}
+              {giveaway.closed && confirmPick && (
+                <div className="admin-giveaway-confirm">
+                  <p className="promo-text">This picks one winner and can&apos;t be redone. Pick now?</p>
+                  <button type="button" className="promo-button promo-button-yes" disabled={picking} onClick={pickWinner}>{picking ? "Picking..." : "Yes, Pick Winner"}</button>
+                  <button type="button" className="promo-button" disabled={picking} onClick={() => setConfirmPick(false)}>Cancel</button>
+                </div>
+              )}
+            </>
+          )}
+        </section>
+      )}
 
       {players && (
         <>

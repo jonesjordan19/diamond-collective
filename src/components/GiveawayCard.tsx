@@ -1,32 +1,28 @@
 import Link from "next/link";
 
-// Thanksgiving 2026 giveaway. Entries close Thu, Nov 26 at 4:00 PM Mountain (Nov 26, 23:00 UTC).
-// Apps Script checks the same deadline, so changing it here alone won't reopen entries.
-export const GIVEAWAY_ID = "thanksgiving-2026";
+// Thanksgiving 2026 giveaway. Membership is the entry: approved members are entered automatically.
+// Entries close Thu, Nov 26 at 4:00 PM Mountain (Nov 26, 23:00 UTC). Apps Script uses the same deadline.
 export const GIVEAWAY_CLOSES_AT = Date.parse("2026-11-26T23:00:00Z");
-// The card stays up for a week after entries close so players can see the winner note.
+// The card stays up for a week after entries close.
 export const GIVEAWAY_HIDE_AT = Date.parse("2026-12-03T07:00:00Z");
 
-export type GiveawayState = "signedOut" | "needsProfile" | "ready" | "entering" | "entered" | "closed";
+export type GiveawayState = "signedOut" | "needsProfile" | "checking" | "pending" | "excluded" | "entered" | "closed";
 
 interface GiveawayCardProps {
   state: GiveawayState;
-  error?: string;
   onSignIn: () => void;
   onOpenLocker: () => void;
-  onEnter: () => void;
 }
 
-const BUTTON_TEXT: Partial<Record<GiveawayState, string>> = {
-  signedOut: "Sign In to Enter",
-  needsProfile: "Save Your Player Card to Enter",
-  ready: "Enter the Giveaway",
-  entering: "Entering…",
+const STATUS_TEXT: Partial<Record<GiveawayState, string>> = {
+  pending: "You're registered. You'll be entered as soon as your membership is approved.",
+  excluded: "Site admins aren't eligible to win.",
+  entered: "✅ You're a member, so you're entered. We'll email the winner after entries close.",
+  closed: "Entries are closed. Thanks to every member.",
 };
 
-export default function GiveawayCard({ state, error, onSignIn, onOpenLocker, onEnter }: GiveawayCardProps) {
-  const handleClick = state === "signedOut" ? onSignIn : state === "needsProfile" ? onOpenLocker : onEnter;
-  const buttonText = BUTTON_TEXT[state];
+export default function GiveawayCard({ state, onSignIn, onOpenLocker }: GiveawayCardProps) {
+  const status = STATUS_TEXT[state];
 
   return (
     <section id="giveaway" className="giveaway-card" aria-labelledby="giveaway-title">
@@ -34,18 +30,13 @@ export default function GiveawayCard({ state, error, onSignIn, onOpenLocker, onE
       <div className="giveaway-card-body">
         <p className="giveaway-card-label">Thanksgiving Giveaway</p>
         <h2 id="giveaway-title">Win a Yardley Y2 Maven Steer glove</h2>
-        <p className="giveaway-card-meta">11.5&quot; • Ibex tan • $205 value • Free to enter</p>
+        <p className="giveaway-card-meta">11.5&quot; • Ibex tan • $205 value</p>
+        {state !== "closed" && <p className="giveaway-card-deadline">Every member is entered automatically. Join free by Thanksgiving Day, Nov 26 at 4:00 PM MT.</p>}
 
-        {state === "entered" && <p className="giveaway-card-status" role="status">✅ You&apos;re entered. We&apos;ll email the winner after entries close.</p>}
-        {state === "closed" && <p className="giveaway-card-status" role="status">Entries are closed. Thanks to everyone who entered.</p>}
-        {state !== "entered" && state !== "closed" && <p className="giveaway-card-deadline">Entries close Thanksgiving Day, Nov 26 at 4:00 PM MT</p>}
+        {status && <p className="giveaway-card-status" role="status">{status}</p>}
 
-        {buttonText && (
-          <button type="button" className="giveaway-card-button" onClick={handleClick} disabled={state === "entering"}>
-            {buttonText}
-          </button>
-        )}
-        {error && <p className="giveaway-card-error" role="alert">{error}</p>}
+        {state === "signedOut" && <button type="button" className="giveaway-card-button" onClick={onSignIn}>Join Free to Be Entered</button>}
+        {state === "needsProfile" && <button type="button" className="giveaway-card-button" onClick={onOpenLocker}>Save Your Player Card to Join</button>}
 
         <Link href="/giveaway-rules" className="giveaway-card-rules">Official rules</Link>
       </div>

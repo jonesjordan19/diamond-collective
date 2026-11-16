@@ -855,3 +855,33 @@
     width: auto;
   }
 }
+
+.admin-giveaway {
+  margin: 0 0 24px;
+  padding: 16px;
+  border: 1.5px solid #f2b33d;
+  border-radius: 14px;
+  background: #0d0d12;
+}
+
+.admin-giveaway h2 {
+  margin: 0 0 8px;
+  color: #f2b33d;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.admin-giveaway-winner {
+  margin: 0 0 8px;
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.admin-giveaway-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
