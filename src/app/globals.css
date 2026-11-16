@@ -749,3 +749,109 @@
     width: auto;
   }
 }
+
+/* Thanksgiving giveaway card: compact so the homepage player card stays on the first phone screen. */
+.giveaway-card {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-top: 16px;
+  padding: 14px;
+  border: 1.5px solid #f2b33d;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(242, 179, 61, 0.12), #0d0d12 60%);
+  scroll-margin-top: 12px;
+}
+
+.giveaway-card-image {
+  flex: 0 0 auto;
+  width: 88px;
+  height: 88px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.giveaway-card-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.giveaway-card-body p {
+  margin: 0;
+}
+
+.giveaway-card-label {
+  color: #f2b33d;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.giveaway-card h2 {
+  margin: 3px 0 0;
+  color: #ffffff;
+  font-family: var(--font-display), sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.giveaway-card-meta,
+.giveaway-card-deadline {
+  margin-top: 4px !important;
+  color: #a1a1aa;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.giveaway-card-deadline {
+  color: #d4d4d8;
+}
+
+.giveaway-card-status {
+  margin-top: 8px !important;
+  color: #a6ff00;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.giveaway-card-button {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  background: #f2b33d;
+  color: #000000;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.giveaway-card-button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.giveaway-card-error {
+  margin-top: 8px !important;
+  color: #ff6b6b;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.giveaway-card-rules {
+  display: inline-block;
+  margin-top: 8px;
+  color: #a1a1aa;
+  font-size: 12px;
+  text-decoration: underline;
+}
+
+@media (min-width: 640px) {
+  .giveaway-card-button {
+    width: auto;
+  }
+}

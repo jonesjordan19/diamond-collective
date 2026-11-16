@@ -8,7 +8,7 @@ const SCRIPT_URL =
   process.env.APPS_SCRIPT_URL ||
   "https://script.google.com/macros/s/AKfycbwe5YJxF93X4fJXpODhAGbJQ-1Xs3FiRHuLC2umjkGLGtsJTqj4VjO-0Ai0_hBqZMojdw/exec";
 
-const ALLOWED_ACTIONS = ["getAccount", "getContacts", "saveProfile", "saveScout", "requestIntro", "listPromoPlayers", "sendPromoRequest"];
+const ALLOWED_ACTIONS = ["getAccount", "getContacts", "saveProfile", "saveScout", "requestIntro", "listPromoPlayers", "sendPromoRequest", "getGiveawayStatus", "enterGiveaway"];
 // These use the private link from a player's email instead of a signed-in wallet.
 const PROMO_TOKEN_ACTIONS = ["getPromoRequest", "answerPromoRequest"];
 const PROMO_COOKIE = "dc_promo_token";
