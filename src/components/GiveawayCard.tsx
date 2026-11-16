@@ -15,7 +15,7 @@ interface GiveawayCardProps {
 }
 
 const STATUS_TEXT: Record<GiveawayState, string> = {
-  signedOut: "Every member is entered. Join free by Nov 26, 4 PM MT ›",
+  signedOut: "All members entered · Ends Nov 26 ›",
   needsProfile: "Save your player card to be entered ›",
   checking: "Every member is entered automatically.",
   pending: "You'll be entered once your membership is approved.",
