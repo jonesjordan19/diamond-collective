@@ -588,7 +588,9 @@ function AppContent() {
     if (!localStorage.getItem(`athlete_profile_${lowerWallet}`)) isNewSignupPending.current = true;
     localStorage.setItem(`athlete_profile_${lowerWallet}`, JSON.stringify(updatedProfile));
 
-    setLeaderboardRows((prev) => {
+    // Only approved players are on the public scoreboard, so don't add a pending player locally.
+    const isApprovedPlayer = updatedProfile.verificationStatus === "Approved";
+    if (isApprovedPlayer) setLeaderboardRows((prev) => {
       const exists = prev.some((p) => p.email.toLowerCase() === updatedProfile.email.toLowerCase() || p.fullName.toLowerCase() === updatedProfile.fullName.toLowerCase());
       if (exists) return prev.map((p) => (p.email.toLowerCase() === updatedProfile.email.toLowerCase() || p.fullName.toLowerCase() === updatedProfile.fullName.toLowerCase() ? updatedProfile : p));
       return [updatedProfile, ...prev];
@@ -599,7 +601,7 @@ function AppContent() {
       trackEvent("profile_saved", { primary_role: updatedProfile.primaryRole });
       if (isNewSignupPending.current) { isNewSignupPending.current = false; trackMetaSignup(); }
       setIsSavingProfile(false);
-      setSaveNotice({ ok: true, text: "Profile saved. Your numbers are on the scoreboard." });
+      setSaveNotice({ ok: true, text: isApprovedPlayer ? "Profile saved. Your numbers are on the scoreboard." : "Profile saved. You'll appear on the scoreboard once we verify you're on a college roster." });
       if (!isUnlocked) setShowClaimPromptModal(true);
     } catch (err) { setIsSavingProfile(false); setSaveNotice({ ok: false, text: err instanceof Error ? err.message : "Your profile wasn't saved. Try again." }); }
   };
