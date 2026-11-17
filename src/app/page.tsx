@@ -137,6 +137,16 @@ const emptyProfile: AthleteProfile = {
 
 interface AthleteContact { fullName: string; email?: string; phone?: string; verificationLink?: string; }
 
+// A roster or proof link must be a full web address, like https://school.edu/roster/name.
+const isValidProofLink = (value: string) => {
+  try {
+    const url = new URL((value || "").trim());
+    return (url.protocol === "https:" || url.protocol === "http:") && url.hostname.includes(".");
+  } catch {
+    return false;
+  }
+};
+
 const emptyScout: ScoutProfile = { fullName: "", organization: "", jobTitle: "", email: "", verificationLink: "", verificationStatus: "UNREGISTERED" };
 
 // Sends anonymous action counts to Google Analytics. Never include names, emails, phone numbers, or wallets.
@@ -556,6 +566,16 @@ function AppContent() {
   const handleSaveProfile = async () => {
     if (!account?.address) return;
     if (!profile.fullName || !profile.email) { alert("Please fill in your Full Name and Email."); setActiveMatrixTab("BIO"); return; }
+    // Players who aren't approved yet must give what we need to check they're on a college roster.
+    if (profile.verificationStatus !== "Approved") {
+      if (!profile.college.trim()) { alert("Please enter your College / Program."); setActiveMatrixTab("BIO"); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email.trim())) { alert("Please enter a valid email address."); setActiveMatrixTab("BIO"); return; }
+      if (!isValidProofLink(profile.verificationLink)) {
+        alert("Please add a roster or proof link, like your page on your team's roster, so we can verify you play college baseball.");
+        document.getElementById("proof-link")?.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+    }
     setIsSavingProfile(true);
     setSaveNotice(null);
     const lowerWallet = account.address.toLowerCase();
@@ -568,7 +588,9 @@ function AppContent() {
     if (!localStorage.getItem(`athlete_profile_${lowerWallet}`)) isNewSignupPending.current = true;
     localStorage.setItem(`athlete_profile_${lowerWallet}`, JSON.stringify(updatedProfile));
 
-    setLeaderboardRows((prev) => {
+    // Only approved players are on the public scoreboard, so don't add a pending player locally.
+    const isApprovedPlayer = updatedProfile.verificationStatus === "Approved";
+    if (isApprovedPlayer) setLeaderboardRows((prev) => {
       const exists = prev.some((p) => p.email.toLowerCase() === updatedProfile.email.toLowerCase() || p.fullName.toLowerCase() === updatedProfile.fullName.toLowerCase());
       if (exists) return prev.map((p) => (p.email.toLowerCase() === updatedProfile.email.toLowerCase() || p.fullName.toLowerCase() === updatedProfile.fullName.toLowerCase() ? updatedProfile : p));
       return [updatedProfile, ...prev];
@@ -579,7 +601,7 @@ function AppContent() {
       trackEvent("profile_saved", { primary_role: updatedProfile.primaryRole });
       if (isNewSignupPending.current) { isNewSignupPending.current = false; trackMetaSignup(); }
       setIsSavingProfile(false);
-      setSaveNotice({ ok: true, text: "Profile saved. Your numbers are on the scoreboard." });
+      setSaveNotice({ ok: true, text: isApprovedPlayer ? "Profile saved. Your numbers are on the scoreboard." : "Profile saved. You'll appear on the scoreboard once we verify you're on a college roster." });
       if (!isUnlocked) setShowClaimPromptModal(true);
     } catch (err) { setIsSavingProfile(false); setSaveNotice({ ok: false, text: err instanceof Error ? err.message : "Your profile wasn't saved. Try again." }); }
   };
@@ -866,7 +888,7 @@ function AppContent() {
                             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                               {canViewContact ? (
                                 <>
-                                  {contact?.verificationLink && contact.verificationLink.startsWith("http") && <a href={contact.verificationLink} target="_blank" rel="noopener noreferrer" style={{ backgroundColor: "rgba(255, 122, 0, 0.15)", border: "1px solid #ff7a00", color: "#ff9933", padding: "7px 12px", borderRadius: "8px", textDecoration: "none", fontSize: "13px", fontWeight: "900" }}>🎥 Watch Video Clip ↗</a>}
+                                  {contact?.verificationLink && contact.verificationLink.startsWith("http") && <a href={contact.verificationLink} target="_blank" rel="noopener noreferrer" style={{ backgroundColor: "rgba(255, 122, 0, 0.15)", border: "1px solid #ff7a00", color: "#ff9933", padding: "7px 12px", borderRadius: "8px", textDecoration: "none", fontSize: "13px", fontWeight: "900" }}>🎓 Roster / Proof ↗</a>}
                                   {contact?.phone && <a href={`tel:${contact.phone}`} style={{ backgroundColor: "#181822", border: "1px solid #3f3f4e", color: "#ffffff", padding: "7px 12px", borderRadius: "8px", textDecoration: "none", fontSize: "13px", fontWeight: "900" }}>📞 {contact.phone}</a>}
                                   {contact?.email && <a href={`mailto:${contact.email}`} style={{ backgroundColor: "#181822", border: "1px solid #3f3f4e", color: "#ffffff", padding: "7px 12px", borderRadius: "8px", textDecoration: "none", fontSize: "13px", fontWeight: "900" }}>✉️ {contact.email}</a>}
                                 </>
@@ -1060,8 +1082,9 @@ function AppContent() {
 
                 {/* Video & Social Proof Inputs */}
                 <div style={{ borderTop: "1px solid #22222a", paddingTop: "14px", marginTop: "16px" }}>
-                  <span style={{ fontSize: "12px", fontWeight: "900", color: "#ff9933", textTransform: "uppercase", letterSpacing: "0.8px", display: "block", marginBottom: "6px" }}>🎥 Video / TrackMan / TAG Sports Clip Link (Optional)</span>
-                  <input type="url" placeholder="https://x.com/... or YouTube / TAG Sports video link" value={profile.verificationLink || ""} onChange={(e) => setProfile(prev => ({ ...prev, verificationLink: e.target.value }))} style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #444", color: "#ffffff", padding: "9px 10px", borderRadius: "8px", fontSize: "12px", fontWeight: "700", marginBottom: "12px" }} />
+                  <label htmlFor="proof-link" style={{ fontSize: "12px", fontWeight: "900", color: "#ff9933", textTransform: "uppercase", letterSpacing: "0.8px", display: "block", marginBottom: "4px" }}>🎓 Roster or Proof Link {profile.verificationStatus === "Approved" ? "" : "(Required) *"}</label>
+                  <p style={{ margin: "0 0 6px", color: "#a1a1aa", fontSize: "12px", fontWeight: "600", lineHeight: 1.4 }}>Your page on your team&apos;s roster works best. A game video or TAG Sports clip also works. Only approved coaches see it.</p>
+                  <input id="proof-link" type="url" inputMode="url" required={profile.verificationStatus !== "Approved"} placeholder="https://yourschool.edu/sports/baseball/roster/your-name" value={profile.verificationLink || ""} onChange={(e) => setProfile(prev => ({ ...prev, verificationLink: e.target.value }))} style={{ width: "100%", boxSizing: "border-box", backgroundColor: "#000000", border: "1px solid #444", color: "#ffffff", padding: "9px 10px", borderRadius: "8px", fontSize: "12px", fontWeight: "700", marginBottom: "12px" }} />
                   <span style={{ fontSize: "12px", fontWeight: "900", color: NEON_GREEN, textTransform: "uppercase", letterSpacing: "0.8px", display: "block", marginBottom: "8px" }}>Public Social Links (For Coaches & Scouts)</span>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "8px", marginBottom: "8px" }}>
                     <select value={profile.social1_Type || "X"} onChange={(e) => setProfile(prev => ({ ...prev, social1_Type: e.target.value }))} style={{ backgroundColor: "#000000", border: "1px solid #444", color: "#ffffff", padding: "9px", borderRadius: "8px", fontSize: "13px", fontWeight: "700" }}><option value="X">X (Twitter)</option><option value="IG">Instagram</option><option value="TIKTOK">TikTok</option></select>
